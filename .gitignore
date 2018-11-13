@@ -1,32 +1,35 @@
+# test data
+knots/*
+
+run/*
+!run/run.sh
+!run/config.xml
+
 # Prerequisites
-*.d
+*/*.d
 
 # Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+*/*.slo
+*/*.lo
+*/*.o
+*/*.obj
 
 # Precompiled Headers
-*.gch
-*.pch
+*/*.gch
+*/*.pch
 
 # Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
+*/*.so
+*/*.dylib
+*/*.dll
 
 # Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
+*/*.lai
+*/*.la
+*/*.a
+*/*.lib
 
 # Executables
-*.exe
-*.out
-*.app
+*/*.exe
+*/*.out
+*/*.app
