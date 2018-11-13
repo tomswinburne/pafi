@@ -23,18 +23,19 @@ Beta version of code used in [this paper](https://journals.aps.org/prl/abstract/
 
 1. [Download LAMMPS](http://lammps.sandia.gov/download.html) and read the [installation instructions](http://lammps.sandia.gov/doc/Section_start.html)
 
-2. In root directory of a clean LAMMPS repository (no packages) run
+2. Before installing any packages, in the LAMMPS root directory (i.e. parent directory of src folder) run the pafi patch
 ```
-patch -p0 < /path/to/PAFI/lammps13Mar18_PAFI.patch
+patch -p0 < /path/to/pafi_lammps_Aug18.patch
 ```
 3. Install any packages you desire
 ```
+cd src
 make yes-package_name
 ```
-3. Compile as a static library and a binary (for later NEB calculations)
+3. Compile as a static library (and optionally initial NEB calculation)
 ```
    make mpi mode=lib
-   make mpi
+   make mpi # only for running initial NEB calculation
 ```
 4. Copy to your local include / library directories, e.g. at ${HOME}/.local/
 ```
@@ -61,7 +62,7 @@ make yes-package_name
 1. Change location of local install folder in build/makefile
 2. make
 ```
-   cd build
+   cd /path/to/pafi/build
    make
 ```
 
