@@ -1,4 +1,3 @@
-# IN BETA : FRAGILE WITH MPI/PYTHON ARCHITECTURE
          _______      _______      _______     _________
         (  ____ )    (  ___  )    (  ____ \    \__   __/
         | (    )|    | (   ) |    | (    \/       ) (
@@ -10,7 +9,7 @@
         Projected    Average      Force        Integrator
 
 
-:copyright: TD Swinburne and M-C Marinica 2018
+v0.4 :copyright: TD Swinburne and M-C Marinica 2018 MIT License
 
 
 
