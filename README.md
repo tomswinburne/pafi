@@ -32,21 +32,39 @@ patch -p0 < /path/to/PAFI/lammps13Mar18_PAFI.patch
 ```
 make yes-package_name
 ```
-3. Compile as shared library and copy to PAFI repo
+3. Compile as a static library and a binary (for later NEB calculations)
 ```
-   make mpi mode=shlib
-   cp liblammps_mpi.so path/to/PAFI/pafilib/liblammps_mpihp.so
+   make mpi mode=lib
+   make mpi
+```
+4. Copy to your local include / library directories, e.g. at ${HOME}/.local/
+```
+   cp liblammps_mpi.a ${HOME}/.local/lib
+   mkdir ${HOME}/.local/include/lammps
+   cp *.h ${HOME}/.local/include/lammps/
+```
+## Compiling Boost C++ libraries
+1. Download tarball from https://www.boost.org/users/download/
+2. Bootstrap with the local install prefix
+```
+   ./bootstrap.sh --prefix=${HOME}/.local
+```
+3. Build with gcc/c++11
+```
+   ./b2 toolset=gcc cxxflags=-std=c++11
+```
+4. Install
+```
+   ./b2 install
 ```
 
-
-
-## Python Requirements
-- Python >= 2.7  (< 3.0) 
-- [mpi4py](mpi4py.scipy.org) >= 2.0.0
-- numpy >= 1.13.0
-- scipy >= 0.18.0
-
-
+## Compiling PAFI
+1. Change location of local install folder in build/makefile
+2. make
+```
+   cd build
+   make
+```
 
 ## Calculation of free energy barrier between states
 
@@ -60,15 +78,12 @@ neb etol ftol N1 N2 Nevery file-style arg keyword
 
 write_data neb_knot_file.$u
 ```
-3. Move the knots to folder and include a LAMMPS input script to load the first knot, as shown in the examples
+3. Move the knots to folder and include and configure the configuratio xml file, as shown in the examples
 
-4. Fill in the input file as shown in the example entry, including a wildcard command for the knots
-
-5. Run PAFI as e.g.
+4. Run PAFI as e.g.
 ```
-mpirun -np NPROCS python ./lmp_mpi_hp.py -i in_file -t TEMPERATURE
+mpirun -np NPROCS ./pafi
 ```
-
 ## Output
 
 ``` 
