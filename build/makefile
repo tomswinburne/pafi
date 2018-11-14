@@ -1,7 +1,9 @@
 CC = mpicxx
 
-INC = -I/home/tomswinburne/.local/include -I../src
-LIB = -L/home/tomswinburne/.local/lib
+PREFIX = /home/tomswinburne/.local
+
+INC = -I${PREFIX}/include -I../src
+LIB = -L${PREFIX}/lib
 
 CPPFLAGS = -std=c++11 -O3 -DBOOST_ALL_DYN_LINK
 LDFLAGS = -llammps_mpi -lpthread -lboost_random -lboost_system

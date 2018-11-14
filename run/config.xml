@@ -4,15 +4,16 @@
 
   <HighTemperature> 200 </HighTemperature>
 
-  <SampleSteps> 10 </SampleSteps>
+  <SampleSteps> 1 </SampleSteps>
 
-  <ThermSteps> 20 </ThermSteps>
-  <ThermWindow> 10 </ThermWindow>
+  <ThermSteps> 1 </ThermSteps>
+  <ThermWindow> 1 </ThermWindow>
 
-  <nPlanes> 51 </nPlanes>
+  <nPlanes> 21 </nPlanes>
 
   <!-- We require nprocs % CoresPerWorker==0-->
-  <CoresPerWorker> 2 </CoresPerWorker>
+
+  <CoresPerWorker> 4 </CoresPerWorker>
 
   <!--
     RELATIVE thermal expansion coefficients -
@@ -23,13 +24,12 @@
 
   <OverDamped> 1 </OverDamped>
 
-  <Position> 0.3 </Position>
-
   <Scripts>
     <Input>
       units metal
       atom_style atomic
       atom_modify map array sort 0 0.0
+
       read_data  md/image_1.dat
       pair_style    eam/fs
       pair_coeff * * md/Fe.eam.fs Fe

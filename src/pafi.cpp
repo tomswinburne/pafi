@@ -17,7 +17,7 @@ int main(int narg, char **arg)
   if(rank==0) std::cout << "PAFI: XML read\n";
 
   // Check proposed MPI division is possible
-  if(nProcs % params.CoresPerWorker) {
+  if (nProcs % params.CoresPerWorker) {
     if(rank == 0) printf("ERROR: nProcs % CoresPerWorker != 0\n");
     MPI_Abort(MPI_COMM_WORLD,1);
   }
@@ -30,10 +30,11 @@ int main(int narg, char **arg)
   MPI_Comm instance_comm;
   MPI_Comm_split(MPI_COMM_WORLD,instance,0,&instance_comm);
 
-  Simulator sys(instance_comm,params,instance);
-  if(rank==0) std::cout<<"SYS LOADED\n";
+  Simulator sim(instance_comm,params,rank);
 
-  sys.make_path(params.KnotList);
+  if(rank==0) std::cout<<"sim LOADED\n";
+
+  sim.make_path(params.KnotList);
   if(rank==0) {
     std::cout<<"PATH MADE\n";
     //std::ofstream out;
@@ -51,42 +52,46 @@ int main(int narg, char **arg)
   std::cout<<std::setprecision(12)<<std::scientific;
   double sT,aT,r=0.,dr = 1./((double)params.nPlanes);
 
-  double E=0.,sE=0.;
+  double E=0.,sE=0.,tE;
 
   results.clear();
-  sys.setup(r,T);
-  sT = sys.thermalize();
-  aT = sys.sample(results);
+  sim.setup(0.0,T);
+  //std::cout<<"START SAMPLE"<<std::endl;
+  sT = sim.thermalize();
+  aT = sim.sample(results);
+  //std::cout<<"SAMPLE: "<<results[0]<<std::endl;
+  sE = sim.getEnergy();
+  if(rank==0) std::cout<<r<<" "<<0.<<" "<<E<<"\n";
 
-  sE = sys.getEnergy();
-
+  //std::cout<<"HERE\n";
 
   while ( r <= 1.+0.01 ) {
     results.clear();
-    sys.setup(r,T);
-    sT = sys.thermalize();
-    aT = sys.sample(results);
-    //E += - dr * results[0];
-    //if(rank==0) std::cout<<r<<" "<<sys.getEnergy()-sE<<" "<<E<<"\n";
+    sim.setup(r,T);
+    sT = sim.thermalize();
+    aT = sim.sample(results);
+    E += - dr * results[0];
+    tE = sim.getEnergy();
+    if(rank==0) std::cout<<r<<" "<<tE-sE<<" "<<E<<"\n";
     r += dr;
   }
 
 
-  //sys.evaluate(position,T,results);
+  //sim.evaluate(position,T,results);
 
 
   /*
 
-  //std::vector<double> x(3*sys.natoms,0.);
-  //lammps_gather_atoms(sys.lmp,(char *) "norm",1,3,&x[0]);
+  //std::vector<double> x(3*sim.natoms,0.);
+  //lammps_gather_atoms(sim.lmp,(char *) "norm",1,3,&x[0]);
 
 
-  //Integrator calculator(sys,params);
+  //Integrator calculator(sim,params);
 
   // runs the vector of strings through LAMMPS
-  sys.run_vector(params.RunScript);
+  sim.run_vector(params.RunScript);
 
-  double finaltemp = sys.temperature();
+  double finaltemp = sim.temperature();
   double *temps = new double[nInstance];
 
   for (int i = 0; i < nInstance; i++) temps[i] = 0.0;
@@ -120,7 +125,7 @@ int main(int narg, char **arg)
   */
 
   // close down LAMMPS instances
-  sys.close();
+  sim.close();
 
   // close down MPI
   MPI_Comm_free(&instance_comm);

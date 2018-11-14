@@ -9,7 +9,6 @@
 #include <string>
 #include <array>
 #include <map>
-#include <regex>
 #include <cmath>
 
 // these are LAMMPS include files
@@ -30,19 +29,9 @@
 #include <boost/timer/timer.hpp>
 #include <boost/foreach.hpp>
 
-
-/*
-char *lammps_run_vector(void *ptr, std::vector<std::string> strv){
-  LAMMPS_NS::LAMMPS *lmp = (LAMMPS_NS::LAMMPS *) ptr;
-  for(auto s:strv) lammps_command((void *)lmp,(char *)s.c_str());
-}
-*/
-
 // PAFI files
-#include "pbc.hpp"
-#include "parser.hpp"
-#include "spline.hpp"
-#include "Simulator.hpp"
-#include "integrator.hpp"
-
+#include "Boundary.hpp"
+#include "Parser.hpp"
+#include "Spline.hpp"
+#include "LAMMPSSimulator.hpp"
 typedef LAMMPSSimulator Simulator;
