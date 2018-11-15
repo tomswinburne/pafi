@@ -1,8 +1,6 @@
 #ifndef PBC_H
 #define PBC_H
 
-#include <Eigen/Dense> // For Supercell and Hessian
-
 class MinImage {
 public:
   std::array< std::array<double,3>, 3 > cell;
@@ -59,5 +57,4 @@ public:
     }
   };
 };
-
 #endif

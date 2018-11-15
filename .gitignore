@@ -1,9 +1,7 @@
 # test data
 knots/*
-
 run/*
-!run/run.sh
-!run/config.xml
+build/*
 
 # Prerequisites
 */*.d

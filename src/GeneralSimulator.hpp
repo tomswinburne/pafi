@@ -12,33 +12,25 @@ public:
     // set up SIMULATOR, pbc
   };
 
-  virtual void load_config(std::string file_string,std::vector<double> &x) {};
+  virtual void load_config(std::string file_string,std::vector<double> &x){};
 
   virtual void run_script(std::string sn){};
 
-  virtual void run_commands(std::vector<std::string> strv) {};
+  virtual void run_commands(std::vector<std::string> strv){};
 
-  virtual void setup(double r, double T){
-    // Includes call to populate(r);
-    //cmd = "run 0";
-    //run_commands(params->Parse(cmd));
-    //refE = getEnergy();
-  };
+  virtual void setup(double r, double T){};
 
-  virtual double thermalize() {
-    // returns effective temperature
-  };
+  virtual double thermalize(){};
 
-  virtual double sample(std::vector<double> &results) {};
+  virtual double sample(std::vector<double> &results){};
 
   virtual double getEnergy(){};
 
-  virtual void close() {};
+  virtual void close(){};
 
-  virtual void populate(double r) {};
+  virtual void populate(double r){};
 
   // LAMMPS INDEPENDENT
-
   virtual void make_path(std::vector<std::string> knot_list) {
     int nknots = knot_list.size();
     // no way around it- have to store all the knots
@@ -97,10 +89,8 @@ public:
     knots.clear(); // delete knot array
   };
 
-
   virtual void evaluate(std::vector<double> &results) {
     // Rescale, establish hp fix
-    std::cout<<"ENERGY: ";
     getEnergy();
   };
 

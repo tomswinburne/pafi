@@ -59,11 +59,30 @@ make yes-package_name
    ./b2 install
 ```
 
-## Compiling PAFI
-1. Change location to pafi build folder
-2. Specify PREFIX environment variable in makefile on command line:
+## Compiling PAFI with cmake (recommended)
+1. Specify environment variables in CMakeLists.txt:
 ```
-   make -e "PREFIX=${HOME}/.local"
+   set(CMAKE_INCLUDE_PATH ${HOME}/.local/include)
+   set(CMAKE_LIBRARY_PATH ${HOME}/.local/lib)
+   set(CMAKE_CXX_COMPILER ${HOME}/.local/bin/mpicxx)
+   set(CMAKE_C_COMPILER ${HOME}/.local/bin/mpicc)
+```
+2. Make pafi build folder and run cmake
+```
+   mkdir build
+   cd build
+   cmake ..
+```
+## Compiling PAFI with make (doesn't run configure)
+1. Specify environment variables with PREFIX
+```
+   PREFIX=${HOME}/.local/
+```
+2. Make pafi build folder and run make
+```
+   mkdir build
+   cd build
+   make -f../makefile
 ```
 
 ## Calculation of free energy barrier between states
@@ -80,7 +99,9 @@ write_data neb_knot_file.$u
 ```
 3. Move the knots to folder and include and configure the configuratio xml file, as shown in the examples
 
-4. Run PAFI as e.g.
+4. Move run.sh to run directory and change path for pafi binary soft link
+
+5. Run PAFI as e.g.
 ```
 mpirun -np NPROCS ./pafi
 ```

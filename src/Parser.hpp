@@ -1,8 +1,5 @@
-
-
 #ifndef PARSER_H
 #define PARSER_H
-
 
 // remove trailing whitespace - avoids RapidXML parsing bug
 std::string rtws(std::string s) {
@@ -89,7 +86,7 @@ std::vector<std::string> Parse(std::string r) {
   std::string key="%RANDOM%";
 	while(not boost::find_first(raw, key).empty()) {
 		int r=d(rng);
-		std::string s=boost::str(boost::format("%1%" ) % r );
+		std::string s=boost::lexical_cast<std::string>(boost::format("%1%" ) % r );
 		boost::replace_first(raw, key, s);
 	}
   // Split Lines and remove trailing whitespace
