@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Expand the tarball in this folder 
+# Expand the tarball in this folder
 #	 tar -xvf Fe_dumbell_example_data.tar.gz
 
 # Adjust the environment variables in this file

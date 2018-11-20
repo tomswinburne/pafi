@@ -7,8 +7,6 @@ public:
   GeneralSimulator (MPI_Comm &instance_comm, Parser &p, int rank) {
     tag = rank;
     params = &p;
-    scale = 1.;
-    fixhp = false;
     // set up SIMULATOR, pbc
   };
 
@@ -30,7 +28,21 @@ public:
 
   virtual void populate(double r){};
 
+  virtual void rescale_cell(double scale){};
+
+  virtual void sample(double r, double T, std::vector<double> &results){};
+
   // LAMMPS INDEPENDENT
+
+  virtual double expansion(double T) {
+    double coeff,new_scale = 1.0;
+    coeff = boost::lexical_cast<double>(params->parameters["Linear"]);
+    new_scale += coeff*T;
+    coeff = boost::lexical_cast<double>(params->parameters["Quadratic"]);
+    new_scale += coeff*T*T;
+    return new_scale;
+  }
+
   virtual void make_path(std::vector<std::string> knot_list) {
     int nknots = knot_list.size();
     // no way around it- have to store all the knots
@@ -94,14 +106,29 @@ public:
     getEnergy();
   };
 
-  double scale, position, temperature, refE, norm_mag;
+  double refE;
   int natoms, tag, nknots;
-  bool fixhp;
   MinImage pbc;
   Parser *params;
   std::vector<spline::spline> pathway;
 private:
   /* nothing */
 };
+
+/*
+std::ofstream out; std::string fn;
+fn = "PathNorm.dat";
+out.open(fn.c_str(),std::ofstream::out);
+for(int i=0;i<natoms;i++) {
+  out<<i<<" ";
+  for(int j=0;j<3;j++) out<<s[3*i+j]<<" ";
+  for(int j=0;j<3;j++) out<<t[3*i+j]<<" ";
+  for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" ";
+  for(int j=0;j<3;j++) out<<(pathway[3*i+j].deriv(1,r)-ncom[j])/norm_mag<<" ";
+  out<<"\n";
+}
+out.close();
+*/
+
 
 #endif
