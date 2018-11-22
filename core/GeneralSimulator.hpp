@@ -1,14 +1,20 @@
 #ifndef SIM_H
 #define SIM_H
 
+#include <mpi.h>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <boost/lexical_cast.hpp>
+
+#include "Parser.hpp"
+#include "Boundary.hpp"
+
+#include "Spline.hpp"
+
 class GeneralSimulator {
 
 public:
-  GeneralSimulator (MPI_Comm &instance_comm, Parser &p, int rank) {
-    tag = rank;
-    params = &p;
-    // set up SIMULATOR, pbc
-  };
 
   virtual void load_config(std::string file_string,std::vector<double> &x){};
 
@@ -34,101 +40,22 @@ public:
 
   // LAMMPS INDEPENDENT
 
-  virtual double expansion(double T) {
-    double coeff,new_scale = 1.0;
-    coeff = boost::lexical_cast<double>(params->parameters["Linear"]);
-    new_scale += coeff*T;
-    coeff = boost::lexical_cast<double>(params->parameters["Quadratic"]);
-    new_scale += coeff*T*T;
-    return new_scale;
-  }
+  void write(double r,std::string fn);
 
-  virtual void make_path(std::vector<std::string> knot_list) {
-    int nknots = knot_list.size();
-    // no way around it- have to store all the knots
-    std::vector<double> x(3*natoms);
-    std::vector<double> xs(nknots,0.), ys(nknots,0.), zs(nknots,0.);
-    std::vector<double> r(nknots,0.), rr(nknots,0.);
-    std::vector<double> knots(3*natoms*nknots,0.);
-    spline::spline xspl,yspl,zspl;
-    double dx;
+  double expansion(double T);
 
-    // run through knots, and make spline
-    load_config(knot_list[0],x);
+  void make_path(std::vector<std::string> knot_list);
 
-    for(int i=0;i<3*natoms;i++) knots[i] = x[i];
-
-    for(int knot=1;knot<nknots;knot++) {
-      load_config(knot_list[knot],x);
-      for(int i=0;i<3*natoms;i++) x[i]-=knots[i];
-      pbc.wrap(x);
-      for(int i=0;i<3*natoms;i++) {
-        knots[i+knot*3*natoms] = x[i]+knots[i];
-      }
-    }
-
-    for(int knot=0;knot<nknots;knot++) {
-      r[knot] = 0.;
-      rr[knot] = 0.;
-      for(int i=0;i<3*natoms;i++) {
-        dx = knots[i+knot*3*natoms]-knots[i];
-        r[knot] += dx*dx;
-        dx = knots[i+knot*3*natoms]-knots[i+(nknots-1)*3*natoms];
-        rr[knot] += dx*dx;
-      }
-    }
-    for(int knot=0;knot<nknots-1;knot++) r[knot] = sqrt(r[knot]/r[nknots-1]);
-    for(int knot=1;knot<nknots;knot++) rr[knot] = sqrt(rr[knot]/rr[0]);
-    rr[0] = 1.0;
-    r[nknots-1] = 1.0;
-    for(int knot=0;knot<nknots;knot++) r[knot] = 0.5*r[knot]+0.5-0.5*rr[knot];
-    for(int i=0; i<natoms; i++) {
-      for(int knot=0;knot<nknots;knot++) {
-        xs[knot] = knots[3*natoms*knot + 3*i+0];
-        ys[knot] = knots[3*natoms*knot + 3*i+1];
-        zs[knot] = knots[3*natoms*knot + 3*i+2];
-      }
-
-      xspl.set_points(r,xs);
-      pathway.push_back(xspl);
-
-      yspl.set_points(r,ys);
-      pathway.push_back(yspl);
-
-      zspl.set_points(r,zs);
-      pathway.push_back(zspl);
-    }
-    knots.clear(); // delete knot array
-  };
-
-  virtual void evaluate(std::vector<double> &results) {
-    // Rescale, establish hp fix
-    getEnergy();
-  };
+  void evaluate(std::vector<double> &results);
 
   double refE;
   int natoms, tag, nknots;
   MinImage pbc;
   Parser *params;
-  std::vector<spline::spline> pathway;
+  std::vector<spline> pathway;
 private:
   /* nothing */
 };
-
-/*
-std::ofstream out; std::string fn;
-fn = "PathNorm.dat";
-out.open(fn.c_str(),std::ofstream::out);
-for(int i=0;i<natoms;i++) {
-  out<<i<<" ";
-  for(int j=0;j<3;j++) out<<s[3*i+j]<<" ";
-  for(int j=0;j<3;j++) out<<t[3*i+j]<<" ";
-  for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" ";
-  for(int j=0;j<3;j++) out<<(pathway[3*i+j].deriv(1,r)-ncom[j])/norm_mag<<" ";
-  out<<"\n";
-}
-out.close();
-*/
 
 
 #endif

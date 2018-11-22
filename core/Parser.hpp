@@ -1,15 +1,23 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-// remove trailing whitespace - avoids RapidXML parsing bug
-std::string rtws(std::string s) {
-	int bws=0,ews=0;
-	for(auto c=s.begin();c!=s.end();c++,bws++)
-		if(!std::isspace(*c)) break;
-	for(auto c=std::prev(s.end());c!=s.begin();c--,ews++)
-		if(!std::isspace(*c)) break;
-	return s.substr(bws,s.length()-ews-bws);
-}
+#include <vector>
+#include <string>
+
+
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+#include <boost/property_tree/info_parser.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/random/random_device.hpp>
+#include <boost/random.hpp>
+//#include <boost/timer/timer.hpp>
+#include <boost/foreach.hpp>
+
+
+
 
 // Loads config file, lammps scripts etc
 class Parser {
@@ -64,6 +72,16 @@ Parser(std::string file) {
 		scripts[key] = tree.get<std::string>("PAFI.Scripts."+v.first);
 	}
 
+};
+
+// remove trailing whitespace - avoids RapidXML parsing bug
+std::string rtws(std::string s) {
+	int bws=0,ews=0;
+	for(auto c=s.begin();c!=s.end();c++,bws++)
+		if(!std::isspace(*c)) break;
+	for(auto c=std::prev(s.end());c!=s.begin();c--,ews++)
+		if(!std::isspace(*c)) break;
+	return s.substr(bws,s.length()-ews-bws);
 };
 
 

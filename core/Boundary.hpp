@@ -1,6 +1,17 @@
 #ifndef PBC_H
 #define PBC_H
 
+
+#include <vector>
+#include <string>
+#include <array>
+
+#include <Eigen/Dense> // For Supercell and Hessian
+
+#include "lammps/lammps.h"
+#include "lammps/library.h"
+
+
 class MinImage {
 public:
   std::array< std::array<double,3>, 3 > cell;

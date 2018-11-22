@@ -24,25 +24,28 @@ int main(int narg, char **arg)
   if(rank==0) std::cout<<"sim LOADED\n";
 
   sim.make_path(params.KnotList);
-  if(rank==0) std::cout<<"PATH MADE\n";
+
   std::vector<double> results, deviation;
   double T = boost::lexical_cast<double>(params.parameters["LowTemperature"]);
-  double r = boost::lexical_cast<double>(params.parameters["position"]);
-  sim.sample(r,T,results,deviation);
-  if(rank==0) {
-    std::cout<<"SAMPLED: r:"<<r<<" T:"<<T<<"\n";
-    for(auto rr: results) std::cout<<rr<<" ";
-    std::cout<<std::endl;
-  }
-  r += 0.1;
-  sim.sample(r,T,results,deviation);
-  if(rank==0) {
-    std::cout<<"SAMPLED: r:"<<r<<" T:"<<T<<"\n";
-    for(auto rr: results) std::cout<<rr<<" ";
-    std::cout<<std::endl;
+  //double r = boost::lexical_cast<double>(params.parameters["position"]);
+
+  for (double r=0.0; r<=1.0; r+=0.1 ) {
+    sim.sample(r,T,results,deviation);
+    if (rank==0) {
+      sim.write(r,"PDN_"+boost::lexical_cast<std::string>(r));
+      std::cout<<"SAMPLED: r:"<<r<<" T:"<<T<<"\n";
+      for(auto rr: results) std::cout<<rr<<" ";
+      std::cout<<std::endl;
+    }
   }
 
-
+  // r += 0.1;
+  // sim.sample(r,T,results,deviation);
+  // if(rank==0) {
+  //   std::cout<<"SAMPLED: r:"<<r<<" T:"<<T<<"\n";
+  //   for(auto rr: results) std::cout<<rr<<" ";
+  //   std::cout<<std::endl;
+  // }
   // close down LAMMPS instances
   sim.close();
 
