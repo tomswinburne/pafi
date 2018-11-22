@@ -26,7 +26,7 @@ int main(int narg, char **arg) {
 
   std::vector<double> results, deviation;
   double T = boost::lexical_cast<double>(params.parameters["LowTemperature"]);
-  for (double r=0.4; r<=.45; r+=0.1 ) {
+  for (double r=0.005; r<=1.; r+=0.1 ) {
     sim.sample(r,T,results,deviation);
     if (rank==0) {
       sim.write(r,"PDN_"+boost::lexical_cast<std::string>(r));

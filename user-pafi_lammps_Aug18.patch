@@ -1,6 +1,6 @@
-diff -ruN src/atom.cpp new_src/atom.cpp
+diff -ruN src/atom.cpp clean_src/atom.cpp
 --- src/atom.cpp	2018-11-13 15:33:50.822074235 +0100
-+++ new_src/atom.cpp	2018-11-15 17:07:50.521597747 +0100
++++ clean_src/atom.cpp	2018-11-22 17:56:41.530955101 +0100
 @@ -99,7 +99,12 @@
    // SPIN package
  
@@ -55,9 +55,9 @@ diff -ruN src/atom.cpp new_src/atom.cpp
    if (strcmp(name,"molecule") == 0) return (void *) molecule;
    if (strcmp(name,"q") == 0) return (void *) q;
    if (strcmp(name,"mu") == 0) return (void *) mu;
-diff -ruN src/atom.h new_src/atom.h
+diff -ruN src/atom.h clean_src/atom.h
 --- src/atom.h	2018-11-13 15:33:50.822074235 +0100
-+++ new_src/atom.h	2018-11-15 17:07:50.521597747 +0100
++++ clean_src/atom.h	2018-11-22 17:56:41.530955101 +0100
 @@ -71,6 +71,11 @@
    double *vfrac,*s0;
    double **x0;
@@ -70,1439 +70,139 @@ diff -ruN src/atom.h new_src/atom.h
    // USER-EFF and USER-AWPMD packages
  
    int *spin;
-diff -ruN src/lmpinstalledpkgs.h new_src/lmpinstalledpkgs.h
---- src/lmpinstalledpkgs.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/lmpinstalledpkgs.h	2018-11-15 17:10:30.337605367 +0100
-@@ -0,0 +1,7 @@
-+#ifndef LMP_INSTALLED_PKGS_H
-+#define LMP_INSTALLED_PKGS_H
-+const char * LAMMPS_NS::LAMMPS::installed_packages[] = {
-+"MANYBODY",
-+"USER-PAFI",
-+ NULL };
-+#endif
-Binary files src/lmp_mpi and new_src/lmp_mpi differ
-diff -ruN src/Makefile new_src/Makefile
---- src/Makefile	2018-11-13 15:33:48.422038973 +0100
-+++ new_src/Makefile	2018-11-15 17:08:47.593600468 +0100
-@@ -61,7 +61,7 @@
- 	   user-diffraction user-dpd user-drude user-eff user-fep user-h5md \
- 	   user-intel user-lb user-manifold user-meamc user-meso \
- 	   user-mgpt user-misc user-mofff user-molfile \
--	   user-netcdf user-omp user-phonon user-qmmm user-qtb \
-+	   user-netcdf user-omp user-pafi user-phonon user-qmmm user-qtb \
- 	   user-quip user-reaxc user-smd user-smtbq user-sph user-tally \
- 	   user-uef user-vtk
+diff -ruN src/library.cpp clean_src/library.cpp
+--- src/library.cpp	2018-11-13 15:33:50.870074937 +0100
++++ clean_src/library.cpp	2018-11-22 17:56:23.334728635 +0100
+@@ -906,6 +906,83 @@
+   END_CAPTURE
+ }
  
-Binary files src/Obj_mpi/angle_hybrid.o and new_src/Obj_mpi/angle_hybrid.o differ
-Binary files src/Obj_mpi/angle.o and new_src/Obj_mpi/angle.o differ
-Binary files src/Obj_mpi/angle_zero.o and new_src/Obj_mpi/angle_zero.o differ
-Binary files src/Obj_mpi/atom_map.o and new_src/Obj_mpi/atom_map.o differ
-Binary files src/Obj_mpi/atom.o and new_src/Obj_mpi/atom.o differ
-Binary files src/Obj_mpi/atom_vec_atomic.o and new_src/Obj_mpi/atom_vec_atomic.o differ
-Binary files src/Obj_mpi/atom_vec_body.o and new_src/Obj_mpi/atom_vec_body.o differ
-Binary files src/Obj_mpi/atom_vec_charge.o and new_src/Obj_mpi/atom_vec_charge.o differ
-Binary files src/Obj_mpi/atom_vec_ellipsoid.o and new_src/Obj_mpi/atom_vec_ellipsoid.o differ
-Binary files src/Obj_mpi/atom_vec_hybrid.o and new_src/Obj_mpi/atom_vec_hybrid.o differ
-Binary files src/Obj_mpi/atom_vec_line.o and new_src/Obj_mpi/atom_vec_line.o differ
-Binary files src/Obj_mpi/atom_vec.o and new_src/Obj_mpi/atom_vec.o differ
-Binary files src/Obj_mpi/atom_vec_pafi.o and new_src/Obj_mpi/atom_vec_pafi.o differ
-Binary files src/Obj_mpi/atom_vec_sphere.o and new_src/Obj_mpi/atom_vec_sphere.o differ
-Binary files src/Obj_mpi/atom_vec_tri.o and new_src/Obj_mpi/atom_vec_tri.o differ
-Binary files src/Obj_mpi/balance.o and new_src/Obj_mpi/balance.o differ
-Binary files src/Obj_mpi/body.o and new_src/Obj_mpi/body.o differ
-Binary files src/Obj_mpi/bond_hybrid.o and new_src/Obj_mpi/bond_hybrid.o differ
-Binary files src/Obj_mpi/bond.o and new_src/Obj_mpi/bond.o differ
-Binary files src/Obj_mpi/bond_zero.o and new_src/Obj_mpi/bond_zero.o differ
-Binary files src/Obj_mpi/change_box.o and new_src/Obj_mpi/change_box.o differ
-Binary files src/Obj_mpi/citeme.o and new_src/Obj_mpi/citeme.o differ
-Binary files src/Obj_mpi/comm_brick.o and new_src/Obj_mpi/comm_brick.o differ
-Binary files src/Obj_mpi/comm.o and new_src/Obj_mpi/comm.o differ
-Binary files src/Obj_mpi/comm_tiled.o and new_src/Obj_mpi/comm_tiled.o differ
-Binary files src/Obj_mpi/compute_aggregate_atom.o and new_src/Obj_mpi/compute_aggregate_atom.o differ
-Binary files src/Obj_mpi/compute_angle_local.o and new_src/Obj_mpi/compute_angle_local.o differ
-Binary files src/Obj_mpi/compute_angle.o and new_src/Obj_mpi/compute_angle.o differ
-Binary files src/Obj_mpi/compute_angmom_chunk.o and new_src/Obj_mpi/compute_angmom_chunk.o differ
-Binary files src/Obj_mpi/compute_bond_local.o and new_src/Obj_mpi/compute_bond_local.o differ
-Binary files src/Obj_mpi/compute_bond.o and new_src/Obj_mpi/compute_bond.o differ
-Binary files src/Obj_mpi/compute_centro_atom.o and new_src/Obj_mpi/compute_centro_atom.o differ
-Binary files src/Obj_mpi/compute_chunk_atom.o and new_src/Obj_mpi/compute_chunk_atom.o differ
-Binary files src/Obj_mpi/compute_cluster_atom.o and new_src/Obj_mpi/compute_cluster_atom.o differ
-Binary files src/Obj_mpi/compute_cna_atom.o and new_src/Obj_mpi/compute_cna_atom.o differ
-Binary files src/Obj_mpi/compute_com_chunk.o and new_src/Obj_mpi/compute_com_chunk.o differ
-Binary files src/Obj_mpi/compute_com.o and new_src/Obj_mpi/compute_com.o differ
-Binary files src/Obj_mpi/compute_contact_atom.o and new_src/Obj_mpi/compute_contact_atom.o differ
-Binary files src/Obj_mpi/compute_coord_atom.o and new_src/Obj_mpi/compute_coord_atom.o differ
-Binary files src/Obj_mpi/compute_dihedral_local.o and new_src/Obj_mpi/compute_dihedral_local.o differ
-Binary files src/Obj_mpi/compute_dihedral.o and new_src/Obj_mpi/compute_dihedral.o differ
-Binary files src/Obj_mpi/compute_dipole_chunk.o and new_src/Obj_mpi/compute_dipole_chunk.o differ
-Binary files src/Obj_mpi/compute_displace_atom.o and new_src/Obj_mpi/compute_displace_atom.o differ
-Binary files src/Obj_mpi/compute_erotate_sphere_atom.o and new_src/Obj_mpi/compute_erotate_sphere_atom.o differ
-Binary files src/Obj_mpi/compute_erotate_sphere.o and new_src/Obj_mpi/compute_erotate_sphere.o differ
-Binary files src/Obj_mpi/compute_fragment_atom.o and new_src/Obj_mpi/compute_fragment_atom.o differ
-Binary files src/Obj_mpi/compute_global_atom.o and new_src/Obj_mpi/compute_global_atom.o differ
-Binary files src/Obj_mpi/compute_group_group.o and new_src/Obj_mpi/compute_group_group.o differ
-Binary files src/Obj_mpi/compute_gyration_chunk.o and new_src/Obj_mpi/compute_gyration_chunk.o differ
-Binary files src/Obj_mpi/compute_gyration.o and new_src/Obj_mpi/compute_gyration.o differ
-Binary files src/Obj_mpi/compute_heat_flux.o and new_src/Obj_mpi/compute_heat_flux.o differ
-Binary files src/Obj_mpi/compute_hexorder_atom.o and new_src/Obj_mpi/compute_hexorder_atom.o differ
-Binary files src/Obj_mpi/compute_improper_local.o and new_src/Obj_mpi/compute_improper_local.o differ
-Binary files src/Obj_mpi/compute_improper.o and new_src/Obj_mpi/compute_improper.o differ
-Binary files src/Obj_mpi/compute_inertia_chunk.o and new_src/Obj_mpi/compute_inertia_chunk.o differ
-Binary files src/Obj_mpi/compute_ke_atom.o and new_src/Obj_mpi/compute_ke_atom.o differ
-Binary files src/Obj_mpi/compute_ke.o and new_src/Obj_mpi/compute_ke.o differ
-Binary files src/Obj_mpi/compute_msd_chunk.o and new_src/Obj_mpi/compute_msd_chunk.o differ
-Binary files src/Obj_mpi/compute_msd.o and new_src/Obj_mpi/compute_msd.o differ
-Binary files src/Obj_mpi/compute.o and new_src/Obj_mpi/compute.o differ
-Binary files src/Obj_mpi/compute_omega_chunk.o and new_src/Obj_mpi/compute_omega_chunk.o differ
-Binary files src/Obj_mpi/compute_orientorder_atom.o and new_src/Obj_mpi/compute_orientorder_atom.o differ
-Binary files src/Obj_mpi/compute_pair_local.o and new_src/Obj_mpi/compute_pair_local.o differ
-Binary files src/Obj_mpi/compute_pair.o and new_src/Obj_mpi/compute_pair.o differ
-Binary files src/Obj_mpi/compute_pe_atom.o and new_src/Obj_mpi/compute_pe_atom.o differ
-Binary files src/Obj_mpi/compute_pe.o and new_src/Obj_mpi/compute_pe.o differ
-Binary files src/Obj_mpi/compute_pressure.o and new_src/Obj_mpi/compute_pressure.o differ
-Binary files src/Obj_mpi/compute_property_atom.o and new_src/Obj_mpi/compute_property_atom.o differ
-Binary files src/Obj_mpi/compute_property_chunk.o and new_src/Obj_mpi/compute_property_chunk.o differ
-Binary files src/Obj_mpi/compute_property_local.o and new_src/Obj_mpi/compute_property_local.o differ
-Binary files src/Obj_mpi/compute_rdf.o and new_src/Obj_mpi/compute_rdf.o differ
-Binary files src/Obj_mpi/compute_reduce.o and new_src/Obj_mpi/compute_reduce.o differ
-Binary files src/Obj_mpi/compute_reduce_region.o and new_src/Obj_mpi/compute_reduce_region.o differ
-Binary files src/Obj_mpi/compute_slice.o and new_src/Obj_mpi/compute_slice.o differ
-Binary files src/Obj_mpi/compute_stress_atom.o and new_src/Obj_mpi/compute_stress_atom.o differ
-Binary files src/Obj_mpi/compute_temp_chunk.o and new_src/Obj_mpi/compute_temp_chunk.o differ
-Binary files src/Obj_mpi/compute_temp_com.o and new_src/Obj_mpi/compute_temp_com.o differ
-Binary files src/Obj_mpi/compute_temp_deform.o and new_src/Obj_mpi/compute_temp_deform.o differ
-Binary files src/Obj_mpi/compute_temp.o and new_src/Obj_mpi/compute_temp.o differ
-Binary files src/Obj_mpi/compute_temp_partial.o and new_src/Obj_mpi/compute_temp_partial.o differ
-Binary files src/Obj_mpi/compute_temp_profile.o and new_src/Obj_mpi/compute_temp_profile.o differ
-Binary files src/Obj_mpi/compute_temp_ramp.o and new_src/Obj_mpi/compute_temp_ramp.o differ
-Binary files src/Obj_mpi/compute_temp_region.o and new_src/Obj_mpi/compute_temp_region.o differ
-Binary files src/Obj_mpi/compute_temp_sphere.o and new_src/Obj_mpi/compute_temp_sphere.o differ
-Binary files src/Obj_mpi/compute_torque_chunk.o and new_src/Obj_mpi/compute_torque_chunk.o differ
-Binary files src/Obj_mpi/compute_vacf.o and new_src/Obj_mpi/compute_vacf.o differ
-Binary files src/Obj_mpi/compute_vcm_chunk.o and new_src/Obj_mpi/compute_vcm_chunk.o differ
-Binary files src/Obj_mpi/create_atoms.o and new_src/Obj_mpi/create_atoms.o differ
-Binary files src/Obj_mpi/create_bonds.o and new_src/Obj_mpi/create_bonds.o differ
-Binary files src/Obj_mpi/create_box.o and new_src/Obj_mpi/create_box.o differ
-Binary files src/Obj_mpi/delete_atoms.o and new_src/Obj_mpi/delete_atoms.o differ
-Binary files src/Obj_mpi/delete_bonds.o and new_src/Obj_mpi/delete_bonds.o differ
-diff -ruN src/Obj_mpi/.depend new_src/Obj_mpi/.depend
---- src/Obj_mpi/.depend	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/Obj_mpi/.depend	2018-11-15 18:43:06.404068493 +0100
-@@ -0,0 +1,397 @@
-+# FastDep v2.1 for LAMMPS
-+# Search path: .:..
-+#   393 sources
-+#   426 includes
-+#   801 depfiles
-+nstencil_full_ghost_bin_3d.o : ../nstencil_full_ghost_bin_3d.cpp ../neighbor.h ../pointers.h ../lammps.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../nstencil_full_ghost_bin_3d.h ../nstencil.h
-+pair_lj_smooth_linear.o : ../pair_lj_smooth_linear.cpp ../force.h ../pointers.h ../lammps.h ../pair_lj_smooth_linear.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h
-+fix_drag.o : ../fix_drag.cpp ../force.h ../pointers.h ../lammps.h ../fix_drag.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../lmptype.h ../domain.h ../atom.h ../error.h
-+pair_lcbop.o : ../pair_lcbop.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../pair_lcbop.h ../neigh_request.h ../error.h ../memory.h ../math_const.h
-+ntopo_dihedral_all.o : ../ntopo_dihedral_all.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../ntopo.h ../update.h ../lmpwindows.h ../output.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../error.h ../memory.h ../ntopo_dihedral_all.h
-+pair_dpd.o : ../pair_dpd.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../random_mars.h ../lmptype.h ../atom.h ../comm.h ../atom_vec.h ../error.h ../pair_dpd.h ../memory.h
-+library.o : ../library.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../output.h ../modify.h ../thermo.h ../lmptype.h ../library.h ../domain.h ../input.h ../atom.h ../comm.h ../universe.h ../atom_vec.h ../variable.h ../info.h ../error.h ../compute.h ../memory.h ../group.h
-+pair_lj_gromacs.o : ../pair_lj_gromacs.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair_lj_gromacs.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h
-+pair_lj_cut_coul_dsf.o : ../pair_lj_cut_coul_dsf.cpp ../pair_lj_cut_coul_dsf.h ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h ../math_const.h
-+compute_temp_sphere.o : ../compute_temp_sphere.cpp ../force.h ../pointers.h ../lammps.h ../compute_temp_sphere.h ../exceptions.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_vec.h ../error.h ../compute.h ../group.h
-+npair_full_multi.o : ../npair_full_multi.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../npair.h ../molecule.h ../atom_vec.h ../npair_full_multi.h ../error.h
-+compute_cna_atom.o : ../compute_cna_atom.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h ../compute.h ../compute_cna_atom.h
-+fix_gravity.o : ../fix_gravity.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../modify.h ../lmptype.h ../fix_gravity.h ../domain.h ../atom.h ../input.h ../variable.h ../error.h ../math_const.h
-+fix_temp_csld.o : ../fix_temp_csld.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../fix_temp_csld.h ../lmpwindows.h ../random_mars.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../input.h ../variable.h ../error.h ../memory.h ../compute.h ../group.h
-+compute_msd_chunk.o : ../compute_msd_chunk.cpp ../compute_chunk_atom.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../compute_msd_chunk.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../fix_store.h ../domain.h ../atom.h ../error.h ../compute.h ../memory.h ../group.h
-+nstencil_half_multi_2d_newton_tri.o : ../nstencil_half_multi_2d_newton_tri.cpp ../neighbor.h ../pointers.h ../lammps.h ../neigh_list.h ../my_page.h ../nstencil_half_multi_2d_newton_tri.h ../lmpwindows.h ../lmptype.h ../atom.h ../nstencil.h
-+write_dump.o : ../write_dump.cpp ../pointers.h ../lammps.h ../dump_dcd.h ../exceptions.h ../dump_image.h ../dump_custom.h ../update.h ../lmpwindows.h ../dump.h ../lmptype.h ../dump_cfg.h ../atom.h ../comm.h ../input.h ../dump_movie.h ../write_dump.h ../dump_atom.h ../dump_local.h ../dump_xyz.h ../error.h ../style_dump.h ../group.h
-+reset_ids.o : ../reset_ids.cpp ../special.h ../reset_ids.h ../pointers.h ../lammps.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_vec.h ../error.h ../memory.h
-+compute_omega_chunk.o : ../compute_omega_chunk.cpp ../compute_chunk_atom.h ../compute_omega_chunk.h ../pointers.h ../lammps.h ../math_extra.h ../exceptions.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../error.h ../compute.h ../memory.h
-+compute_rdf.o : ../compute_rdf.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../compute_rdf.h ../compute.h ../memory.h ../math_const.h ../group.h
-+ntopo_improper_template.o : ../ntopo_improper_template.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../ntopo.h ../update.h ../lmpwindows.h ../ntopo_improper_template.h ../output.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../molecule.h ../atom_vec.h ../error.h ../memory.h
-+compute_coord_atom.o : ../compute_coord_atom.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../compute_orientorder_atom.h ../neigh_request.h ../error.h ../compute.h ../memory.h ../compute_coord_atom.h
-+fix_tmd.o : ../fix_tmd.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../modify.h ../fix_tmd.h ../lmptype.h ../domain.h ../atom.h ../error.h ../memory.h ../group.h
-+input.o : ../input.cpp ../special.h ../reset_ids.h ../force.h ../neighbor.h ../delete_atoms.h ../pointers.h ../lammps.h ../write_coeff.h ../pair.h ../improper.h ../delete_bonds.h ../exceptions.h ../angle.h ../dihedral.h ../balance.h ../update.h ../create_bonds.h ../fix.h ../lmpwindows.h ../style_command.h ../replicate.h ../run.h ../output.h ../timer.h ../modify.h ../accelerator_kokkos.h ../thermo.h ../lmptype.h ../domain.h ../create_atoms.h ../read_data.h ../atom.h ../comm.h ../input.h ../write_dump.h ../universe.h ../displace_atoms.h ../minimize.h ../comm_brick.h ../atom_vec.h ../change_box.h ../read_dump.h ../bond.h ../info.h ../read_restart.h ../variable.h ../rerun.h ../min.h ../create_box.h ../write_data.h ../error.h ../write_restart.h ../comm_tiled.h ../memory.h ../compute.h ../velocity.h ../kspace.h ../set.h ../group.h
-+compute_property_local.o : ../compute_property_local.cpp ../compute_property_local.h ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../lmptype.h ../atom.h ../atom_vec.h ../neigh_request.h ../error.h ../compute.h ../memory.h
-+create_atoms.o : ../create_atoms.cpp ../special.h ../force.h ../pointers.h ../lammps.h ../math_extra.h ../exceptions.h ../fix.h ../lmpwindows.h ../random_mars.h ../modify.h ../lmptype.h ../domain.h ../create_atoms.h ../atom.h ../comm.h ../input.h ../region.h ../molecule.h ../atom_vec.h ../variable.h ../irregular.h ../error.h ../compute.h ../random_park.h ../math_const.h ../lattice.h
-+compute_angle_local.o : ../compute_angle_local.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../angle.h ../update.h ../compute_angle_local.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../molecule.h ../atom_vec.h ../error.h ../compute.h ../memory.h ../math_const.h
-+region_plane.o : ../region_plane.cpp ../region_plane.h ../force.h ../pointers.h ../lammps.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../region.h ../error.h
-+npair_half_nsq_newton.o : ../npair_half_nsq_newton.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../npair.h ../molecule.h ../atom_vec.h ../error.h ../npair_half_nsq_newton.h ../group.h
-+npair_halffull_newton.o : ../npair_halffull_newton.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../npair.h ../molecule.h ../npair_halffull_newton.h ../atom_vec.h ../error.h
-+pair_lj_cut.o : ../pair_lj_cut.cpp ../force.h ../pair_lj_cut.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../respa.h ../lmpwindows.h ../integrate.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h ../math_const.h
-+force.o : ../force.cpp ../angle_zero.h ../style_improper.h ../pair_bop.h ../style_pair.h ../improper_hybrid.h ../pair_lj_cut_coul_dsf.h ../pair_soft.h ../pair_yukawa.h ../force.h ../style_dihedral.h ../pair_lj_cut.h ../style_kspace.h ../pair_lj_expand.h ../pair_lj_gromacs_coul_gromacs.h ../pair_zbl.h ../pointers.h ../lammps.h ../pair_lj_smooth_linear.h ../pair_nb3b_harmonic.h ../pair_born_coul_dsf.h ../pair_gauss.h ../pair_lj_gromacs.h ../improper.h ../pair.h ../pair_coul_dsf.h ../pair_lj_cubic.h ../exceptions.h ../bond_hybrid.h ../angle.h ../pair_gw.h ../pair_polymorphic.h ../dihedral.h ../pair_lj_cut_coul_debye.h ../my_page.h ../update.h ../pair_tersoff.h ../pair_zero.h ../pair_beck.h ../pair_eim.h ../pair_mie_cut.h ../pair_born.h ../pair_rebo.h ../pair_eam_alloy.h ../pair_hybrid_overlay.h ../pair_lj_smooth.h ../lmpwindows.h ../pair_tersoff_zbl.h ../pair_hybrid.h ../pair_born_coul_wolf.h ../pair_coul_wolf.h ../pair_eam_cd.h ../pair_airebo.h ../style_angle.h ../lmptype.h ../pair_eam.h ../pair_coul_cut.h ../pair_dpd_tstat.h ../pair_eam_fs.h ../dihedral_hybrid.h ../atom.h ../comm.h ../pair_comb.h ../pair_lcbop.h ../pair_coul_debye.h ../angle_hybrid.h ../style_bond.h ../pair_tersoff_mod_c.h ../bond.h ../pair_buck_coul_cut.h ../pair_lj96_cut.h ../pair_table.h ../pair_vashishta.h ../pair_gw_zbl.h ../dihedral_zero.h ../improper_zero.h ../pair_airebo_morse.h ../pair_sw.h ../pair_adp.h ../pair_comb3.h ../error.h ../pair_lj_cut_coul_cut.h ../pair_coul_streitz.h ../pair_ufm.h ../pair_vashishta_table.h ../pair_dpd.h ../pair_buck.h ../memory.h ../math_const.h ../pair_morse.h ../bond_zero.h ../kspace.h ../pair_lj_cut_coul_wolf.h ../pair_tersoff_mod.h ../group.h
-+ntopo_bond_partial.o : ../ntopo_bond_partial.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../ntopo.h ../update.h ../lmpwindows.h ../output.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../error.h ../memory.h ../ntopo_bond_partial.h
-+fix_wall_region.o : ../fix_wall_region.cpp ../force.h ../pointers.h ../lammps.h ../fix_wall_region.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../output.h ../lmptype.h ../domain.h ../atom.h ../region.h ../atom_vec.h ../error.h ../math_const.h ../lattice.h
-+fix_ave_chunk.o : ../fix_ave_chunk.cpp ../compute_chunk_atom.h ../force.h ../pointers.h ../lammps.h ../fix_ave_chunk.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../input.h ../variable.h ../error.h ../compute.h ../memory.h
-+pair_lj_expand.o : ../pair_lj_expand.cpp ../force.h ../pair_lj_expand.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h ../math_const.h
-+min_fire.o : ../min_fire.cpp ../min_fire.h ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../output.h ../timer.h ../lmptype.h ../atom.h ../universe.h ../min.h ../error.h
-+fix_store_state.o : ../fix_store_state.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../input.h ../variable.h ../error.h ../fix_store_state.h ../compute.h ../memory.h ../group.h
-+output.o : ../output.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../dump_dcd.h ../exceptions.h ../update.h ../dump_custom.h ../dump_image.h ../lmpwindows.h ../dump.h ../output.h ../modify.h ../thermo.h ../lmptype.h ../dump_cfg.h ../domain.h ../atom.h ../input.h ../comm.h ../dump_movie.h ../dump_atom.h ../dump_local.h ../variable.h ../dump_xyz.h ../error.h ../style_dump.h ../compute.h ../write_restart.h ../memory.h ../group.h
-+nstencil_full_multi_3d.o : ../nstencil_full_multi_3d.cpp ../neighbor.h ../pointers.h ../lammps.h ../neigh_list.h ../my_page.h ../nstencil_full_multi_3d.h ../lmpwindows.h ../lmptype.h ../atom.h ../nstencil.h
-+pair_bop.o : ../pair_bop.cpp ../pair_bop.h ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h
-+fix_respa.o : ../fix_respa.cpp ../force.h ../pointers.h ../lammps.h ../fix.h ../lmpwindows.h ../lmptype.h ../atom.h ../fix_respa.h ../memory.h
-+nstencil_half_ghost_bin_2d_newtoff.o : ../nstencil_half_ghost_bin_2d_newtoff.cpp ../nstencil_half_ghost_bin_2d_newtoff.h ../neighbor.h ../pointers.h ../lammps.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../nstencil.h
-+pair_lj_gromacs_coul_gromacs.o : ../pair_lj_gromacs_coul_gromacs.cpp ../force.h ../neighbor.h ../pair_lj_gromacs_coul_gromacs.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h
-+image.o : ../image.cpp ../force.h ../pointers.h ../lammps.h ../math_extra.h ../image.h ../exceptions.h ../version.h ../lmpwindows.h ../random_mars.h ../lmptype.h ../error.h ../memory.h ../math_const.h
-+pair_hybrid.o : ../pair_hybrid.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../update.h ../respa.h ../lmpwindows.h ../integrate.h ../pair_hybrid.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h
-+angle_hybrid.o : ../angle_hybrid.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../angle.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../angle_hybrid.h ../error.h ../memory.h
-+compute_angle.o : ../compute_angle.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../angle.h ../update.h ../lmpwindows.h ../lmptype.h ../compute_angle.h ../angle_hybrid.h ../error.h ../compute.h
-+nbin.o : ../nbin.cpp ../nbin.h ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../neigh_request.h ../error.h ../memory.h
-+fix_wall.o : ../fix_wall.cpp ../fix_wall.h ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../input.h ../variable.h ../error.h ../lattice.h
-+balance.o : ../balance.cpp ../imbalance.h ../imbalance_var.h ../force.h ../imbalance_time.h ../rcb.h ../pointers.h ../lammps.h ../imbalance_group.h ../exceptions.h ../balance.h ../update.h ../fix.h ../lmpwindows.h ../timer.h ../modify.h ../lmptype.h ../fix_store.h ../domain.h ../imbalance_neigh.h ../atom.h ../comm.h ../imbalance_store.h ../irregular.h ../error.h ../memory.h ../group.h
-+compute_pe_atom.o : ../compute_pe_atom.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../improper.h ../compute_pe_atom.h ../exceptions.h ../angle.h ../dihedral.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../bond.h ../error.h ../compute.h ../memory.h ../kspace.h
-+pair_beck.o : ../pair_beck.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../pair_beck.h ../math_special.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h
-+pair_gw_zbl.o : ../pair_gw_zbl.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../pair_gw.h ../my_page.h ../update.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../pair_gw_zbl.h ../error.h ../memory.h ../math_const.h
-+npair_skip_size_off2on.o : ../npair_skip_size_off2on.cpp ../neighbor.h ../pointers.h ../lammps.h ../npair_skip_size_off2on.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../npair.h ../atom.h ../atom_vec.h ../error.h
-+min_hftn.o : ../min_hftn.cpp ../pointers.h ../lammps.h ../pair.h ../fix_minimize.h ../update.h ../fix.h ../lmpwindows.h ../output.h ../timer.h ../modify.h ../lmptype.h ../atom.h ../min.h ../min_hftn.h
-+compute_pair_local.o : ../compute_pair_local.cpp ../compute_pair_local.h ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../lmptype.h ../atom.h ../neigh_request.h ../error.h ../compute.h ../memory.h ../group.h
-+fix_wall_lj93.o : ../fix_wall_lj93.cpp ../fix_wall.h ../pointers.h ../lammps.h ../exceptions.h ../fix_wall_lj93.h ../fix.h ../lmpwindows.h ../lmptype.h ../atom.h ../error.h
-+pair_zero.o : ../pair_zero.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../pair_zero.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h
-+compute_temp_region.o : ../compute_temp_region.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../compute_temp_region.h ../lmptype.h ../domain.h ../atom.h ../region.h ../error.h ../compute.h ../memory.h ../group.h
-+angle_zero.o : ../angle_zero.cpp ../angle_zero.h ../force.h ../pointers.h ../lammps.h ../exceptions.h ../angle.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h ../math_const.h
-+imbalance_var.o : ../imbalance_var.cpp ../imbalance.h ../imbalance_var.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../atom.h ../input.h ../variable.h ../error.h ../memory.h ../group.h
-+npair_half_nsq_newtoff.o : ../npair_half_nsq_newtoff.cpp ../neighbor.h ../pointers.h ../lammps.h ../npair_half_nsq_newtoff.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../npair.h ../atom.h ../molecule.h ../atom_vec.h ../error.h ../group.h
-+fix_ave_time.o : ../fix_ave_time.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../input.h ../variable.h ../fix_ave_time.h ../error.h ../compute.h ../memory.h
-+dihedral_hybrid.o : ../dihedral_hybrid.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../dihedral.h ../lmpwindows.h ../lmptype.h ../domain.h ../dihedral_hybrid.h ../atom.h ../comm.h ../error.h ../memory.h
-+reader.o : ../reader.cpp ../pointers.h ../lammps.h ../exceptions.h ../reader.h ../lmpwindows.h ../lmptype.h ../error.h
-+pair_coul_dsf.o : ../pair_coul_dsf.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../pair_coul_dsf.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h ../math_const.h
-+npair_full_nsq_ghost.o : ../npair_full_nsq_ghost.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../npair.h ../molecule.h ../atom_vec.h ../npair_full_nsq_ghost.h ../error.h
-+nstencil_half_bin_2d_newton.o : ../nstencil_half_bin_2d_newton.cpp ../neighbor.h ../pointers.h ../lammps.h ../nstencil_half_bin_2d_newton.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../nstencil.h
-+read_restart.o : ../read_restart.cpp ../special.h ../force.h ../pointers.h ../lammps.h ../pair.h ../improper.h ../exceptions.h ../angle.h ../dihedral.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../universe.h ../mpiio.h ../atom_vec.h ../bond.h ../read_restart.h ../irregular.h ../error.h ../memory.h ../fix_read_restart.h ../group.h
-+respa.o : ../respa.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../improper.h ../exceptions.h ../angle.h ../dihedral.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../output.h ../timer.h ../pair_hybrid.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_vec.h ../fix_respa.h ../bond.h ../error.h ../compute.h ../memory.h ../kspace.h
-+fix_hp.o : ../fix_hp.cpp ../force.h ../pointers.h ../lammps.h ../math_extra.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../random_mars.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../atom_vec_ellipsoid.h ../region.h ../atom_vec.h ../variable.h ../fix_hp.h ../error.h ../compute.h ../memory.h ../group.h
-+imbalance.o : ../imbalance.cpp ../imbalance.h ../pointers.h ../lammps.h ../lmpwindows.h ../lmptype.h
-+compute_group_group.o : ../compute_group_group.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../compute_group_group.h ../my_page.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../compute.h ../math_const.h ../kspace.h ../group.h
-+dump_custom.o : ../dump_custom.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../dump_custom.h ../update.h ../fix.h ../lmpwindows.h ../dump.h ../modify.h ../lmptype.h ../fix_store.h ../domain.h ../atom.h ../input.h ../region.h ../variable.h ../error.h ../compute.h ../memory.h ../group.h
-+nstencil_half_ghost_bin_3d_newtoff.o : ../nstencil_half_ghost_bin_3d_newtoff.cpp ../neighbor.h ../pointers.h ../lammps.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../nstencil_half_ghost_bin_3d_newtoff.h ../nstencil.h
-+reader_native.o : ../reader_native.cpp ../pointers.h ../lammps.h ../exceptions.h ../reader_native.h ../reader.h ../lmpwindows.h ../lmptype.h ../atom.h ../error.h ../memory.h
-+fix_spring.o : ../fix_spring.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../lmptype.h ../domain.h ../atom.h ../fix_spring.h ../error.h ../group.h
-+bond_zero.o : ../bond_zero.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../bond.h ../error.h ../memory.h ../bond_zero.h
-+pair_comb3.o : ../pair_comb3.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../pair_comb3.h ../error.h ../memory.h ../math_const.h ../group.h
-+pair_born_coul_wolf.o : ../pair_born_coul_wolf.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../pair_born_coul_wolf.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h ../math_const.h
-+fix_wall_lj1043.o : ../fix_wall_lj1043.cpp ../fix_wall.h ../pointers.h ../lammps.h ../fix.h ../lmpwindows.h ../lmptype.h ../fix_wall_lj1043.h ../atom.h ../math_const.h
-+compute_dipole_chunk.o : ../compute_dipole_chunk.cpp ../compute_chunk_atom.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../math_special.h ../lmpwindows.h ../modify.h ../compute_dipole_chunk.h ../lmptype.h ../domain.h ../atom.h ../error.h ../compute.h ../memory.h
-+atom_vec_line.o : ../atom_vec_line.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_vec.h ../atom_vec_line.h ../error.h ../memory.h ../math_const.h
-+atom_vec_tri.o : ../atom_vec_tri.cpp ../force.h ../pointers.h ../lammps.h ../math_extra.h ../exceptions.h ../fix.h ../lmpwindows.h ../atom_vec_tri.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_vec.h ../error.h ../memory.h ../math_const.h
-+compute_contact_atom.o : ../compute_contact_atom.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../compute_contact_atom.h ../error.h ../compute.h ../memory.h
-+fix_nh.o : ../fix_nh.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../math_extra.h ../fix_deform.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../irregular.h ../error.h ../fix_nh.h ../compute.h ../memory.h ../kspace.h ../group.h
-+region_sphere.o : ../region_sphere.cpp ../force.h ../region_sphere.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../input.h ../region.h ../variable.h ../error.h
-+region_intersect.o : ../region_intersect.cpp ../force.h ../pointers.h ../lammps.h ../region_intersect.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../domain.h ../region.h ../error.h
-+compute_hexorder_atom.o : ../compute_hexorder_atom.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../compute_hexorder_atom.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../compute.h ../memory.h ../math_const.h
-+fix_langevin.o : ../fix_langevin.cpp ../force.h ../pointers.h ../lammps.h ../math_extra.h ../exceptions.h ../update.h ../respa.h ../fix_langevin.h ../fix.h ../lmpwindows.h ../integrate.h ../random_mars.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../atom_vec_ellipsoid.h ../region.h ../atom_vec.h ../variable.h ../error.h ../compute.h ../memory.h ../group.h
-+compute_angmom_chunk.o : ../compute_angmom_chunk.cpp ../compute_chunk_atom.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../compute_angmom_chunk.h ../error.h ../compute.h ../memory.h
-+fix_nvt.o : ../fix_nvt.cpp ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../fix_nvt.h ../fix_nh.h ../error.h ../group.h
-+integrate.o : ../integrate.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../update.h ../lmpwindows.h ../integrate.h ../modify.h ../lmptype.h ../compute.h ../kspace.h
-+npair_full_bin.o : ../npair_full_bin.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../npair.h ../molecule.h ../atom_vec.h ../error.h ../npair_full_bin.h
-+nstencil_half_bin_2d_newton_tri.o : ../nstencil_half_bin_2d_newton_tri.cpp ../neighbor.h ../pointers.h ../lammps.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../nstencil_half_bin_2d_newton_tri.h ../nstencil.h
-+pair_tersoff_mod.o : ../pair_tersoff_mod.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../pair_tersoff.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h ../math_const.h ../pair_tersoff_mod.h
-+fix_planeforce.o : ../fix_planeforce.cpp ../force.h ../pointers.h ../lammps.h ../fix_planeforce.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../lmptype.h ../atom.h ../error.h
-+pair_tersoff_zbl.o : ../pair_tersoff_zbl.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../pair_tersoff.h ../lmpwindows.h ../pair_tersoff_zbl.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h ../math_const.h
-+bond.o : ../bond.cpp ../force.h ../neighbor.h ../suffix.h ../pointers.h ../lammps.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../bond.h ../atom_masks.h ../error.h ../memory.h
-+neigh_request.o : ../neigh_request.cpp ../pointers.h ../lammps.h ../lmpwindows.h ../lmptype.h ../atom.h ../neigh_request.h ../memory.h
-+compute_slice.o : ../compute_slice.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../input.h ../variable.h ../compute_slice.h ../error.h ../compute.h ../memory.h ../group.h
-+fix_recenter.o : ../fix_recenter.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../fix_recenter.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../error.h ../lattice.h ../group.h
-+domain.o : ../domain.cpp ../region_plane.h ../region_cone.h ../region_prism.h ../force.h ../region_cylinder.h ../region_sphere.h ../pointers.h ../lammps.h ../fix_deform.h ../region_intersect.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../style_region.h ../output.h ../modify.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../region.h ../universe.h ../molecule.h ../region_block.h ../atom_vec.h ../region_union.h ../error.h ../memory.h ../math_const.h ../kspace.h ../lattice.h
-+compute_reduce.o : ../compute_reduce.cpp ../force.h ../pointers.h ../lammps.h ../compute_reduce.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../variable.h ../error.h ../compute.h ../memory.h ../group.h
-+universe.o : ../universe.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../version.h ../lmpwindows.h ../lmptype.h ../universe.h ../error.h ../memory.h
-+compute_improper.o : ../compute_improper.cpp ../force.h ../improper_hybrid.h ../pointers.h ../lammps.h ../improper.h ../exceptions.h ../compute_improper.h ../update.h ../lmpwindows.h ../lmptype.h ../error.h ../compute.h
-+region.o : ../region.cpp ../force.h ../pointers.h ../lammps.h ../math_extra.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../input.h ../region.h ../variable.h ../error.h ../lattice.h
-+pair_table.o : ../pair_table.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../pair_table.h ../error.h ../memory.h
-+dihedral.o : ../dihedral.cpp ../force.h ../suffix.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../dihedral.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../atom_masks.h ../error.h ../memory.h
-+pair_lj_smooth.o : ../pair_lj_smooth.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../pair_lj_smooth.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h
-+fix_enforce2d.o : ../fix_enforce2d.cpp ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../fix_enforce2d.h ../error.h
-+compute_temp_deform.o : ../compute_temp_deform.cpp ../compute_temp_deform.h ../force.h ../pointers.h ../lammps.h ../fix_deform.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../error.h ../compute.h ../memory.h ../group.h
-+lammps.o : ../lammps.cpp ../compute_chunk_atom.h ../compute_temp_deform.h ../fix_halt.h ../fix_nph_sphere.h ../style_compute.h ../compute_gyration_chunk.h ../min_fire.h ../angle_zero.h ../fix_wall.h ../compute_improper_local.h ../compute_inertia_chunk.h ../compute_property_local.h ../compute_temp_partial.h ../style_improper.h ../region_plane.h ../fix_spring_self.h ../fix_wall_harmonic.h ../pair_bop.h ../reset_ids.h ../region_cone.h ../region_prism.h ../compute_vcm_chunk.h ../style_pair.h ../compute_fragment_atom.h ../compute_omega_chunk.h ../compute_pair_local.h ../compute_vacf.h ../improper_hybrid.h ../pair_lj_cut_coul_dsf.h ../pair_soft.h ../pair_yukawa.h ../style_dihedral.h ../force.h ../compute_temp_profile.h ../pair_lj_cut.h ../style_kspace.h ../neighbor.h ../delete_atoms.h ../region_cylinder.h ../fix_adapt.h ../atom_vec_sphere.h ../pair_lj_expand.h ../pair_lj_gromacs_coul_gromacs.h ../pair_zbl.h ../region_sphere.h ../fix_nvt_sllod.h ../atom_vec_pafi.h ../pointers.h ../lammps.h ../compute_ke.h ../compute_temp_sphere.h ../pair_lj_smooth_linear.h ../pair_nb3b_harmonic.h ../write_coeff.h ../atom_vec_charge.h ../dump_dcd.h ../compute_property_chunk.h ../compute_temp.h ../pair_born_coul_dsf.h ../pair_gauss.h ../verlet.h ../fix_ave_chunk.h ../fix_drag.h ../fix_nvt_sphere.h ../fix_temp_berendsen.h ../compute_reduce.h ../pair_lj_gromacs.h ../fix_wall_region.h ../improper.h ../pair.h ../fix_deform.h ../fix_planeforce.h ../pair_coul_dsf.h ../region_intersect.h ../atom_vec_body.h ../compute_pe_atom.h ../pair_lj_cubic.h ../style_integrate.h ../delete_bonds.h ../fix_move.h ../fix_press_berendsen.h ../fix_qeq_comb.h ../exceptions.h ../compute_improper.h ../angle.h ../fix_minimize.h ../fix_vector.h ../fix_wall_lj93.h ../bond_hybrid.h ../compute_group_group.h ../pair_gw.h ../pair_polymorphic.h ../dihedral.h ../version.h ../balance.h ../pair_lj_cut_coul_debye.h ../my_page.h ../python.h ../lmpinstalledpkgs.h ../compute_gyration.h ../update.h ../pair_tersoff.h ../pair_zero.h ../fix_heat.h ../dump_custom.h ../dump_image.h ../pair_beck.h ../respa.h ../style_minimize.h ../create_bonds.h ../compute_angle_local.h ../compute_com_chunk.h ../compute_msd_chunk.h ../pair_eim.h ../pair_mie_cut.h ../fix_addforce.h ../fix_dt_reset.h ../fix_group.h ../pair_born.h ../pair_rebo.h ../fix.h ../fix_langevin.h ../pair_eam_alloy.h ../pair_hybrid_overlay.h ../pair_lj_smooth.h ../fix_property_atom.h ../fix_temp_csld.h ../lmpwindows.h ../compute_temp_region.h ../pair_tersoff_zbl.h ../integrate.h ../style_command.h ../replicate.h ../style_region.h ../fix_ave_histo.h ../fix_npt_sphere.h ../compute_hexorder_atom.h ../fix_temp_rescale.h ../atom_vec_hybrid.h ../dump.h ../pair_hybrid.h ../pair_born_coul_wolf.h ../run.h ../output.h ../timer.h ../fix_recenter.h ../atom_vec_tri.h ../pair_coul_wolf.h ../pair_eam_cd.h ../modify.h ../accelerator_kokkos.h ../fix_nve.h ../fix_nve_limit.h ../atom_vec_atomic.h ../compute_dipole_chunk.h ../compute_erotate_sphere_atom.h ../pair_airebo.h ../style_angle.h ../fix_ave_atom.h ../fix_lineforce.h ../fix_momentum.h ../fix_tmd.h ../fix_wall_lj126.h ../lmptype.h ../pair_eam.h ../pair_coul_cut.h ../fix_deprecated.h ../fix_gravity.h ../fix_indent.h ../fix_store.h ../dump_cfg.h ../compute_msd.h ../pair_dpd_tstat.h ../pair_eam_fs.h ../domain.h ../fix_wall_lj1043.h ../compute_bond_local.h ../compute_displace_atom.h ../dihedral_hybrid.h ../min_sd.h ../create_atoms.h ../read_data.h ../atom.h ../comm.h ../input.h ../citeme.h ../fix_nph.h ../dump_movie.h ../style_fix.h ../fix_enforce2d.h ../fix_spring_chunk.h ../compute_angle.h ../compute_orientorder_atom.h ../pair_comb.h ../write_dump.h ../region.h ../universe.h ../atom_vec_ellipsoid.h ../dump_atom.h ../compute_ke_atom.h ../pair_lcbop.h ../fix_balance.h ../fix_spring_rg.h ../compute_temp_ramp.h ../pair_coul_debye.h ../region_block.h ../compute_global_atom.h ../displace_atoms.h ../minimize.h ../comm_brick.h ../angle_hybrid.h ../fix_respa.h ../style_bond.h ../atom_vec.h ../pair_tersoff_mod_c.h ../change_box.h ../read_dump.h ../bond.h ../style_atom.h ../dump_local.h ../compute_dihedral.h ../pair_buck_coul_cut.h ../pair_lj96_cut.h ../pair_table.h ../min_linesearch.h ../info.h ../read_restart.h ../fix_nve_sphere.h ../compute_angmom_chunk.h ../min.h ../rerun.h ../pair_vashishta.h ../fix_nh_sphere.h ../fix_ave_histo_weight.h ../compute_erotate_sphere.h ../pair_gw_zbl.h ../dump_xyz.h ../compute_contact_atom.h ../compute_heat_flux.h ../compute_pe.h ../compute_slice.h ../min_cg.h ../min_hftn.h ../fix_npt.h ../fix_nvt.h ../fix_print.h ../fix_store_force.h ../atom_vec_line.h ../compute_pressure.h ../create_box.h ../fix_ave_time.h ../compute_aggregate_atom.h ../compute_torque_chunk.h ../dihedral_zero.h ../fix_nve_noforce.h ../fix_temp_csvr.h ../improper_zero.h ../pair_airebo_morse.h ../pair_sw.h ../write_data.h ../region_union.h ../fix_aveforce.h ../fix_hp.h ../fix_spring.h ../pair_adp.h ../pair_comb3.h ../fix_nh.h ../my_pool_chunk.h ../error.h ../compute_com.h ../compute_property_atom.h ../pair_lj_cut_coul_cut.h ../pair_coul_streitz.h ../pair_ufm.h ../pair_vashishta_table.h ../compute.h ../compute_dihedral_local.h ../compute_rdf.h ../compute_temp_chunk.h ../pair_dpd.h ../pair_buck.h ../write_restart.h ../comm_tiled.h ../memory.h ../fix_controller.h ../fix_neigh_history.h ../fix_store_state.h ../style_dump.h ../compute_bond.h ../compute_cluster_atom.h ../compute_reduce_region.h ../compute_temp_com.h ../min_quickmin.h ../velocity.h ../fix_external.h ../fix_restrain.h ../fix_setforce.h ../fix_viscous.h ../compute_coord_atom.h ../math_const.h ../pair_morse.h ../fix_ave_correlate.h ../accelerator_omp.h ../compute_centro_atom.h ../compute_cna_atom.h ../bond_zero.h ../compute_pair.h ../pair_lj_cut_coul_wolf.h ../set.h ../fix_box_relax.h ../fix_wall_reflect.h ../compute_stress_atom.h ../pair_tersoff_mod.h ../fix_read_restart.h ../group.h
-+ntopo_dihedral_partial.o : ../ntopo_dihedral_partial.cpp ../ntopo_dihedral_partial.h ../force.h ../pointers.h ../lammps.h ../exceptions.h ../ntopo.h ../update.h ../lmpwindows.h ../output.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../error.h ../memory.h
-+nstencil_full_bin_3d.o : ../nstencil_full_bin_3d.cpp ../neighbor.h ../pointers.h ../lammps.h ../neigh_list.h ../my_page.h ../nstencil_full_bin_3d.h ../lmpwindows.h ../lmptype.h ../nstencil.h
-+info.o : ../info.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../improper.h ../exceptions.h ../angle.h ../dihedral.h ../update.h ../fix.h ../lmpwindows.h ../dump.h ../pair_hybrid.h ../output.h ../accelerator_kokkos.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../region.h ../universe.h ../comm_brick.h ../bond.h ../info.h ../variable.h ../error.h ../comm_tiled.h ../memory.h ../compute.h ../group.h
-+npair_half_respa_bin_newton.o : ../npair_half_respa_bin_newton.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../npair_half_respa_bin_newton.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../npair.h ../atom.h ../molecule.h ../atom_vec.h ../error.h
-+pair_lj_cut_coul_cut.o : ../pair_lj_cut_coul_cut.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../pair_lj_cut_coul_cut.h ../memory.h ../math_const.h
-+fix_spring_chunk.o : ../fix_spring_chunk.cpp ../compute_chunk_atom.h ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../compute_com_chunk.h ../fix.h ../lmpwindows.h ../integrate.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../fix_spring_chunk.h ../error.h ../compute.h ../memory.h
-+compute_vcm_chunk.o : ../compute_vcm_chunk.cpp ../compute_chunk_atom.h ../compute_vcm_chunk.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../error.h ../compute.h ../memory.h
-+nstencil_full_ghost_bin_2d.o : ../nstencil_full_ghost_bin_2d.cpp ../neighbor.h ../pointers.h ../lammps.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../nstencil_full_ghost_bin_2d.h ../nstencil.h
-+fix_deprecated.o : ../fix_deprecated.cpp ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../fix_deprecated.h ../lmptype.h ../comm.h ../error.h
-+create_bonds.o : ../create_bonds.cpp ../special.h ../force.h ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../create_bonds.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../group.h
-+finish.o : ../finish.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../timer.h ../output.h ../accelerator_kokkos.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../universe.h ../finish.h ../molecule.h ../comm_brick.h ../atom_vec.h ../min.h ../neigh_request.h ../error.h ../comm_tiled.h ../memory.h ../accelerator_omp.h ../kspace.h
-+npair_half_size_nsq_newtoff.o : ../npair_half_size_nsq_newtoff.cpp ../neighbor.h ../pointers.h ../lammps.h ../npair_half_size_nsq_newtoff.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../npair.h ../atom.h ../atom_vec.h ../error.h ../group.h
-+neighbor.o : ../neighbor.cpp ../nstencil_half_ghost_bin_2d_newtoff.h ../nbin.h ../nstencil_full_multi_2d.h ../npair_half_respa_nsq_newton.h ../nstencil_half_bin_3d_newton_tri.h ../ntopo_dihedral_partial.h ../npair_half_multi_newton_tri.h ../force.h ../neighbor.h ../ntopo_dihedral_template.h ../npair_half_multi_newton.h ../nstencil_half_multi_2d_newtoff.h ../pointers.h ../lammps.h ../nstencil_half_bin_2d_newton.h ../nstencil_half_bin_3d_newtoff.h ../npair_full_nsq.h ../npair_half_multi_newtoff.h ../npair_half_size_nsq_newtoff.h ../nstencil_half_multi_3d_newton.h ../ntopo_angle_partial.h ../ntopo_bond_all.h ../npair_half_size_bin_newtoff.h ../ntopo_improper_partial.h ../pair.h ../npair_half_nsq_newtoff.h ../npair_skip_size_off2on.h ../nstencil_half_multi_3d_newtoff.h ../exceptions.h ../npair_half_respa_bin_newtoff.h ../neigh_list.h ../npair_half_respa_bin_newton.h ../my_page.h ../ntopo.h ../nstencil_half_bin_3d_newton.h ../update.h ../npair_half_bin_newtoff_ghost.h ../respa.h ../nstencil_full_multi_3d.h ../npair_half_bin_newton.h ../style_nstencil.h ../nstencil_full_bin_3d.h ../fix.h ../nstencil_half_multi_2d_newton_tri.h ../ntopo_improper_all.h ../npair_full_bin_atomonly.h ../npair_skip_respa.h ../lmpwindows.h ../integrate.h ../nstencil_half_bin_2d_newtoff.h ../npair_halffull_newtoff.h ../output.h ../ntopo_improper_template.h ../npair_skip_size_off2on_oneside.h ../modify.h ../nstencil_half_multi_3d_newton_tri.h ../npair_half_bin_newtoff.h ../lmptype.h ../nbin_standard.h ../ntopo_bond_template.h ../domain.h ../npair.h ../atom.h ../comm.h ../citeme.h ../style_nbin.h ../npair_half_nsq_newtoff_ghost.h ../nstencil_half_multi_2d_newton.h ../atom_vec.h ../npair_halffull_newton.h ../npair_half_respa_bin_newton_tri.h ../npair_half_bin_newton_tri.h ../nstencil_half_ghost_bin_3d_newtoff.h ../neigh_request.h ../npair_skip_size.h ../style_ntopo.h ../ntopo_angle_all.h ../npair_half_respa_nsq_newtoff.h ../npair_skip.h ../npair_full_nsq_ghost.h ../nstencil_full_bin_2d.h ../nstencil_full_ghost_bin_2d.h ../nstencil_half_bin_2d_newton_tri.h ../error.h ../npair_copy.h ../npair_full_multi.h ../npair_half_size_nsq_newton.h ../nstencil_full_ghost_bin_3d.h ../nstencil.h ../compute.h ../memory.h ../npair_half_bin_atomonly_newton.h ../npair_half_size_bin_newton.h ../npair_half_size_bin_newton_tri.h ../npair_full_bin.h ../npair_full_bin_ghost.h ../ntopo_bond_partial.h ../style_npair.h ../npair_half_nsq_newton.h ../ntopo_angle_template.h ../ntopo_dihedral_all.h ../group.h
-+comm_brick.o : ../comm_brick.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../math_extra.h ../pair.h ../exceptions.h ../fix.h ../lmpwindows.h ../dump.h ../output.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../universe.h ../comm_brick.h ../atom_vec.h ../error.h ../comm_tiled.h ../compute.h ../memory.h ../group.h
-+compute_gyration.o : ../compute_gyration.cpp ../pointers.h ../lammps.h ../exceptions.h ../compute_gyration.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../error.h ../compute.h ../group.h
-+thermo.o : ../thermo.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../improper.h ../exceptions.h ../angle.h ../dihedral.h ../update.h ../fix.h ../lmpwindows.h ../output.h ../timer.h ../modify.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../universe.h ../bond.h ../variable.h ../error.h ../compute.h ../memory.h ../math_const.h ../kspace.h ../lattice.h ../group.h
-+imbalance_group.o : ../imbalance_group.cpp ../imbalance.h ../force.h ../pointers.h ../lammps.h ../imbalance_group.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../atom.h ../error.h ../group.h
-+nstencil.o : ../nstencil.cpp ../nbin.h ../neighbor.h ../pointers.h ../lammps.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../neigh_request.h ../nstencil.h ../memory.h
-+fix_vector.o : ../fix_vector.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../fix_vector.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../input.h ../variable.h ../error.h ../compute.h ../memory.h ../group.h
-+npair_skip_size.o : ../npair_skip_size.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../npair.h ../atom_vec.h ../npair_skip_size.h ../error.h
-+molecule.o : ../molecule.cpp ../force.h ../pointers.h ../lammps.h ../math_extra.h ../atom_vec_body.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../molecule.h ../atom_vec.h ../error.h ../my_pool_chunk.h ../memory.h ../math_const.h
-+fix_temp_csvr.o : ../fix_temp_csvr.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../random_mars.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../input.h ../variable.h ../fix_temp_csvr.h ../error.h ../memory.h ../compute.h ../group.h
-+write_coeff.o : ../write_coeff.cpp ../force.h ../pointers.h ../lammps.h ../write_coeff.h ../pair.h ../improper.h ../exceptions.h ../angle.h ../dihedral.h ../lmpwindows.h ../lmptype.h ../domain.h ../comm.h ../universe.h ../bond.h ../error.h
-+velocity.o : ../velocity.cpp ../force.h ../pointers.h ../lammps.h ../compute_temp.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../input.h ../comm.h ../variable.h ../error.h ../compute.h ../memory.h ../velocity.h ../random_park.h ../lattice.h ../group.h
-+pair_buck_coul_cut.o : ../pair_buck_coul_cut.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../pair_buck_coul_cut.h ../error.h ../memory.h ../math_const.h
-+min_cg.o : ../min_cg.cpp ../pointers.h ../lammps.h ../update.h ../lmpwindows.h ../output.h ../timer.h ../lmptype.h ../atom.h ../min_linesearch.h ../min.h ../min_cg.h
-+compute_heat_flux.o : ../compute_heat_flux.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../atom.h ../compute_heat_flux.h ../error.h ../compute.h ../group.h
-+compute_stress_atom.o : ../compute_stress_atom.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../improper.h ../exceptions.h ../angle.h ../dihedral.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../bond.h ../error.h ../memory.h ../compute.h ../kspace.h ../compute_stress_atom.h
-+npair_half_size_bin_newtoff.o : ../npair_half_size_bin_newtoff.cpp ../neighbor.h ../pointers.h ../lammps.h ../npair_half_size_bin_newtoff.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../npair.h ../atom.h ../atom_vec.h ../error.h
-+npair_half_respa_bin_newtoff.o : ../npair_half_respa_bin_newtoff.cpp ../neighbor.h ../pointers.h ../lammps.h ../npair_half_respa_bin_newtoff.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../npair.h ../atom.h ../molecule.h ../atom_vec.h ../error.h
-+pair_eim.o : ../pair_eim.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../pair_eim.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h
-+npair_full_nsq.o : ../npair_full_nsq.cpp ../neighbor.h ../pointers.h ../lammps.h ../npair_full_nsq.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../npair.h ../atom.h ../molecule.h ../atom_vec.h ../error.h ../group.h
-+imbalance_neigh.o : ../imbalance_neigh.cpp ../imbalance.h ../force.h ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../imbalance_neigh.h ../atom.h ../comm.h ../neigh_request.h ../error.h
-+dump_cfg.o : ../dump_cfg.cpp ../pointers.h ../lammps.h ../exceptions.h ../dump_custom.h ../fix.h ../lmpwindows.h ../dump.h ../modify.h ../lmptype.h ../dump_cfg.h ../domain.h ../atom.h ../comm.h ../input.h ../variable.h ../error.h ../compute.h ../memory.h
-+minimize.o : ../minimize.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../timer.h ../lmptype.h ../domain.h ../finish.h ../minimize.h ../min.h ../error.h
-+pair_polymorphic.o : ../pair_polymorphic.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../pair_polymorphic.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h ../math_const.h
-+compute_erotate_sphere.o : ../compute_erotate_sphere.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../atom_vec.h ../compute_erotate_sphere.h ../error.h ../compute.h ../group.h
-+fix_temp_rescale.o : ../fix_temp_rescale.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../fix_temp_rescale.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../region.h ../variable.h ../error.h ../compute.h ../group.h
-+pair_eam_cd.o : ../pair_eam_cd.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../pair_eam_alloy.h ../lmpwindows.h ../pair_eam_cd.h ../lmptype.h ../pair_eam.h ../atom.h ../comm.h ../error.h ../memory.h
-+npair_skip.o : ../npair_skip.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../npair.h ../molecule.h ../atom_vec.h ../npair_skip.h ../error.h
-+fix_external.o : ../fix_external.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../lmptype.h ../atom.h ../error.h ../memory.h ../fix_external.h
-+update.o : ../update.cpp ../min_fire.h ../force.h ../neighbor.h ../pointers.h ../lammps.h ../verlet.h ../style_integrate.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../respa.h ../style_minimize.h ../fix.h ../lmpwindows.h ../integrate.h ../output.h ../modify.h ../lmptype.h ../domain.h ../min_sd.h ../region.h ../min_linesearch.h ../min.h ../min_cg.h ../min_hftn.h ../error.h ../compute.h ../memory.h ../min_quickmin.h
-+delete_bonds.o : ../delete_bonds.cpp ../special.h ../force.h ../neighbor.h ../pointers.h ../lammps.h ../delete_bonds.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_vec.h ../error.h ../group.h
-+ntopo_dihedral_template.o : ../ntopo_dihedral_template.cpp ../force.h ../ntopo_dihedral_template.h ../pointers.h ../lammps.h ../exceptions.h ../ntopo.h ../update.h ../lmpwindows.h ../output.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../molecule.h ../atom_vec.h ../error.h ../memory.h
-+variable.o : ../variable.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../python.h ../update.h ../fix.h ../lmpwindows.h ../random_mars.h ../output.h ../modify.h ../thermo.h ../lmptype.h ../fix_store.h ../domain.h ../atom.h ../comm.h ../input.h ../universe.h ../region.h ../variable.h ../info.h ../atom_masks.h ../error.h ../compute.h ../memory.h ../math_const.h ../group.h
-+compute_dihedral_local.o : ../compute_dihedral_local.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../dihedral.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../molecule.h ../atom_vec.h ../error.h ../compute_dihedral_local.h ../compute.h ../memory.h ../math_const.h
-+npair_skip_respa.o : ../npair_skip_respa.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../npair_skip_respa.h ../lmpwindows.h ../lmptype.h ../domain.h ../npair.h ../atom.h ../molecule.h ../atom_vec.h ../error.h
-+fix_ave_histo.o : ../fix_ave_histo.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../fix_ave_histo.h ../modify.h ../lmptype.h ../atom.h ../input.h ../variable.h ../error.h ../compute.h ../memory.h ../group.h
-+ntopo_improper_partial.o : ../ntopo_improper_partial.cpp ../force.h ../pointers.h ../lammps.h ../ntopo_improper_partial.h ../exceptions.h ../ntopo.h ../update.h ../lmpwindows.h ../output.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../error.h ../memory.h
-+displace_atoms.o : ../displace_atoms.cpp ../force.h ../pointers.h ../lammps.h ../math_extra.h ../atom_vec_body.h ../exceptions.h ../lmpwindows.h ../atom_vec_tri.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../atom_vec_ellipsoid.h ../atom_vec.h ../displace_atoms.h ../variable.h ../irregular.h ../atom_vec_line.h ../error.h ../my_pool_chunk.h ../memory.h ../math_const.h ../random_park.h ../lattice.h ../group.h
-+npair_half_nsq_newtoff_ghost.o : ../npair_half_nsq_newtoff_ghost.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../npair.h ../molecule.h ../npair_half_nsq_newtoff_ghost.h ../atom_vec.h ../error.h ../group.h
-+npair_half_bin_newtoff.o : ../npair_half_bin_newtoff.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../npair_half_bin_newtoff.h ../lmptype.h ../domain.h ../npair.h ../atom.h ../molecule.h ../atom_vec.h ../error.h
-+compute_com_chunk.o : ../compute_com_chunk.cpp ../compute_chunk_atom.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../compute_com_chunk.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../error.h ../compute.h ../memory.h
-+compute_temp_chunk.o : ../compute_temp_chunk.cpp ../compute_chunk_atom.h ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../error.h ../compute.h ../compute_temp_chunk.h ../memory.h
-+nstencil_half_multi_2d_newtoff.o : ../nstencil_half_multi_2d_newtoff.cpp ../neighbor.h ../nstencil_half_multi_2d_newtoff.h ../pointers.h ../lammps.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../nstencil.h
-+min_linesearch.o : ../min_linesearch.cpp ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../fix_minimize.h ../update.h ../fix.h ../lmpwindows.h ../output.h ../timer.h ../modify.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../min_linesearch.h ../min.h ../error.h
-+pair_airebo_morse.o : ../pair_airebo_morse.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../my_page.h ../lmpwindows.h ../pair_airebo.h ../lmptype.h ../pair_airebo_morse.h ../error.h ../math_const.h
-+npair_half_bin_newtoff_ghost.o : ../npair_half_bin_newtoff_ghost.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../npair_half_bin_newtoff_ghost.h ../lmpwindows.h ../lmptype.h ../domain.h ../npair.h ../atom.h ../molecule.h ../atom_vec.h ../error.h
-+pair_born.o : ../pair_born.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../pair_born.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h ../math_const.h
-+neigh_list.o : ../neigh_list.cpp ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h
-+pair_airebo.o : ../pair_airebo.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../math_special.h ../lmpwindows.h ../pair_airebo.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h ../math_const.h
-+improper_zero.o : ../improper_zero.cpp ../force.h ../pointers.h ../lammps.h ../improper.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../improper_zero.h ../error.h ../memory.h
-+rerun.o : ../rerun.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../integrate.h ../output.h ../timer.h ../modify.h ../lmptype.h ../domain.h ../finish.h ../read_dump.h ../rerun.h ../error.h
-+verlet.o : ../verlet.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../verlet.h ../pair.h ../improper.h ../exceptions.h ../angle.h ../dihedral.h ../update.h ../fix.h ../lmpwindows.h ../integrate.h ../output.h ../timer.h ../modify.h ../lmptype.h ../domain.h ../comm.h ../atom.h ../atom_vec.h ../bond.h ../error.h ../compute.h ../memory.h ../kspace.h
-+ntopo_angle_template.o : ../ntopo_angle_template.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../ntopo.h ../update.h ../lmpwindows.h ../output.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../molecule.h ../atom_vec.h ../error.h ../memory.h ../ntopo_angle_template.h
-+atom.o : ../atom.cpp ../force.h ../neighbor.h ../atom_vec_sphere.h ../atom_vec_pafi.h ../pointers.h ../lammps.h ../atom_vec_charge.h ../atom_vec_body.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../atom_vec_hybrid.h ../output.h ../atom_vec_tri.h ../modify.h ../atom_vec_atomic.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../atom_vec_ellipsoid.h ../molecule.h ../atom_vec.h ../style_atom.h ../variable.h ../neigh_request.h ../atom_vec_line.h ../atom_masks.h ../my_pool_chunk.h ../error.h ../compute.h ../memory.h ../math_const.h ../group.h
-+fix_press_berendsen.o : ../fix_press_berendsen.cpp ../force.h ../pointers.h ../lammps.h ../fix_deform.h ../fix_press_berendsen.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../error.h ../compute.h ../kspace.h
-+nstencil_half_multi_2d_newton.o : ../nstencil_half_multi_2d_newton.cpp ../neighbor.h ../pointers.h ../lammps.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../nstencil_half_multi_2d_newton.h ../nstencil.h
-+fix_wall_harmonic.o : ../fix_wall_harmonic.cpp ../fix_wall.h ../fix_wall_harmonic.h ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../lmptype.h ../atom.h ../error.h
-+compute_chunk_atom.o : ../compute_chunk_atom.cpp ../compute_chunk_atom.h ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../fix_store.h ../domain.h ../atom.h ../comm.h ../input.h ../region.h ../variable.h ../error.h ../compute.h ../memory.h ../math_const.h ../lattice.h ../group.h
-+min.o : ../min.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../improper.h ../exceptions.h ../fix_minimize.h ../angle.h ../dihedral.h ../update.h ../fix.h ../lmpwindows.h ../output.h ../timer.h ../modify.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_vec.h ../bond.h ../min.h ../error.h ../compute.h ../memory.h ../kspace.h
-+fix_print.o : ../fix_print.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../input.h ../variable.h ../fix_print.h ../error.h ../memory.h
-+math_extra.o : ../math_extra.cpp ../pointers.h ../lammps.h ../math_extra.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../error.h
-+nstencil_half_bin_3d_newtoff.o : ../nstencil_half_bin_3d_newtoff.cpp ../neighbor.h ../pointers.h ../lammps.h ../nstencil_half_bin_3d_newtoff.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../nstencil.h
-+nstencil_half_multi_3d_newton_tri.o : ../nstencil_half_multi_3d_newton_tri.cpp ../neighbor.h ../pointers.h ../lammps.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../nstencil_half_multi_3d_newton_tri.h ../lmptype.h ../atom.h ../nstencil.h
-+fix_qeq_comb.o : ../fix_qeq_comb.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../fix_qeq_comb.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../lmptype.h ../atom.h ../comm.h ../pair_comb.h ../neigh_request.h ../pair_comb3.h ../error.h ../memory.h ../group.h
-+ntopo_bond_template.o : ../ntopo_bond_template.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../ntopo.h ../update.h ../lmpwindows.h ../output.h ../thermo.h ../lmptype.h ../ntopo_bond_template.h ../domain.h ../atom.h ../molecule.h ../atom_vec.h ../error.h ../memory.h
-+pair_ufm.o : ../pair_ufm.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../respa.h ../lmpwindows.h ../integrate.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../pair_ufm.h ../memory.h ../math_const.h
-+imbalance_time.o : ../imbalance_time.cpp ../imbalance.h ../force.h ../imbalance_time.h ../pointers.h ../lammps.h ../exceptions.h ../lmpwindows.h ../timer.h ../lmptype.h ../atom.h ../comm.h ../error.h
-+pair_lj_cut_coul_debye.o : ../pair_lj_cut_coul_debye.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../pair_lj_cut_coul_debye.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../pair_lj_cut_coul_cut.h
-+pair_mie_cut.o : ../pair_mie_cut.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../respa.h ../pair_mie_cut.h ../lmpwindows.h ../integrate.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h ../math_const.h
-+imbalance_store.o : ../imbalance_store.cpp ../imbalance.h ../pointers.h ../lammps.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../imbalance_store.h ../atom.h ../input.h ../error.h
-+fix_wall_reflect.o : ../fix_wall_reflect.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../variable.h ../error.h ../fix_wall_reflect.h ../lattice.h
-+pair_tersoff_mod_c.o : ../pair_tersoff_mod_c.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../pair_tersoff.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../pair_tersoff_mod_c.h ../neigh_request.h ../error.h ../memory.h ../math_const.h ../pair_tersoff_mod.h
-+bond_hybrid.o : ../bond_hybrid.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../bond_hybrid.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../bond.h ../error.h ../memory.h
-+compute_aggregate_atom.o : ../compute_aggregate_atom.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../atom_vec.h ../neigh_request.h ../compute_aggregate_atom.h ../error.h ../compute.h ../memory.h ../group.h
-+read_data.o : ../read_data.cpp ../special.h ../force.h ../pointers.h ../lammps.h ../pair.h ../improper.h ../exceptions.h ../angle.h ../dihedral.h ../update.h ../fix.h ../lmpwindows.h ../atom_vec_tri.h ../modify.h ../lmptype.h ../domain.h ../read_data.h ../atom.h ../comm.h ../atom_vec_ellipsoid.h ../molecule.h ../atom_vec.h ../bond.h ../irregular.h ../atom_vec_line.h ../error.h ../memory.h ../group.h
-+atom_vec_pafi.o : ../atom_vec_pafi.cpp ../atom_vec_pafi.h ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_vec.h ../error.h ../memory.h
-+improper.o : ../improper.cpp ../force.h ../suffix.h ../pointers.h ../lammps.h ../improper.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../atom_masks.h ../error.h ../memory.h
-+compute_reduce_region.o : ../compute_reduce_region.cpp ../pointers.h ../lammps.h ../compute_reduce.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../input.h ../region.h ../variable.h ../error.h ../memory.h ../compute.h ../compute_reduce_region.h ../group.h
-+fix_ave_histo_weight.o : ../fix_ave_histo_weight.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../fix_ave_histo.h ../modify.h ../lmptype.h ../atom.h ../input.h ../variable.h ../fix_ave_histo_weight.h ../error.h ../compute.h ../memory.h ../group.h
-+pair_comb.o : ../pair_comb.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../pair_comb.h ../neigh_request.h ../error.h ../memory.h ../math_const.h ../group.h
-+npair_half_size_nsq_newton.o : ../npair_half_size_nsq_newton.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../npair.h ../atom_vec.h ../npair_half_size_nsq_newton.h ../error.h ../group.h
-+pair_eam.o : ../pair_eam.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../pair_eam.h ../atom.h ../comm.h ../error.h ../memory.h
-+pair_coul_streitz.o : ../pair_coul_streitz.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../pair_coul_streitz.h ../memory.h ../math_const.h ../kspace.h ../group.h
-+fix_viscous.o : ../fix_viscous.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../lmptype.h ../atom.h ../error.h ../fix_viscous.h
-+dump_image.o : ../dump_image.cpp ../force.h ../pointers.h ../lammps.h ../math_extra.h ../image.h ../atom_vec_body.h ../exceptions.h ../dump_image.h ../dump_custom.h ../body.h ../fix.h ../lmpwindows.h ../dump.h ../atom_vec_tri.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../molecule.h ../atom_vec.h ../variable.h ../atom_vec_line.h ../error.h ../my_pool_chunk.h ../memory.h ../math_const.h ../group.h
-+npair_half_size_bin_newton.o : ../npair_half_size_bin_newton.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../npair.h ../atom_vec.h ../error.h ../npair_half_size_bin_newton.h
-+compute_temp_ramp.o : ../compute_temp_ramp.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../compute_temp_ramp.h ../error.h ../compute.h ../memory.h ../lattice.h ../group.h
-+compute_pair.o : ../compute_pair.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../error.h ../compute.h ../compute_pair.h
-+rcb.o : ../rcb.cpp ../rcb.h ../pointers.h ../lammps.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../irregular.h ../error.h ../memory.h
-+compute_temp.o : ../compute_temp.cpp ../force.h ../pointers.h ../lammps.h ../compute_temp.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../error.h ../compute.h ../group.h
-+error.o : ../error.cpp ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../output.h ../lmptype.h ../input.h ../universe.h ../error.h
-+compute_pressure.o : ../compute_pressure.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../improper.h ../exceptions.h ../angle.h ../dihedral.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../bond.h ../compute_pressure.h ../error.h ../compute.h ../kspace.h
-+nbin_standard.o : ../nbin_standard.cpp ../nbin.h ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../nbin_standard.h ../domain.h ../atom.h ../comm.h ../error.h ../group.h
-+npair_half_multi_newtoff.o : ../npair_half_multi_newtoff.cpp ../neighbor.h ../pointers.h ../lammps.h ../npair_half_multi_newtoff.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../npair.h ../atom.h ../molecule.h ../atom_vec.h ../error.h
-+fix_property_atom.o : ../fix_property_atom.cpp ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../fix_property_atom.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h
-+compute_global_atom.o : ../compute_global_atom.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../compute_global_atom.h ../variable.h ../error.h ../compute.h ../memory.h ../group.h
-+delete_atoms.o : ../delete_atoms.cpp ../force.h ../delete_atoms.h ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../random_mars.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../region.h ../molecule.h ../atom_vec.h ../neigh_request.h ../error.h ../memory.h ../group.h
-+fix_nph.o : ../fix_nph.cpp ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../fix_nph.h ../fix_nh.h ../error.h
-+fix.o : ../fix.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../atom_masks.h ../error.h ../memory.h ../group.h
-+atom_vec_charge.o : ../atom_vec_charge.cpp ../atom_vec_charge.h ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_vec.h ../error.h ../memory.h
-+fix_nve_noforce.o : ../fix_nve_noforce.cpp ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../lmptype.h ../atom.h ../fix_nve_noforce.h ../error.h
-+pair_sw.o : ../pair_sw.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../pair_sw.h ../error.h ../memory.h
-+pair_lj_cubic.o : ../pair_lj_cubic.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../pair_lj_cubic.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h
-+compute_displace_atom.o : ../compute_displace_atom.cpp ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../fix_store.h ../domain.h ../compute_displace_atom.h ../atom.h ../input.h ../variable.h ../error.h ../compute.h ../memory.h ../group.h
-+npair.o : ../npair.cpp ../nbin.h ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../npair.h ../atom.h ../neigh_request.h ../error.h ../nstencil.h ../memory.h
-+compute_dihedral.o : ../compute_dihedral.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../dihedral.h ../update.h ../lmpwindows.h ../lmptype.h ../dihedral_hybrid.h ../compute_dihedral.h ../error.h ../compute.h
-+pair_rebo.o : ../pair_rebo.cpp ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../my_page.h ../pair_rebo.h ../lmpwindows.h ../pair_airebo.h ../lmptype.h ../error.h ../math_const.h
-+npair_half_bin_newton.o : ../npair_half_bin_newton.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../npair_half_bin_newton.h ../lmpwindows.h ../lmptype.h ../domain.h ../npair.h ../atom.h ../molecule.h ../atom_vec.h ../error.h
-+pair_coul_wolf.o : ../pair_coul_wolf.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../pair_coul_wolf.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h ../math_const.h
-+pair_yukawa.o : ../pair_yukawa.cpp ../pair_yukawa.h ../force.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h
-+main.o : ../main.cpp ../lammps.h ../pointers.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../input.h ../error.h
-+pair_vashishta.o : ../pair_vashishta.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../pair_vashishta.h ../error.h ../memory.h
-+create_box.o : ../create_box.cpp ../region_prism.h ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../region.h ../atom_vec.h ../create_box.h ../error.h
-+npair_half_size_bin_newton_tri.o : ../npair_half_size_bin_newton_tri.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../npair.h ../atom_vec.h ../error.h ../npair_half_size_bin_newton_tri.h
-+pair_zbl.o : ../pair_zbl.cpp ../force.h ../neighbor.h ../pair_zbl.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../respa.h ../lmpwindows.h ../integrate.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h ../math_const.h
-+pair_lj_cut_coul_wolf.o : ../pair_lj_cut_coul_wolf.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../integrate.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h ../math_const.h ../pair_lj_cut_coul_wolf.h
-+nstencil_half_multi_3d_newtoff.o : ../nstencil_half_multi_3d_newtoff.cpp ../neighbor.h ../pointers.h ../lammps.h ../nstencil_half_multi_3d_newtoff.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../nstencil.h
-+compute_bond_local.o : ../compute_bond_local.cpp ../force.h ../pointers.h ../lammps.h ../math_extra.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../compute_bond_local.h ../atom.h ../comm.h ../molecule.h ../atom_vec.h ../bond.h ../error.h ../compute.h ../memory.h
-+dump_movie.o : ../dump_movie.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../dump_image.h ../dump_custom.h ../lmpwindows.h ../dump.h ../lmptype.h ../dump_movie.h ../comm.h ../error.h ../memory.h
-+npair_full_bin_atomonly.o : ../npair_full_bin_atomonly.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../npair_full_bin_atomonly.h ../lmpwindows.h ../lmptype.h ../domain.h ../npair.h ../atom.h ../atom_vec.h ../error.h
-+math_special.o : ../math_special.cpp ../math_special.h
-+compute_improper_local.o : ../compute_improper_local.cpp ../compute_improper_local.h ../force.h ../pointers.h ../lammps.h ../improper.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../molecule.h ../atom_vec.h ../error.h ../compute.h ../memory.h ../math_const.h
-+fix_dt_reset.o : ../fix_dt_reset.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../update.h ../fix_dt_reset.h ../fix.h ../lmpwindows.h ../integrate.h ../dump.h ../output.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../error.h ../lattice.h
-+compute_inertia_chunk.o : ../compute_inertia_chunk.cpp ../compute_chunk_atom.h ../compute_inertia_chunk.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../error.h ../compute.h ../memory.h
-+fix_addforce.o : ../fix_addforce.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix_addforce.h ../fix.h ../lmpwindows.h ../integrate.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../input.h ../region.h ../variable.h ../atom_masks.h ../error.h ../memory.h
-+citeme.o : ../citeme.cpp ../pointers.h ../lammps.h ../exceptions.h ../version.h ../lmpwindows.h ../lmptype.h ../citeme.h ../universe.h ../error.h
-+nstencil_half_bin_3d_newton.o : ../nstencil_half_bin_3d_newton.cpp ../neighbor.h ../pointers.h ../lammps.h ../neigh_list.h ../my_page.h ../nstencil_half_bin_3d_newton.h ../lmpwindows.h ../lmptype.h ../nstencil.h
-+random_park.o : ../random_park.cpp ../pointers.h ../lammps.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../error.h ../random_park.h
-+set.o : ../set.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../math_extra.h ../pair.h ../atom_vec_body.h ../exceptions.h ../lmpwindows.h ../atom_vec_tri.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../atom_vec_ellipsoid.h ../region.h ../atom_vec.h ../variable.h ../atom_vec_line.h ../error.h ../my_pool_chunk.h ../memory.h ../random_park.h ../math_const.h ../set.h ../group.h
-+min_quickmin.o : ../min_quickmin.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../output.h ../timer.h ../lmptype.h ../atom.h ../universe.h ../min.h ../error.h ../min_quickmin.h
-+npair_half_bin_newton_tri.o : ../npair_half_bin_newton_tri.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../npair.h ../molecule.h ../atom_vec.h ../npair_half_bin_newton_tri.h ../error.h
-+fix_npt_sphere.o : ../fix_npt_sphere.cpp ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../fix_npt_sphere.h ../lmpwindows.h ../modify.h ../lmptype.h ../fix_nh_sphere.h ../fix_nh.h ../error.h
-+pair_dpd_tstat.o : ../pair_dpd_tstat.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../random_mars.h ../lmptype.h ../pair_dpd_tstat.h ../atom.h ../comm.h ../error.h ../pair_dpd.h
-+compute_centro_atom.o : ../compute_centro_atom.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../math_extra.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h ../compute.h ../compute_centro_atom.h
-+comm.o : ../comm.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../fix.h ../lmpwindows.h ../dump.h ../output.h ../modify.h ../accelerator_kokkos.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../universe.h ../comm_brick.h ../atom_vec.h ../error.h ../comm_tiled.h ../memory.h ../compute.h ../procmap.h ../group.h
-+write_data.o : ../write_data.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../improper.h ../exceptions.h ../angle.h ../dihedral.h ../update.h ../fix.h ../lmpwindows.h ../output.h ../modify.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../universe.h ../atom_vec.h ../bond.h ../write_data.h ../error.h ../memory.h ../group.h
-+body.o : ../body.cpp ../pointers.h ../lammps.h ../atom_vec_body.h ../exceptions.h ../body.h ../lmpwindows.h ../lmptype.h ../atom_vec.h ../my_pool_chunk.h ../error.h
-+compute_bond.o : ../compute_bond.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../bond_hybrid.h ../update.h ../lmpwindows.h ../lmptype.h ../bond.h ../error.h ../compute.h ../compute_bond.h
-+compute_fragment_atom.o : ../compute_fragment_atom.cpp ../compute_fragment_atom.h ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../atom_vec.h ../error.h ../compute.h ../memory.h ../group.h
-+fix_momentum.o : ../fix_momentum.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../fix_momentum.h ../lmptype.h ../domain.h ../atom.h ../error.h ../group.h
-+fix_store_force.o : ../fix_store_force.cpp ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../lmptype.h ../atom.h ../fix_store_force.h ../error.h ../memory.h ../group.h
-+procmap.o : ../procmap.cpp ../pointers.h ../lammps.h ../math_extra.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../domain.h ../comm.h ../universe.h ../error.h ../memory.h ../procmap.h
-+region_block.o : ../region_block.cpp ../force.h ../pointers.h ../lammps.h ../math_extra.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../domain.h ../region.h ../region_block.h ../error.h
-+improper_hybrid.o : ../improper_hybrid.cpp ../improper_hybrid.h ../force.h ../neighbor.h ../pointers.h ../lammps.h ../improper.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../error.h ../memory.h
-+fix_nvt_sllod.o : ../fix_nvt_sllod.cpp ../fix_nvt_sllod.h ../pointers.h ../lammps.h ../math_extra.h ../fix_deform.h ../exceptions.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../fix_nh.h ../error.h ../compute.h ../group.h
-+compute_torque_chunk.o : ../compute_torque_chunk.cpp ../compute_chunk_atom.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../compute_torque_chunk.h ../error.h ../compute.h ../memory.h
-+pair.o : ../pair.cpp ../force.h ../neighbor.h ../suffix.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_masks.h ../error.h ../compute.h ../memory.h ../math_const.h ../kspace.h
-+reader_xyz.o : ../reader_xyz.cpp ../force.h ../pointers.h ../lammps.h ../reader_xyz.h ../exceptions.h ../lmpwindows.h ../reader.h ../lmptype.h ../atom.h ../error.h ../memory.h
-+nstencil_half_multi_3d_newton.o : ../nstencil_half_multi_3d_newton.cpp ../neighbor.h ../pointers.h ../lammps.h ../nstencil_half_multi_3d_newton.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../nstencil.h
-+pair_coul_debye.o : ../pair_coul_debye.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../pair_coul_cut.h ../atom.h ../comm.h ../pair_coul_debye.h ../error.h ../memory.h
-+lattice.o : ../lattice.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../comm.h ../error.h ../memory.h ../lattice.h
-+compute_temp_profile.o : ../compute_temp_profile.cpp ../force.h ../compute_temp_profile.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../error.h ../compute.h ../memory.h ../group.h
-+compute_property_chunk.o : ../compute_property_chunk.cpp ../compute_chunk_atom.h ../pointers.h ../lammps.h ../compute_property_chunk.h ../exceptions.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../atom.h ../error.h ../compute.h ../memory.h
-+nstencil_half_bin_3d_newton_tri.o : ../nstencil_half_bin_3d_newton_tri.cpp ../nstencil_half_bin_3d_newton_tri.h ../neighbor.h ../pointers.h ../lammps.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../nstencil.h
-+fix_nvt_sphere.o : ../fix_nvt_sphere.cpp ../pointers.h ../lammps.h ../fix_nvt_sphere.h ../exceptions.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../fix_nh_sphere.h ../fix_nh.h ../error.h ../group.h
-+fix_group.o : ../fix_group.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix_group.h ../fix.h ../lmpwindows.h ../integrate.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../region.h ../variable.h ../error.h ../memory.h ../group.h
-+fix_npt.o : ../fix_npt.cpp ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../fix_npt.h ../fix_nh.h ../error.h
-+special.o : ../special.cpp ../special.h ../force.h ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../modify.h ../accelerator_kokkos.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../comm_brick.h ../atom_vec.h ../atom_masks.h ../error.h ../comm_tiled.h ../memory.h
-+pair_hybrid_overlay.o : ../pair_hybrid_overlay.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../pair_hybrid_overlay.h ../lmpwindows.h ../pair_hybrid.h ../lmptype.h ../atom.h ../neigh_request.h ../error.h
-+compute_ke_atom.o : ../compute_ke_atom.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../compute_ke_atom.h ../error.h ../compute.h ../memory.h
-+fix_ave_correlate.o : ../fix_ave_correlate.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../input.h ../variable.h ../error.h ../compute.h ../memory.h ../fix_ave_correlate.h
-+npair_copy.o : ../npair_copy.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../npair.h ../molecule.h ../atom_vec.h ../npair_copy.h ../error.h
-+compute.o : ../compute.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_masks.h ../error.h ../compute.h ../memory.h ../group.h
-+compute_property_atom.o : ../compute_property_atom.cpp ../pointers.h ../lammps.h ../math_extra.h ../atom_vec_body.h ../exceptions.h ../update.h ../lmpwindows.h ../atom_vec_tri.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_vec_ellipsoid.h ../atom_vec.h ../atom_vec_line.h ../error.h ../my_pool_chunk.h ../compute_property_atom.h ../compute.h ../memory.h
-+random_mars.o : ../random_mars.cpp ../pointers.h ../lammps.h ../exceptions.h ../lmpwindows.h ../random_mars.h ../lmptype.h ../error.h
-+change_box.o : ../change_box.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../output.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../change_box.h ../irregular.h ../error.h ../lattice.h ../group.h
-+fix_minimize.o : ../fix_minimize.cpp ../pointers.h ../lammps.h ../exceptions.h ../fix_minimize.h ../fix.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../error.h ../memory.h
-+ntopo_improper_all.o : ../ntopo_improper_all.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../ntopo.h ../update.h ../ntopo_improper_all.h ../lmpwindows.h ../output.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../error.h ../memory.h
-+atom_vec_sphere.o : ../atom_vec_sphere.cpp ../force.h ../atom_vec_sphere.h ../fix_adapt.h ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_vec.h ../error.h ../memory.h ../math_const.h
-+atom_vec_hybrid.o : ../atom_vec_hybrid.cpp ../atom_vec_sphere.h ../atom_vec_pafi.h ../pointers.h ../lammps.h ../atom_vec_charge.h ../atom_vec_body.h ../exceptions.h ../fix.h ../lmpwindows.h ../atom_vec_hybrid.h ../atom_vec_tri.h ../modify.h ../atom_vec_atomic.h ../lmptype.h ../domain.h ../atom.h ../atom_vec_ellipsoid.h ../atom_vec.h ../style_atom.h ../atom_vec_line.h ../my_pool_chunk.h ../error.h ../memory.h
-+pair_morse.o : ../pair_morse.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h ../pair_morse.h
-+write_restart.o : ../write_restart.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../improper.h ../exceptions.h ../angle.h ../dihedral.h ../update.h ../fix.h ../lmpwindows.h ../atom_vec_hybrid.h ../output.h ../modify.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../universe.h ../mpiio.h ../atom_vec.h ../bond.h ../error.h ../write_restart.h ../memory.h ../group.h
-+dump_dcd.o : ../dump_dcd.cpp ../dump_dcd.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../dump.h ../output.h ../lmptype.h ../domain.h ../atom.h ../error.h ../memory.h ../group.h
-+min_sd.o : ../min_sd.cpp ../pointers.h ../lammps.h ../update.h ../lmpwindows.h ../output.h ../timer.h ../lmptype.h ../min_sd.h ../atom.h ../min_linesearch.h ../min.h
-+region_prism.o : ../region_prism.cpp ../region_prism.h ../force.h ../pointers.h ../lammps.h ../math_extra.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../domain.h ../region.h ../error.h
-+compute_erotate_sphere_atom.o : ../compute_erotate_sphere_atom.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../modify.h ../compute_erotate_sphere_atom.h ../lmptype.h ../atom.h ../comm.h ../error.h ../compute.h ../memory.h
-+atom_vec_body.o : ../atom_vec_body.cpp ../style_body.h ../force.h ../pointers.h ../lammps.h ../atom_vec_body.h ../exceptions.h ../body.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_vec.h ../my_pool_chunk.h ../error.h ../memory.h
-+pair_eam_fs.o : ../pair_eam_fs.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../pair_eam.h ../pair_eam_fs.h ../atom.h ../comm.h ../error.h ../memory.h
-+pair_buck.o : ../pair_buck.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../pair_buck.h ../memory.h ../math_const.h
-+pair_nb3b_harmonic.o : ../pair_nb3b_harmonic.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair_nb3b_harmonic.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h
-+npair_full_bin_ghost.o : ../npair_full_bin_ghost.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../npair.h ../molecule.h ../atom_vec.h ../error.h ../npair_full_bin_ghost.h
-+python.o : ../python.cpp ../pointers.h ../lammps.h ../exceptions.h ../python.h ../lmpwindows.h ../lmptype.h ../error.h
-+kspace.o : ../kspace.cpp ../force.h ../suffix.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_masks.h ../error.h ../memory.h ../kspace.h
-+compute_temp_com.o : ../compute_temp_com.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../error.h ../compute.h ../compute_temp_com.h ../lattice.h ../group.h
-+atom_vec_ellipsoid.o : ../atom_vec_ellipsoid.cpp ../force.h ../pointers.h ../lammps.h ../math_extra.h ../exceptions.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_vec_ellipsoid.h ../atom_vec.h ../error.h ../memory.h ../math_const.h
-+fix_controller.o : ../fix_controller.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../input.h ../variable.h ../error.h ../fix_controller.h ../compute.h
-+fix_indent.o : ../fix_indent.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../output.h ../modify.h ../lmptype.h ../fix_indent.h ../domain.h ../atom.h ../input.h ../variable.h ../error.h ../lattice.h
-+pair_born_coul_dsf.o : ../pair_born_coul_dsf.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair_born_coul_dsf.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../math_special.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h ../math_const.h
-+nstencil_full_multi_2d.o : ../nstencil_full_multi_2d.cpp ../nstencil_full_multi_2d.h ../neighbor.h ../pointers.h ../lammps.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../nstencil.h
-+region_cylinder.o : ../region_cylinder.cpp ../force.h ../region_cylinder.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../input.h ../region.h ../variable.h ../error.h
-+comm_tiled.o : ../comm_tiled.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../fix.h ../lmpwindows.h ../dump.h ../output.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../comm_brick.h ../atom_vec.h ../error.h ../comm_tiled.h ../compute.h ../memory.h
-+pair_coul_cut.o : ../pair_coul_cut.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../pair_coul_cut.h ../atom.h ../comm.h ../error.h ../memory.h
-+npair_half_respa_nsq_newton.o : ../npair_half_respa_nsq_newton.cpp ../npair_half_respa_nsq_newton.h ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../npair.h ../atom.h ../molecule.h ../atom_vec.h ../error.h ../group.h
-+compute_msd.o : ../compute_msd.cpp ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../fix_store.h ../compute_msd.h ../domain.h ../atom.h ../error.h ../compute.h ../group.h
-+read_dump.o : ../read_dump.cpp ../force.h ../style_reader.h ../pointers.h ../lammps.h ../reader_xyz.h ../exceptions.h ../update.h ../reader_native.h ../fix.h ../lmpwindows.h ../reader.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../atom_vec.h ../read_dump.h ../variable.h ../irregular.h ../error.h ../compute.h ../memory.h
-+fix_store.o : ../fix_store.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../lmptype.h ../fix_store.h ../atom.h ../comm.h ../error.h ../memory.h
-+run.o : ../run.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../integrate.h ../run.h ../output.h ../timer.h ../modify.h ../lmptype.h ../domain.h ../input.h ../finish.h ../error.h
-+group.o : ../group.cpp ../force.h ../pointers.h ../lammps.h ../math_extra.h ../exceptions.h ../fix.h ../lmpwindows.h ../dump.h ../output.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../region.h ../variable.h ../error.h ../compute.h ../memory.h ../group.h
-+dump_xyz.o : ../dump_xyz.cpp ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../dump.h ../lmptype.h ../atom.h ../dump_xyz.h ../error.h ../memory.h ../group.h
-+pair_eam_alloy.o : ../pair_eam_alloy.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../pair_eam_alloy.h ../lmpwindows.h ../lmptype.h ../pair_eam.h ../atom.h ../comm.h ../error.h ../memory.h
-+fix_deform.o : ../fix_deform.cpp ../force.h ../pointers.h ../lammps.h ../fix_deform.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../variable.h ../irregular.h ../error.h ../math_const.h ../kspace.h ../lattice.h
-+fix_balance.o : ../fix_balance.cpp ../force.h ../neighbor.h ../rcb.h ../pointers.h ../lammps.h ../exceptions.h ../balance.h ../update.h ../fix.h ../lmpwindows.h ../timer.h ../modify.h ../lmptype.h ../fix_store.h ../domain.h ../atom.h ../comm.h ../fix_balance.h ../irregular.h ../error.h ../kspace.h
-+fix_heat.o : ../fix_heat.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../fix_heat.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../input.h ../region.h ../variable.h ../error.h ../memory.h ../group.h
-+npair_half_respa_bin_newton_tri.o : ../npair_half_respa_bin_newton_tri.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../npair.h ../molecule.h ../atom_vec.h ../npair_half_respa_bin_newton_tri.h ../error.h
-+fix_adapt.o : ../fix_adapt.cpp ../force.h ../fix_adapt.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../pair_hybrid.h ../modify.h ../lmptype.h ../fix_store.h ../atom.h ../input.h ../bond.h ../variable.h ../error.h ../memory.h ../math_const.h ../kspace.h ../group.h
-+npair_half_multi_newton.o : ../npair_half_multi_newton.cpp ../npair_half_multi_newton.h ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../npair.h ../atom.h ../molecule.h ../atom_vec.h ../error.h
-+fix_nve_limit.o : ../fix_nve_limit.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../fix_nve_limit.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../error.h
-+compute_temp_partial.o : ../compute_temp_partial.cpp ../compute_temp_partial.h ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../error.h ../compute.h ../memory.h ../group.h
-+atom_vec_atomic.o : ../atom_vec_atomic.cpp ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../atom_vec_atomic.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_vec.h ../error.h ../memory.h
-+fix_temp_berendsen.o : ../fix_temp_berendsen.cpp ../force.h ../pointers.h ../lammps.h ../fix_temp_berendsen.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../input.h ../variable.h ../error.h ../compute.h ../group.h
-+ntopo_angle_all.o : ../ntopo_angle_all.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../ntopo.h ../update.h ../lmpwindows.h ../output.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../ntopo_angle_all.h ../error.h ../memory.h
-+fix_restrain.o : ../fix_restrain.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../error.h ../memory.h ../fix_restrain.h ../math_const.h
-+compute_vacf.o : ../compute_vacf.cpp ../compute_vacf.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../fix_store.h ../atom.h ../error.h ../compute.h ../group.h
-+compute_cluster_atom.o : ../compute_cluster_atom.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h ../compute.h ../compute_cluster_atom.h ../group.h
-+npair_half_bin_atomonly_newton.o : ../npair_half_bin_atomonly_newton.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../npair.h ../molecule.h ../atom_vec.h ../error.h ../npair_half_bin_atomonly_newton.h
-+dump_atom.o : ../dump_atom.cpp ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../dump.h ../lmptype.h ../domain.h ../atom.h ../dump_atom.h ../error.h ../memory.h ../group.h
-+atom_vec.o : ../atom_vec.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../atom_vec.h ../error.h
-+compute_orientorder_atom.o : ../compute_orientorder_atom.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../compute_orientorder_atom.h ../neigh_request.h ../error.h ../compute.h ../memory.h ../math_const.h
-+pair_adp.o : ../pair_adp.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../pair_adp.h ../error.h ../memory.h
-+dump.o : ../dump.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../dump.h ../output.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../irregular.h ../error.h ../compute.h ../memory.h ../mergesort.h ../group.h
-+fix_aveforce.o : ../fix_aveforce.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../input.h ../region.h ../variable.h ../fix_aveforce.h ../error.h
-+dump_local.o : ../dump_local.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../dump.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../input.h ../dump_local.h ../error.h ../compute.h ../memory.h
-+fix_move.o : ../fix_move.cpp ../force.h ../pointers.h ../lammps.h ../math_extra.h ../atom_vec_body.h ../exceptions.h ../fix_move.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../atom_vec_tri.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../input.h ../atom_vec_ellipsoid.h ../atom_vec.h ../variable.h ../atom_vec_line.h ../error.h ../my_pool_chunk.h ../memory.h ../math_const.h ../lattice.h ../group.h
-+angle.o : ../angle.cpp ../force.h ../suffix.h ../pointers.h ../lammps.h ../exceptions.h ../angle.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../atom_masks.h ../error.h ../memory.h ../math_const.h
-+pair_gauss.o : ../pair_gauss.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair_gauss.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h
-+dihedral_zero.o : ../dihedral_zero.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../dihedral.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../dihedral_zero.h ../error.h ../memory.h
-+ntopo_bond_all.o : ../ntopo_bond_all.cpp ../force.h ../pointers.h ../lammps.h ../ntopo_bond_all.h ../exceptions.h ../ntopo.h ../update.h ../lmpwindows.h ../output.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../error.h ../memory.h
-+region_union.o : ../region_union.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../domain.h ../region.h ../region_union.h ../error.h
-+pair_vashishta_table.o : ../pair_vashishta_table.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../pair_vashishta.h ../error.h ../pair_vashishta_table.h ../memory.h
-+npair_half_multi_newton_tri.o : ../npair_half_multi_newton_tri.cpp ../npair_half_multi_newton_tri.h ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../npair.h ../atom.h ../molecule.h ../atom_vec.h ../error.h
-+fix_halt.o : ../fix_halt.cpp ../fix_halt.h ../force.h ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../timer.h ../modify.h ../lmptype.h ../input.h ../atom.h ../comm.h ../variable.h ../error.h
-+npair_halffull_newtoff.o : ../npair_halffull_newtoff.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../npair_halffull_newtoff.h ../lmptype.h ../domain.h ../npair.h ../atom.h ../molecule.h ../atom_vec.h ../error.h
-+fix_box_relax.o : ../fix_box_relax.cpp ../force.h ../pointers.h ../lammps.h ../math_extra.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../error.h ../compute.h ../kspace.h ../fix_box_relax.h
-+fix_ave_atom.o : ../fix_ave_atom.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../fix_ave_atom.h ../lmptype.h ../domain.h ../atom.h ../input.h ../variable.h ../error.h ../compute.h ../memory.h
-+fix_lineforce.o : ../fix_lineforce.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../fix_lineforce.h ../lmptype.h ../atom.h ../error.h
-+fix_wall_lj126.o : ../fix_wall_lj126.cpp ../fix_wall.h ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../fix_wall_lj126.h ../lmptype.h ../atom.h ../error.h
-+pair_gw.o : ../pair_gw.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../pair_gw.h ../my_page.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h ../math_const.h
-+fix_nph_sphere.o : ../fix_nph_sphere.cpp ../fix_nph_sphere.h ../pointers.h ../lammps.h ../exceptions.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../fix_nh_sphere.h ../fix_nh.h ../error.h
-+fix_nve_sphere.o : ../fix_nve_sphere.cpp ../force.h ../pointers.h ../lammps.h ../math_extra.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../fix_nve.h ../lmptype.h ../math_vector.h ../domain.h ../atom.h ../atom_vec.h ../fix_nve_sphere.h ../error.h
-+compute_pe.o : ../compute_pe.cpp ../force.h ../pointers.h ../lammps.h ../pair.h ../improper.h ../exceptions.h ../angle.h ../dihedral.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../bond.h ../compute_pe.h ../error.h ../compute.h ../kspace.h
-+region_cone.o : ../region_cone.cpp ../region_cone.h ../force.h ../pointers.h ../lammps.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../domain.h ../region.h ../error.h
-+compute_gyration_chunk.o : ../compute_gyration_chunk.cpp ../compute_chunk_atom.h ../compute_gyration_chunk.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../error.h ../compute.h ../memory.h
-+fix_neigh_history.o : ../fix_neigh_history.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../fix.h ../lmpwindows.h ../modify.h ../lmptype.h ../atom.h ../comm.h ../error.h ../fix_neigh_history.h ../memory.h
-+fix_spring_rg.o : ../fix_spring_rg.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../lmptype.h ../domain.h ../atom.h ../fix_spring_rg.h ../error.h ../group.h
-+pair_lj96_cut.o : ../pair_lj96_cut.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../respa.h ../lmpwindows.h ../integrate.h ../lmptype.h ../atom.h ../comm.h ../pair_lj96_cut.h ../neigh_request.h ../error.h ../memory.h ../math_const.h
-+irregular.o : ../irregular.cpp ../pointers.h ../lammps.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_vec.h ../irregular.h ../memory.h ../mergesort.h
-+modify.o : ../modify.cpp ../compute_chunk_atom.h ../compute_temp_deform.h ../fix_halt.h ../fix_nph_sphere.h ../style_compute.h ../compute_gyration_chunk.h ../fix_wall.h ../compute_improper_local.h ../compute_inertia_chunk.h ../compute_property_local.h ../compute_temp_partial.h ../fix_spring_self.h ../fix_wall_harmonic.h ../compute_vcm_chunk.h ../compute_fragment_atom.h ../compute_omega_chunk.h ../compute_pair_local.h ../compute_vacf.h ../compute_temp_profile.h ../fix_adapt.h ../fix_nvt_sllod.h ../pointers.h ../lammps.h ../compute_ke.h ../compute_temp_sphere.h ../compute_property_chunk.h ../compute_temp.h ../fix_ave_chunk.h ../fix_drag.h ../fix_nvt_sphere.h ../fix_temp_berendsen.h ../compute_reduce.h ../fix_wall_region.h ../fix_deform.h ../fix_planeforce.h ../compute_pe_atom.h ../fix_move.h ../fix_press_berendsen.h ../fix_qeq_comb.h ../exceptions.h ../compute_improper.h ../fix_minimize.h ../fix_vector.h ../fix_wall_lj93.h ../compute_group_group.h ../my_page.h ../compute_gyration.h ../update.h ../fix_heat.h ../compute_angle_local.h ../compute_com_chunk.h ../compute_msd_chunk.h ../fix_addforce.h ../fix_dt_reset.h ../fix_group.h ../fix.h ../fix_langevin.h ../fix_property_atom.h ../fix_temp_csld.h ../lmpwindows.h ../compute_temp_region.h ../fix_ave_histo.h ../fix_npt_sphere.h ../compute_hexorder_atom.h ../fix_temp_rescale.h ../fix_recenter.h ../modify.h ../fix_nve.h ../fix_nve_limit.h ../compute_dipole_chunk.h ../compute_erotate_sphere_atom.h ../fix_ave_atom.h ../fix_lineforce.h ../fix_momentum.h ../fix_tmd.h ../fix_wall_lj126.h ../lmptype.h ../fix_deprecated.h ../fix_gravity.h ../fix_indent.h ../fix_store.h ../compute_msd.h ../domain.h ../fix_wall_lj1043.h ../compute_bond_local.h ../compute_displace_atom.h ../atom.h ../comm.h ../input.h ../fix_nph.h ../style_fix.h ../fix_enforce2d.h ../fix_spring_chunk.h ../compute_angle.h ../compute_orientorder_atom.h ../region.h ../compute_ke_atom.h ../fix_balance.h ../fix_spring_rg.h ../compute_temp_ramp.h ../compute_global_atom.h ../fix_respa.h ../compute_dihedral.h ../fix_nve_sphere.h ../variable.h ../compute_angmom_chunk.h ../fix_nh_sphere.h ../fix_ave_histo_weight.h ../compute_erotate_sphere.h ../compute_contact_atom.h ../compute_heat_flux.h ../compute_pe.h ../compute_slice.h ../fix_npt.h ../fix_nvt.h ../fix_print.h ../fix_store_force.h ../compute_pressure.h ../fix_ave_time.h ../compute_aggregate_atom.h ../compute_torque_chunk.h ../fix_nve_noforce.h ../fix_temp_csvr.h ../fix_aveforce.h ../fix_hp.h ../fix_spring.h ../fix_nh.h ../error.h ../compute_com.h ../compute_property_atom.h ../compute.h ../compute_dihedral_local.h ../compute_rdf.h ../compute_temp_chunk.h ../fix_controller.h ../fix_neigh_history.h ../fix_store_state.h ../memory.h ../compute_bond.h ../compute_cluster_atom.h ../compute_reduce_region.h ../compute_temp_com.h ../fix_external.h ../fix_restrain.h ../fix_setforce.h ../fix_viscous.h ../compute_coord_atom.h ../fix_ave_correlate.h ../compute_centro_atom.h ../compute_cna_atom.h ../compute_pair.h ../fix_box_relax.h ../fix_wall_reflect.h ../compute_stress_atom.h ../fix_read_restart.h ../group.h
-+npair_half_respa_nsq_newtoff.o : ../npair_half_respa_nsq_newtoff.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../npair.h ../molecule.h ../atom_vec.h ../npair_half_respa_nsq_newtoff.h ../error.h ../group.h
-+memory.o : ../memory.cpp ../pointers.h ../lammps.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../error.h ../memory.h
-+pair_tersoff.o : ../pair_tersoff.cpp ../force.h ../neighbor.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../pair_tersoff.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../neigh_request.h ../error.h ../memory.h ../math_const.h
-+fix_setforce.o : ../fix_setforce.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../input.h ../region.h ../variable.h ../error.h ../memory.h ../fix_setforce.h
-+ntopo.o : ../ntopo.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../ntopo.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../error.h ../memory.h
-+compute_ke.o : ../compute_ke.cpp ../force.h ../pointers.h ../lammps.h ../compute_ke.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../domain.h ../atom.h ../error.h ../compute.h ../group.h
-+atom_map.o : ../atom_map.cpp ../pointers.h ../lammps.h ../exceptions.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h
-+pair_soft.o : ../pair_soft.cpp ../pair_soft.h ../force.h ../pointers.h ../lammps.h ../pair.h ../exceptions.h ../neigh_list.h ../my_page.h ../update.h ../lmpwindows.h ../lmptype.h ../atom.h ../comm.h ../error.h ../memory.h ../math_const.h
-+replicate.o : ../replicate.cpp ../special.h ../force.h ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../lmpwindows.h ../replicate.h ../atom_vec_hybrid.h ../accelerator_kokkos.h ../modify.h ../lmptype.h ../domain.h ../atom.h ../comm.h ../atom_vec.h ../comm_brick.h ../error.h ../comm_tiled.h ../memory.h
-+ntopo_angle_partial.o : ../ntopo_angle_partial.cpp ../force.h ../pointers.h ../lammps.h ../ntopo_angle_partial.h ../exceptions.h ../ntopo.h ../update.h ../lmpwindows.h ../output.h ../thermo.h ../lmptype.h ../domain.h ../atom.h ../error.h ../memory.h
-+fix_spring_self.o : ../fix_spring_self.cpp ../fix_spring_self.h ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../lmptype.h ../domain.h ../atom.h ../error.h ../memory.h
-+fix_nve.o : ../fix_nve.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../update.h ../respa.h ../fix.h ../lmpwindows.h ../integrate.h ../fix_nve.h ../lmptype.h ../atom.h ../error.h
-+fix_nh_sphere.o : ../fix_nh_sphere.cpp ../force.h ../pointers.h ../lammps.h ../math_extra.h ../exceptions.h ../fix.h ../lmpwindows.h ../lmptype.h ../math_vector.h ../domain.h ../atom.h ../atom_vec.h ../fix_nh_sphere.h ../error.h ../fix_nh.h ../group.h
-+nstencil_full_bin_2d.o : ../nstencil_full_bin_2d.cpp ../neighbor.h ../pointers.h ../lammps.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../lmptype.h ../nstencil_full_bin_2d.h ../nstencil.h
-+npair_skip_size_off2on_oneside.o : ../npair_skip_size_off2on_oneside.cpp ../neighbor.h ../pointers.h ../lammps.h ../exceptions.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../npair_skip_size_off2on_oneside.h ../lmptype.h ../domain.h ../npair.h ../atom.h ../atom_vec.h ../error.h
-+fix_read_restart.o : ../fix_read_restart.cpp ../force.h ../pointers.h ../lammps.h ../fix.h ../lmpwindows.h ../lmptype.h ../atom.h ../memory.h ../fix_read_restart.h
-+compute_com.o : ../compute_com.cpp ../pointers.h ../lammps.h ../exceptions.h ../update.h ../lmpwindows.h ../lmptype.h ../error.h ../compute_com.h ../compute.h ../group.h
-+timer.o : ../timer.cpp ../force.h ../pointers.h ../lammps.h ../exceptions.h ../lmpwindows.h ../timer.h ../lmptype.h ../comm.h ../error.h ../memory.h
-+nstencil_half_bin_2d_newtoff.o : ../nstencil_half_bin_2d_newtoff.cpp ../neighbor.h ../pointers.h ../lammps.h ../neigh_list.h ../my_page.h ../lmpwindows.h ../nstencil_half_bin_2d_newtoff.h ../lmptype.h ../nstencil.h
-Binary files src/Obj_mpi/dihedral_hybrid.o and new_src/Obj_mpi/dihedral_hybrid.o differ
-Binary files src/Obj_mpi/dihedral.o and new_src/Obj_mpi/dihedral.o differ
-Binary files src/Obj_mpi/dihedral_zero.o and new_src/Obj_mpi/dihedral_zero.o differ
-Binary files src/Obj_mpi/displace_atoms.o and new_src/Obj_mpi/displace_atoms.o differ
-Binary files src/Obj_mpi/domain.o and new_src/Obj_mpi/domain.o differ
-Binary files src/Obj_mpi/dump_atom.o and new_src/Obj_mpi/dump_atom.o differ
-Binary files src/Obj_mpi/dump_cfg.o and new_src/Obj_mpi/dump_cfg.o differ
-Binary files src/Obj_mpi/dump_custom.o and new_src/Obj_mpi/dump_custom.o differ
-Binary files src/Obj_mpi/dump_dcd.o and new_src/Obj_mpi/dump_dcd.o differ
-Binary files src/Obj_mpi/dump_image.o and new_src/Obj_mpi/dump_image.o differ
-Binary files src/Obj_mpi/dump_local.o and new_src/Obj_mpi/dump_local.o differ
-Binary files src/Obj_mpi/dump_movie.o and new_src/Obj_mpi/dump_movie.o differ
-Binary files src/Obj_mpi/dump.o and new_src/Obj_mpi/dump.o differ
-Binary files src/Obj_mpi/dump_xyz.o and new_src/Obj_mpi/dump_xyz.o differ
-Binary files src/Obj_mpi/error.o and new_src/Obj_mpi/error.o differ
-Binary files src/Obj_mpi/fastdep.exe and new_src/Obj_mpi/fastdep.exe differ
-Binary files src/Obj_mpi/finish.o and new_src/Obj_mpi/finish.o differ
-Binary files src/Obj_mpi/fix_adapt.o and new_src/Obj_mpi/fix_adapt.o differ
-Binary files src/Obj_mpi/fix_addforce.o and new_src/Obj_mpi/fix_addforce.o differ
-Binary files src/Obj_mpi/fix_ave_atom.o and new_src/Obj_mpi/fix_ave_atom.o differ
-Binary files src/Obj_mpi/fix_ave_chunk.o and new_src/Obj_mpi/fix_ave_chunk.o differ
-Binary files src/Obj_mpi/fix_ave_correlate.o and new_src/Obj_mpi/fix_ave_correlate.o differ
-Binary files src/Obj_mpi/fix_aveforce.o and new_src/Obj_mpi/fix_aveforce.o differ
-Binary files src/Obj_mpi/fix_ave_histo.o and new_src/Obj_mpi/fix_ave_histo.o differ
-Binary files src/Obj_mpi/fix_ave_histo_weight.o and new_src/Obj_mpi/fix_ave_histo_weight.o differ
-Binary files src/Obj_mpi/fix_ave_time.o and new_src/Obj_mpi/fix_ave_time.o differ
-Binary files src/Obj_mpi/fix_balance.o and new_src/Obj_mpi/fix_balance.o differ
-Binary files src/Obj_mpi/fix_box_relax.o and new_src/Obj_mpi/fix_box_relax.o differ
-Binary files src/Obj_mpi/fix_controller.o and new_src/Obj_mpi/fix_controller.o differ
-Binary files src/Obj_mpi/fix_deform.o and new_src/Obj_mpi/fix_deform.o differ
-Binary files src/Obj_mpi/fix_deprecated.o and new_src/Obj_mpi/fix_deprecated.o differ
-Binary files src/Obj_mpi/fix_drag.o and new_src/Obj_mpi/fix_drag.o differ
-Binary files src/Obj_mpi/fix_dt_reset.o and new_src/Obj_mpi/fix_dt_reset.o differ
-Binary files src/Obj_mpi/fix_enforce2d.o and new_src/Obj_mpi/fix_enforce2d.o differ
-Binary files src/Obj_mpi/fix_external.o and new_src/Obj_mpi/fix_external.o differ
-Binary files src/Obj_mpi/fix_gravity.o and new_src/Obj_mpi/fix_gravity.o differ
-Binary files src/Obj_mpi/fix_group.o and new_src/Obj_mpi/fix_group.o differ
-Binary files src/Obj_mpi/fix_halt.o and new_src/Obj_mpi/fix_halt.o differ
-Binary files src/Obj_mpi/fix_heat.o and new_src/Obj_mpi/fix_heat.o differ
-Binary files src/Obj_mpi/fix_hp.o and new_src/Obj_mpi/fix_hp.o differ
-Binary files src/Obj_mpi/fix_indent.o and new_src/Obj_mpi/fix_indent.o differ
-Binary files src/Obj_mpi/fix_langevin.o and new_src/Obj_mpi/fix_langevin.o differ
-Binary files src/Obj_mpi/fix_lineforce.o and new_src/Obj_mpi/fix_lineforce.o differ
-Binary files src/Obj_mpi/fix_minimize.o and new_src/Obj_mpi/fix_minimize.o differ
-Binary files src/Obj_mpi/fix_momentum.o and new_src/Obj_mpi/fix_momentum.o differ
-Binary files src/Obj_mpi/fix_move.o and new_src/Obj_mpi/fix_move.o differ
-Binary files src/Obj_mpi/fix_neigh_history.o and new_src/Obj_mpi/fix_neigh_history.o differ
-Binary files src/Obj_mpi/fix_nh.o and new_src/Obj_mpi/fix_nh.o differ
-Binary files src/Obj_mpi/fix_nh_sphere.o and new_src/Obj_mpi/fix_nh_sphere.o differ
-Binary files src/Obj_mpi/fix_nph.o and new_src/Obj_mpi/fix_nph.o differ
-Binary files src/Obj_mpi/fix_nph_sphere.o and new_src/Obj_mpi/fix_nph_sphere.o differ
-Binary files src/Obj_mpi/fix_npt.o and new_src/Obj_mpi/fix_npt.o differ
-Binary files src/Obj_mpi/fix_npt_sphere.o and new_src/Obj_mpi/fix_npt_sphere.o differ
-Binary files src/Obj_mpi/fix_nve_limit.o and new_src/Obj_mpi/fix_nve_limit.o differ
-Binary files src/Obj_mpi/fix_nve_noforce.o and new_src/Obj_mpi/fix_nve_noforce.o differ
-Binary files src/Obj_mpi/fix_nve.o and new_src/Obj_mpi/fix_nve.o differ
-Binary files src/Obj_mpi/fix_nve_sphere.o and new_src/Obj_mpi/fix_nve_sphere.o differ
-Binary files src/Obj_mpi/fix_nvt.o and new_src/Obj_mpi/fix_nvt.o differ
-Binary files src/Obj_mpi/fix_nvt_sllod.o and new_src/Obj_mpi/fix_nvt_sllod.o differ
-Binary files src/Obj_mpi/fix_nvt_sphere.o and new_src/Obj_mpi/fix_nvt_sphere.o differ
-Binary files src/Obj_mpi/fix.o and new_src/Obj_mpi/fix.o differ
-Binary files src/Obj_mpi/fix_planeforce.o and new_src/Obj_mpi/fix_planeforce.o differ
-Binary files src/Obj_mpi/fix_press_berendsen.o and new_src/Obj_mpi/fix_press_berendsen.o differ
-Binary files src/Obj_mpi/fix_print.o and new_src/Obj_mpi/fix_print.o differ
-Binary files src/Obj_mpi/fix_property_atom.o and new_src/Obj_mpi/fix_property_atom.o differ
-Binary files src/Obj_mpi/fix_qeq_comb.o and new_src/Obj_mpi/fix_qeq_comb.o differ
-Binary files src/Obj_mpi/fix_read_restart.o and new_src/Obj_mpi/fix_read_restart.o differ
-Binary files src/Obj_mpi/fix_recenter.o and new_src/Obj_mpi/fix_recenter.o differ
-Binary files src/Obj_mpi/fix_respa.o and new_src/Obj_mpi/fix_respa.o differ
-Binary files src/Obj_mpi/fix_restrain.o and new_src/Obj_mpi/fix_restrain.o differ
-Binary files src/Obj_mpi/fix_setforce.o and new_src/Obj_mpi/fix_setforce.o differ
-Binary files src/Obj_mpi/fix_spring_chunk.o and new_src/Obj_mpi/fix_spring_chunk.o differ
-Binary files src/Obj_mpi/fix_spring.o and new_src/Obj_mpi/fix_spring.o differ
-Binary files src/Obj_mpi/fix_spring_rg.o and new_src/Obj_mpi/fix_spring_rg.o differ
-Binary files src/Obj_mpi/fix_spring_self.o and new_src/Obj_mpi/fix_spring_self.o differ
-Binary files src/Obj_mpi/fix_store_force.o and new_src/Obj_mpi/fix_store_force.o differ
-Binary files src/Obj_mpi/fix_store.o and new_src/Obj_mpi/fix_store.o differ
-Binary files src/Obj_mpi/fix_store_state.o and new_src/Obj_mpi/fix_store_state.o differ
-Binary files src/Obj_mpi/fix_temp_berendsen.o and new_src/Obj_mpi/fix_temp_berendsen.o differ
-Binary files src/Obj_mpi/fix_temp_csld.o and new_src/Obj_mpi/fix_temp_csld.o differ
-Binary files src/Obj_mpi/fix_temp_csvr.o and new_src/Obj_mpi/fix_temp_csvr.o differ
-Binary files src/Obj_mpi/fix_temp_rescale.o and new_src/Obj_mpi/fix_temp_rescale.o differ
-Binary files src/Obj_mpi/fix_tmd.o and new_src/Obj_mpi/fix_tmd.o differ
-Binary files src/Obj_mpi/fix_vector.o and new_src/Obj_mpi/fix_vector.o differ
-Binary files src/Obj_mpi/fix_viscous.o and new_src/Obj_mpi/fix_viscous.o differ
-Binary files src/Obj_mpi/fix_wall_harmonic.o and new_src/Obj_mpi/fix_wall_harmonic.o differ
-Binary files src/Obj_mpi/fix_wall_lj1043.o and new_src/Obj_mpi/fix_wall_lj1043.o differ
-Binary files src/Obj_mpi/fix_wall_lj126.o and new_src/Obj_mpi/fix_wall_lj126.o differ
-Binary files src/Obj_mpi/fix_wall_lj93.o and new_src/Obj_mpi/fix_wall_lj93.o differ
-Binary files src/Obj_mpi/fix_wall.o and new_src/Obj_mpi/fix_wall.o differ
-Binary files src/Obj_mpi/fix_wall_reflect.o and new_src/Obj_mpi/fix_wall_reflect.o differ
-Binary files src/Obj_mpi/fix_wall_region.o and new_src/Obj_mpi/fix_wall_region.o differ
-Binary files src/Obj_mpi/force.o and new_src/Obj_mpi/force.o differ
-Binary files src/Obj_mpi/group.o and new_src/Obj_mpi/group.o differ
-Binary files src/Obj_mpi/image.o and new_src/Obj_mpi/image.o differ
-Binary files src/Obj_mpi/imbalance_group.o and new_src/Obj_mpi/imbalance_group.o differ
-Binary files src/Obj_mpi/imbalance_neigh.o and new_src/Obj_mpi/imbalance_neigh.o differ
-Binary files src/Obj_mpi/imbalance.o and new_src/Obj_mpi/imbalance.o differ
-Binary files src/Obj_mpi/imbalance_store.o and new_src/Obj_mpi/imbalance_store.o differ
-Binary files src/Obj_mpi/imbalance_time.o and new_src/Obj_mpi/imbalance_time.o differ
-Binary files src/Obj_mpi/imbalance_var.o and new_src/Obj_mpi/imbalance_var.o differ
-Binary files src/Obj_mpi/improper_hybrid.o and new_src/Obj_mpi/improper_hybrid.o differ
-Binary files src/Obj_mpi/improper.o and new_src/Obj_mpi/improper.o differ
-Binary files src/Obj_mpi/improper_zero.o and new_src/Obj_mpi/improper_zero.o differ
-Binary files src/Obj_mpi/info.o and new_src/Obj_mpi/info.o differ
-Binary files src/Obj_mpi/input.o and new_src/Obj_mpi/input.o differ
-Binary files src/Obj_mpi/integrate.o and new_src/Obj_mpi/integrate.o differ
-Binary files src/Obj_mpi/irregular.o and new_src/Obj_mpi/irregular.o differ
-Binary files src/Obj_mpi/kspace.o and new_src/Obj_mpi/kspace.o differ
-Binary files src/Obj_mpi/lammps.o and new_src/Obj_mpi/lammps.o differ
-Binary files src/Obj_mpi/lattice.o and new_src/Obj_mpi/lattice.o differ
-Binary files src/Obj_mpi/library.o and new_src/Obj_mpi/library.o differ
-Binary files src/Obj_mpi/main.o and new_src/Obj_mpi/main.o differ
-diff -ruN src/Obj_mpi/Makefile new_src/Obj_mpi/Makefile
---- src/Obj_mpi/Makefile	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/Obj_mpi/Makefile	2018-11-15 18:43:06.324068489 +0100
-@@ -0,0 +1,114 @@
-+# mpi = MPI with its default compiler
 +
-+SHELL = /bin/sh
++/* ----------------------------------------------------------------------
++  Contributing author: Thomas Swinburne (CNRS & CINaM, Marseille, France)
++   gather the named per atom fix and return it in user-allocated data
++   extract_fix does not work when running lammps in parallel
++   data will be ordered by atom ID
++     requirement for consecutive atom IDs (1 to N)
++   gather_fix_concat() gather_fix_subset() not implemented yet....
++   id = fix ID
++   count: number of entries per atom
++   Fills 1d data, which must be pre-allocated to length of count * Natoms, where Natoms is as queried by get_natoms()
++   method:
++     alloc and zero count*Natom length vector
++     loop over Nlocal to fill vector with my values
++     Allreduce to sum vector into data across all procs
++------------------------------------------------------------------------- */
 +
-+# ---------------------------------------------------------------------
-+# compiler/linker settings
-+# specify flags and libraries needed for your compiler
++void lammps_gather_peratom_fix(void *ptr, char *id, int count, void *data)
++{
++  LAMMPS *lmp = (LAMMPS *) ptr;
 +
-+CC =		mpicxx
-+CCFLAGS =	-g -O3 
-+SHFLAGS =	-fPIC
-+DEPFLAGS =	-M
++  BEGIN_CAPTURE
++  {
++    int i,j,offset;
 +
-+LINK =		mpicxx
-+LINKFLAGS =	-g -O
-+LIB = 
-+SIZE =		size
-+
-+ARCHIVE =	ar
-+ARFLAGS =	-rc
-+SHLIBFLAGS =	-shared
-+
-+# ---------------------------------------------------------------------
-+# LAMMPS-specific settings, all OPTIONAL
-+# specify settings for LAMMPS features you will use
-+# if you change any -D setting, do full re-compile after "make clean"
-+
-+# LAMMPS ifdef settings
-+# see possible settings in Section 2.2 (step 4) of manual
-+
-+LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64
-+
-+# MPI library
-+# see discussion in Section 2.2 (step 5) of manual
-+# MPI wrapper compiler/linker can provide this info
-+# can point to dummy MPI library in src/STUBS as in Makefile.serial
-+# use -D MPICH and OMPI settings in INC to avoid C++ lib conflicts
-+# INC = path for mpi.h, MPI compiler settings
-+# PATH = path for MPI library
-+# LIB = name of MPI library
-+
-+MPI_INC =       -DMPICH_SKIP_MPICXX -DOMPI_SKIP_MPICXX=1
-+MPI_PATH = 
-+MPI_LIB =	
-+
-+# FFT library
-+# see discussion in Section 2.2 (step 6) of manual
-+# can be left blank to use provided KISS FFT library
-+# INC = -DFFT setting, e.g. -DFFT_FFTW, FFT compiler settings
-+# PATH = path for FFT library
-+# LIB = name of FFT library
-+
-+FFT_INC =    	
-+FFT_PATH = 
-+FFT_LIB =	
-+
-+# JPEG and/or PNG library
-+# see discussion in Section 2.2 (step 7) of manual
-+# only needed if -DLAMMPS_JPEG or -DLAMMPS_PNG listed with LMP_INC
-+# INC = path(s) for jpeglib.h and/or png.h
-+# PATH = path(s) for JPEG library and/or PNG library
-+# LIB = name(s) of JPEG library and/or PNG library
-+
-+JPG_INC =       
-+JPG_PATH = 	
-+JPG_LIB =	
-+
-+# ---------------------------------------------------------------------
-+# build rules and dependencies
-+# do not edit this section
-+
-+include	Makefile.package.settings
-+include	Makefile.package
-+
-+EXTRA_INC = $(LMP_INC) $(PKG_INC) $(MPI_INC) $(FFT_INC) $(JPG_INC) $(PKG_SYSINC)
-+EXTRA_PATH = $(PKG_PATH) $(MPI_PATH) $(FFT_PATH) $(JPG_PATH) $(PKG_SYSPATH)
-+EXTRA_LIB = $(PKG_LIB) $(MPI_LIB) $(FFT_LIB) $(JPG_LIB) $(PKG_SYSLIB)
-+EXTRA_CPP_DEPENDS = $(PKG_CPP_DEPENDS)
-+EXTRA_LINK_DEPENDS = $(PKG_LINK_DEPENDS)
-+
-+# Path to src files
-+
-+vpath %.cpp ..
-+vpath %.h ..
-+
-+# Link target
-+
-+$(EXE):	$(OBJ) $(EXTRA_LINK_DEPENDS)
-+	$(LINK) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ) $(EXTRA_LIB) $(LIB) -o $(EXE)
-+	$(SIZE) $(EXE)
-+
-+# Library targets
-+
-+lib:	$(OBJ) $(EXTRA_LINK_DEPENDS)
-+	$(ARCHIVE) $(ARFLAGS) $(EXE) $(OBJ)
-+
-+shlib:	$(OBJ) $(EXTRA_LINK_DEPENDS)
-+	$(CC) $(CCFLAGS) $(SHFLAGS) $(SHLIBFLAGS) $(EXTRA_PATH) -o $(EXE) \
-+        $(OBJ) $(EXTRA_LIB) $(LIB)
-+
-+# Compilation rules
-+
-+%.o:%.cpp
-+	$(CC) $(CCFLAGS) $(SHFLAGS) $(EXTRA_INC) -c $<
-+
-+# Individual dependencies
-+
-+depend : fastdep.exe $(SRC)
-+	@./fastdep.exe $(EXTRA_INC) -- $^ > .depend || exit 1
-+
-+fastdep.exe: ../DEPEND/fastdep.c
-+	cc -O -o $@ $<
-+
-+sinclude .depend
-diff -ruN src/Obj_mpi/Makefile.package new_src/Obj_mpi/Makefile.package
---- src/Obj_mpi/Makefile.package	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/Obj_mpi/Makefile.package	2018-11-15 18:43:06.336068490 +0100
-@@ -0,0 +1,12 @@
-+# Settings for libraries used by specific LAMMPS packages
-+# this file is auto-edited when those packages are included/excluded
-+
-+PKG_INC =   
-+PKG_PATH =  
-+PKG_LIB =   
-+PKG_CPP_DEPENDS = 
-+PKG_LINK_DEPENDS = 
-+
-+PKG_SYSINC =  
-+PKG_SYSLIB =  
-+PKG_SYSPATH = 
-diff -ruN src/Obj_mpi/Makefile.package.settings new_src/Obj_mpi/Makefile.package.settings
---- src/Obj_mpi/Makefile.package.settings	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/Obj_mpi/Makefile.package.settings	2018-11-15 18:43:06.336068490 +0100
-@@ -0,0 +1,4 @@
-+# Makefile settings generated by libraries used by specific LAMMPS packages
-+# this file is auto-edited when those packages are included/excluded
-+
-+
-Binary files src/Obj_mpi/math_extra.o and new_src/Obj_mpi/math_extra.o differ
-Binary files src/Obj_mpi/math_special.o and new_src/Obj_mpi/math_special.o differ
-Binary files src/Obj_mpi/memory.o and new_src/Obj_mpi/memory.o differ
-Binary files src/Obj_mpi/min_cg.o and new_src/Obj_mpi/min_cg.o differ
-Binary files src/Obj_mpi/min_fire.o and new_src/Obj_mpi/min_fire.o differ
-Binary files src/Obj_mpi/min_hftn.o and new_src/Obj_mpi/min_hftn.o differ
-Binary files src/Obj_mpi/minimize.o and new_src/Obj_mpi/minimize.o differ
-Binary files src/Obj_mpi/min_linesearch.o and new_src/Obj_mpi/min_linesearch.o differ
-Binary files src/Obj_mpi/min.o and new_src/Obj_mpi/min.o differ
-Binary files src/Obj_mpi/min_quickmin.o and new_src/Obj_mpi/min_quickmin.o differ
-Binary files src/Obj_mpi/min_sd.o and new_src/Obj_mpi/min_sd.o differ
-Binary files src/Obj_mpi/modify.o and new_src/Obj_mpi/modify.o differ
-Binary files src/Obj_mpi/molecule.o and new_src/Obj_mpi/molecule.o differ
-Binary files src/Obj_mpi/nbin.o and new_src/Obj_mpi/nbin.o differ
-Binary files src/Obj_mpi/nbin_standard.o and new_src/Obj_mpi/nbin_standard.o differ
-Binary files src/Obj_mpi/neighbor.o and new_src/Obj_mpi/neighbor.o differ
-Binary files src/Obj_mpi/neigh_list.o and new_src/Obj_mpi/neigh_list.o differ
-Binary files src/Obj_mpi/neigh_request.o and new_src/Obj_mpi/neigh_request.o differ
-Binary files src/Obj_mpi/npair_copy.o and new_src/Obj_mpi/npair_copy.o differ
-Binary files src/Obj_mpi/npair_full_bin_atomonly.o and new_src/Obj_mpi/npair_full_bin_atomonly.o differ
-Binary files src/Obj_mpi/npair_full_bin_ghost.o and new_src/Obj_mpi/npair_full_bin_ghost.o differ
-Binary files src/Obj_mpi/npair_full_bin.o and new_src/Obj_mpi/npair_full_bin.o differ
-Binary files src/Obj_mpi/npair_full_multi.o and new_src/Obj_mpi/npair_full_multi.o differ
-Binary files src/Obj_mpi/npair_full_nsq_ghost.o and new_src/Obj_mpi/npair_full_nsq_ghost.o differ
-Binary files src/Obj_mpi/npair_full_nsq.o and new_src/Obj_mpi/npair_full_nsq.o differ
-Binary files src/Obj_mpi/npair_half_bin_atomonly_newton.o and new_src/Obj_mpi/npair_half_bin_atomonly_newton.o differ
-Binary files src/Obj_mpi/npair_half_bin_newtoff_ghost.o and new_src/Obj_mpi/npair_half_bin_newtoff_ghost.o differ
-Binary files src/Obj_mpi/npair_half_bin_newtoff.o and new_src/Obj_mpi/npair_half_bin_newtoff.o differ
-Binary files src/Obj_mpi/npair_half_bin_newton.o and new_src/Obj_mpi/npair_half_bin_newton.o differ
-Binary files src/Obj_mpi/npair_half_bin_newton_tri.o and new_src/Obj_mpi/npair_half_bin_newton_tri.o differ
-Binary files src/Obj_mpi/npair_halffull_newtoff.o and new_src/Obj_mpi/npair_halffull_newtoff.o differ
-Binary files src/Obj_mpi/npair_halffull_newton.o and new_src/Obj_mpi/npair_halffull_newton.o differ
-Binary files src/Obj_mpi/npair_half_multi_newtoff.o and new_src/Obj_mpi/npair_half_multi_newtoff.o differ
-Binary files src/Obj_mpi/npair_half_multi_newton.o and new_src/Obj_mpi/npair_half_multi_newton.o differ
-Binary files src/Obj_mpi/npair_half_multi_newton_tri.o and new_src/Obj_mpi/npair_half_multi_newton_tri.o differ
-Binary files src/Obj_mpi/npair_half_nsq_newtoff_ghost.o and new_src/Obj_mpi/npair_half_nsq_newtoff_ghost.o differ
-Binary files src/Obj_mpi/npair_half_nsq_newtoff.o and new_src/Obj_mpi/npair_half_nsq_newtoff.o differ
-Binary files src/Obj_mpi/npair_half_nsq_newton.o and new_src/Obj_mpi/npair_half_nsq_newton.o differ
-Binary files src/Obj_mpi/npair_half_respa_bin_newtoff.o and new_src/Obj_mpi/npair_half_respa_bin_newtoff.o differ
-Binary files src/Obj_mpi/npair_half_respa_bin_newton.o and new_src/Obj_mpi/npair_half_respa_bin_newton.o differ
-Binary files src/Obj_mpi/npair_half_respa_bin_newton_tri.o and new_src/Obj_mpi/npair_half_respa_bin_newton_tri.o differ
-Binary files src/Obj_mpi/npair_half_respa_nsq_newtoff.o and new_src/Obj_mpi/npair_half_respa_nsq_newtoff.o differ
-Binary files src/Obj_mpi/npair_half_respa_nsq_newton.o and new_src/Obj_mpi/npair_half_respa_nsq_newton.o differ
-Binary files src/Obj_mpi/npair_half_size_bin_newtoff.o and new_src/Obj_mpi/npair_half_size_bin_newtoff.o differ
-Binary files src/Obj_mpi/npair_half_size_bin_newton.o and new_src/Obj_mpi/npair_half_size_bin_newton.o differ
-Binary files src/Obj_mpi/npair_half_size_bin_newton_tri.o and new_src/Obj_mpi/npair_half_size_bin_newton_tri.o differ
-Binary files src/Obj_mpi/npair_half_size_nsq_newtoff.o and new_src/Obj_mpi/npair_half_size_nsq_newtoff.o differ
-Binary files src/Obj_mpi/npair_half_size_nsq_newton.o and new_src/Obj_mpi/npair_half_size_nsq_newton.o differ
-Binary files src/Obj_mpi/npair.o and new_src/Obj_mpi/npair.o differ
-Binary files src/Obj_mpi/npair_skip.o and new_src/Obj_mpi/npair_skip.o differ
-Binary files src/Obj_mpi/npair_skip_respa.o and new_src/Obj_mpi/npair_skip_respa.o differ
-Binary files src/Obj_mpi/npair_skip_size.o and new_src/Obj_mpi/npair_skip_size.o differ
-Binary files src/Obj_mpi/npair_skip_size_off2on.o and new_src/Obj_mpi/npair_skip_size_off2on.o differ
-Binary files src/Obj_mpi/npair_skip_size_off2on_oneside.o and new_src/Obj_mpi/npair_skip_size_off2on_oneside.o differ
-Binary files src/Obj_mpi/nstencil_full_bin_2d.o and new_src/Obj_mpi/nstencil_full_bin_2d.o differ
-Binary files src/Obj_mpi/nstencil_full_bin_3d.o and new_src/Obj_mpi/nstencil_full_bin_3d.o differ
-Binary files src/Obj_mpi/nstencil_full_ghost_bin_2d.o and new_src/Obj_mpi/nstencil_full_ghost_bin_2d.o differ
-Binary files src/Obj_mpi/nstencil_full_ghost_bin_3d.o and new_src/Obj_mpi/nstencil_full_ghost_bin_3d.o differ
-Binary files src/Obj_mpi/nstencil_full_multi_2d.o and new_src/Obj_mpi/nstencil_full_multi_2d.o differ
-Binary files src/Obj_mpi/nstencil_full_multi_3d.o and new_src/Obj_mpi/nstencil_full_multi_3d.o differ
-Binary files src/Obj_mpi/nstencil_half_bin_2d_newtoff.o and new_src/Obj_mpi/nstencil_half_bin_2d_newtoff.o differ
-Binary files src/Obj_mpi/nstencil_half_bin_2d_newton.o and new_src/Obj_mpi/nstencil_half_bin_2d_newton.o differ
-Binary files src/Obj_mpi/nstencil_half_bin_2d_newton_tri.o and new_src/Obj_mpi/nstencil_half_bin_2d_newton_tri.o differ
-Binary files src/Obj_mpi/nstencil_half_bin_3d_newtoff.o and new_src/Obj_mpi/nstencil_half_bin_3d_newtoff.o differ
-Binary files src/Obj_mpi/nstencil_half_bin_3d_newton.o and new_src/Obj_mpi/nstencil_half_bin_3d_newton.o differ
-Binary files src/Obj_mpi/nstencil_half_bin_3d_newton_tri.o and new_src/Obj_mpi/nstencil_half_bin_3d_newton_tri.o differ
-Binary files src/Obj_mpi/nstencil_half_ghost_bin_2d_newtoff.o and new_src/Obj_mpi/nstencil_half_ghost_bin_2d_newtoff.o differ
-Binary files src/Obj_mpi/nstencil_half_ghost_bin_3d_newtoff.o and new_src/Obj_mpi/nstencil_half_ghost_bin_3d_newtoff.o differ
-Binary files src/Obj_mpi/nstencil_half_multi_2d_newtoff.o and new_src/Obj_mpi/nstencil_half_multi_2d_newtoff.o differ
-Binary files src/Obj_mpi/nstencil_half_multi_2d_newton.o and new_src/Obj_mpi/nstencil_half_multi_2d_newton.o differ
-Binary files src/Obj_mpi/nstencil_half_multi_2d_newton_tri.o and new_src/Obj_mpi/nstencil_half_multi_2d_newton_tri.o differ
-Binary files src/Obj_mpi/nstencil_half_multi_3d_newtoff.o and new_src/Obj_mpi/nstencil_half_multi_3d_newtoff.o differ
-Binary files src/Obj_mpi/nstencil_half_multi_3d_newton.o and new_src/Obj_mpi/nstencil_half_multi_3d_newton.o differ
-Binary files src/Obj_mpi/nstencil_half_multi_3d_newton_tri.o and new_src/Obj_mpi/nstencil_half_multi_3d_newton_tri.o differ
-Binary files src/Obj_mpi/nstencil.o and new_src/Obj_mpi/nstencil.o differ
-Binary files src/Obj_mpi/ntopo_angle_all.o and new_src/Obj_mpi/ntopo_angle_all.o differ
-Binary files src/Obj_mpi/ntopo_angle_partial.o and new_src/Obj_mpi/ntopo_angle_partial.o differ
-Binary files src/Obj_mpi/ntopo_angle_template.o and new_src/Obj_mpi/ntopo_angle_template.o differ
-Binary files src/Obj_mpi/ntopo_bond_all.o and new_src/Obj_mpi/ntopo_bond_all.o differ
-Binary files src/Obj_mpi/ntopo_bond_partial.o and new_src/Obj_mpi/ntopo_bond_partial.o differ
-Binary files src/Obj_mpi/ntopo_bond_template.o and new_src/Obj_mpi/ntopo_bond_template.o differ
-Binary files src/Obj_mpi/ntopo_dihedral_all.o and new_src/Obj_mpi/ntopo_dihedral_all.o differ
-Binary files src/Obj_mpi/ntopo_dihedral_partial.o and new_src/Obj_mpi/ntopo_dihedral_partial.o differ
-Binary files src/Obj_mpi/ntopo_dihedral_template.o and new_src/Obj_mpi/ntopo_dihedral_template.o differ
-Binary files src/Obj_mpi/ntopo_improper_all.o and new_src/Obj_mpi/ntopo_improper_all.o differ
-Binary files src/Obj_mpi/ntopo_improper_partial.o and new_src/Obj_mpi/ntopo_improper_partial.o differ
-Binary files src/Obj_mpi/ntopo_improper_template.o and new_src/Obj_mpi/ntopo_improper_template.o differ
-Binary files src/Obj_mpi/ntopo.o and new_src/Obj_mpi/ntopo.o differ
-Binary files src/Obj_mpi/output.o and new_src/Obj_mpi/output.o differ
-Binary files src/Obj_mpi/pair_adp.o and new_src/Obj_mpi/pair_adp.o differ
-Binary files src/Obj_mpi/pair_airebo_morse.o and new_src/Obj_mpi/pair_airebo_morse.o differ
-Binary files src/Obj_mpi/pair_airebo.o and new_src/Obj_mpi/pair_airebo.o differ
-Binary files src/Obj_mpi/pair_beck.o and new_src/Obj_mpi/pair_beck.o differ
-Binary files src/Obj_mpi/pair_bop.o and new_src/Obj_mpi/pair_bop.o differ
-Binary files src/Obj_mpi/pair_born_coul_dsf.o and new_src/Obj_mpi/pair_born_coul_dsf.o differ
-Binary files src/Obj_mpi/pair_born_coul_wolf.o and new_src/Obj_mpi/pair_born_coul_wolf.o differ
-Binary files src/Obj_mpi/pair_born.o and new_src/Obj_mpi/pair_born.o differ
-Binary files src/Obj_mpi/pair_buck_coul_cut.o and new_src/Obj_mpi/pair_buck_coul_cut.o differ
-Binary files src/Obj_mpi/pair_buck.o and new_src/Obj_mpi/pair_buck.o differ
-Binary files src/Obj_mpi/pair_comb3.o and new_src/Obj_mpi/pair_comb3.o differ
-Binary files src/Obj_mpi/pair_comb.o and new_src/Obj_mpi/pair_comb.o differ
-Binary files src/Obj_mpi/pair_coul_cut.o and new_src/Obj_mpi/pair_coul_cut.o differ
-Binary files src/Obj_mpi/pair_coul_debye.o and new_src/Obj_mpi/pair_coul_debye.o differ
-Binary files src/Obj_mpi/pair_coul_dsf.o and new_src/Obj_mpi/pair_coul_dsf.o differ
-Binary files src/Obj_mpi/pair_coul_streitz.o and new_src/Obj_mpi/pair_coul_streitz.o differ
-Binary files src/Obj_mpi/pair_coul_wolf.o and new_src/Obj_mpi/pair_coul_wolf.o differ
-Binary files src/Obj_mpi/pair_dpd.o and new_src/Obj_mpi/pair_dpd.o differ
-Binary files src/Obj_mpi/pair_dpd_tstat.o and new_src/Obj_mpi/pair_dpd_tstat.o differ
-Binary files src/Obj_mpi/pair_eam_alloy.o and new_src/Obj_mpi/pair_eam_alloy.o differ
-Binary files src/Obj_mpi/pair_eam_cd.o and new_src/Obj_mpi/pair_eam_cd.o differ
-Binary files src/Obj_mpi/pair_eam_fs.o and new_src/Obj_mpi/pair_eam_fs.o differ
-Binary files src/Obj_mpi/pair_eam.o and new_src/Obj_mpi/pair_eam.o differ
-Binary files src/Obj_mpi/pair_eim.o and new_src/Obj_mpi/pair_eim.o differ
-Binary files src/Obj_mpi/pair_gauss.o and new_src/Obj_mpi/pair_gauss.o differ
-Binary files src/Obj_mpi/pair_gw.o and new_src/Obj_mpi/pair_gw.o differ
-Binary files src/Obj_mpi/pair_gw_zbl.o and new_src/Obj_mpi/pair_gw_zbl.o differ
-Binary files src/Obj_mpi/pair_hybrid.o and new_src/Obj_mpi/pair_hybrid.o differ
-Binary files src/Obj_mpi/pair_hybrid_overlay.o and new_src/Obj_mpi/pair_hybrid_overlay.o differ
-Binary files src/Obj_mpi/pair_lcbop.o and new_src/Obj_mpi/pair_lcbop.o differ
-Binary files src/Obj_mpi/pair_lj96_cut.o and new_src/Obj_mpi/pair_lj96_cut.o differ
-Binary files src/Obj_mpi/pair_lj_cubic.o and new_src/Obj_mpi/pair_lj_cubic.o differ
-Binary files src/Obj_mpi/pair_lj_cut_coul_cut.o and new_src/Obj_mpi/pair_lj_cut_coul_cut.o differ
-Binary files src/Obj_mpi/pair_lj_cut_coul_debye.o and new_src/Obj_mpi/pair_lj_cut_coul_debye.o differ
-Binary files src/Obj_mpi/pair_lj_cut_coul_dsf.o and new_src/Obj_mpi/pair_lj_cut_coul_dsf.o differ
-Binary files src/Obj_mpi/pair_lj_cut_coul_wolf.o and new_src/Obj_mpi/pair_lj_cut_coul_wolf.o differ
-Binary files src/Obj_mpi/pair_lj_cut.o and new_src/Obj_mpi/pair_lj_cut.o differ
-Binary files src/Obj_mpi/pair_lj_expand.o and new_src/Obj_mpi/pair_lj_expand.o differ
-Binary files src/Obj_mpi/pair_lj_gromacs_coul_gromacs.o and new_src/Obj_mpi/pair_lj_gromacs_coul_gromacs.o differ
-Binary files src/Obj_mpi/pair_lj_gromacs.o and new_src/Obj_mpi/pair_lj_gromacs.o differ
-Binary files src/Obj_mpi/pair_lj_smooth_linear.o and new_src/Obj_mpi/pair_lj_smooth_linear.o differ
-Binary files src/Obj_mpi/pair_lj_smooth.o and new_src/Obj_mpi/pair_lj_smooth.o differ
-Binary files src/Obj_mpi/pair_mie_cut.o and new_src/Obj_mpi/pair_mie_cut.o differ
-Binary files src/Obj_mpi/pair_morse.o and new_src/Obj_mpi/pair_morse.o differ
-Binary files src/Obj_mpi/pair_nb3b_harmonic.o and new_src/Obj_mpi/pair_nb3b_harmonic.o differ
-Binary files src/Obj_mpi/pair.o and new_src/Obj_mpi/pair.o differ
-Binary files src/Obj_mpi/pair_polymorphic.o and new_src/Obj_mpi/pair_polymorphic.o differ
-Binary files src/Obj_mpi/pair_rebo.o and new_src/Obj_mpi/pair_rebo.o differ
-Binary files src/Obj_mpi/pair_soft.o and new_src/Obj_mpi/pair_soft.o differ
-Binary files src/Obj_mpi/pair_sw.o and new_src/Obj_mpi/pair_sw.o differ
-Binary files src/Obj_mpi/pair_table.o and new_src/Obj_mpi/pair_table.o differ
-Binary files src/Obj_mpi/pair_tersoff_mod_c.o and new_src/Obj_mpi/pair_tersoff_mod_c.o differ
-Binary files src/Obj_mpi/pair_tersoff_mod.o and new_src/Obj_mpi/pair_tersoff_mod.o differ
-Binary files src/Obj_mpi/pair_tersoff.o and new_src/Obj_mpi/pair_tersoff.o differ
-Binary files src/Obj_mpi/pair_tersoff_zbl.o and new_src/Obj_mpi/pair_tersoff_zbl.o differ
-Binary files src/Obj_mpi/pair_ufm.o and new_src/Obj_mpi/pair_ufm.o differ
-Binary files src/Obj_mpi/pair_vashishta.o and new_src/Obj_mpi/pair_vashishta.o differ
-Binary files src/Obj_mpi/pair_vashishta_table.o and new_src/Obj_mpi/pair_vashishta_table.o differ
-Binary files src/Obj_mpi/pair_yukawa.o and new_src/Obj_mpi/pair_yukawa.o differ
-Binary files src/Obj_mpi/pair_zbl.o and new_src/Obj_mpi/pair_zbl.o differ
-Binary files src/Obj_mpi/pair_zero.o and new_src/Obj_mpi/pair_zero.o differ
-Binary files src/Obj_mpi/procmap.o and new_src/Obj_mpi/procmap.o differ
-Binary files src/Obj_mpi/python.o and new_src/Obj_mpi/python.o differ
-Binary files src/Obj_mpi/random_mars.o and new_src/Obj_mpi/random_mars.o differ
-Binary files src/Obj_mpi/random_park.o and new_src/Obj_mpi/random_park.o differ
-Binary files src/Obj_mpi/rcb.o and new_src/Obj_mpi/rcb.o differ
-Binary files src/Obj_mpi/read_data.o and new_src/Obj_mpi/read_data.o differ
-Binary files src/Obj_mpi/read_dump.o and new_src/Obj_mpi/read_dump.o differ
-Binary files src/Obj_mpi/reader_native.o and new_src/Obj_mpi/reader_native.o differ
-Binary files src/Obj_mpi/reader.o and new_src/Obj_mpi/reader.o differ
-Binary files src/Obj_mpi/reader_xyz.o and new_src/Obj_mpi/reader_xyz.o differ
-Binary files src/Obj_mpi/read_restart.o and new_src/Obj_mpi/read_restart.o differ
-Binary files src/Obj_mpi/region_block.o and new_src/Obj_mpi/region_block.o differ
-Binary files src/Obj_mpi/region_cone.o and new_src/Obj_mpi/region_cone.o differ
-Binary files src/Obj_mpi/region_cylinder.o and new_src/Obj_mpi/region_cylinder.o differ
-Binary files src/Obj_mpi/region_intersect.o and new_src/Obj_mpi/region_intersect.o differ
-Binary files src/Obj_mpi/region.o and new_src/Obj_mpi/region.o differ
-Binary files src/Obj_mpi/region_plane.o and new_src/Obj_mpi/region_plane.o differ
-Binary files src/Obj_mpi/region_prism.o and new_src/Obj_mpi/region_prism.o differ
-Binary files src/Obj_mpi/region_sphere.o and new_src/Obj_mpi/region_sphere.o differ
-Binary files src/Obj_mpi/region_union.o and new_src/Obj_mpi/region_union.o differ
-Binary files src/Obj_mpi/replicate.o and new_src/Obj_mpi/replicate.o differ
-Binary files src/Obj_mpi/rerun.o and new_src/Obj_mpi/rerun.o differ
-Binary files src/Obj_mpi/reset_ids.o and new_src/Obj_mpi/reset_ids.o differ
-Binary files src/Obj_mpi/respa.o and new_src/Obj_mpi/respa.o differ
-Binary files src/Obj_mpi/run.o and new_src/Obj_mpi/run.o differ
-Binary files src/Obj_mpi/set.o and new_src/Obj_mpi/set.o differ
-Binary files src/Obj_mpi/special.o and new_src/Obj_mpi/special.o differ
-Binary files src/Obj_mpi/thermo.o and new_src/Obj_mpi/thermo.o differ
-Binary files src/Obj_mpi/timer.o and new_src/Obj_mpi/timer.o differ
-Binary files src/Obj_mpi/universe.o and new_src/Obj_mpi/universe.o differ
-Binary files src/Obj_mpi/update.o and new_src/Obj_mpi/update.o differ
-Binary files src/Obj_mpi/variable.o and new_src/Obj_mpi/variable.o differ
-Binary files src/Obj_mpi/velocity.o and new_src/Obj_mpi/velocity.o differ
-Binary files src/Obj_mpi/verlet.o and new_src/Obj_mpi/verlet.o differ
-Binary files src/Obj_mpi/write_coeff.o and new_src/Obj_mpi/write_coeff.o differ
-Binary files src/Obj_mpi/write_data.o and new_src/Obj_mpi/write_data.o differ
-Binary files src/Obj_mpi/write_dump.o and new_src/Obj_mpi/write_dump.o differ
-Binary files src/Obj_mpi/write_restart.o and new_src/Obj_mpi/write_restart.o differ
-diff -ruN src/set.cpp new_src/set.cpp
---- src/set.cpp	2018-11-13 15:33:50.914075581 +0100
-+++ new_src/set.cpp	2018-11-15 17:08:19.077599108 +0100
-@@ -45,7 +45,7 @@
- 
- enum{TYPE,TYPE_FRACTION,MOLECULE,X,Y,Z,CHARGE,MASS,SHAPE,LENGTH,TRI,
-      DIPOLE,DIPOLE_RANDOM,SPIN,SPIN_RANDOM,QUAT,QUAT_RANDOM,
--     THETA,THETA_RANDOM,ANGMOM,OMEGA,
-+     THETA,THETA_RANDOM,ANGMOM,OMEGA,PAFIPATH,
-      DIAMETER,DENSITY,VOLUME,IMAGE,BOND,ANGLE,DIHEDRAL,IMPROPER,
-      MESO_E,MESO_CV,MESO_RHO,EDPD_TEMP,EDPD_CV,CC,SMD_MASS_DENSITY,
-      SMD_CONTACT_RADIUS,DPDTHETA,INAME,DNAME,VX,VY,VZ};
-@@ -252,6 +252,33 @@
-       set(SPIN);
-       iarg += 5;
- 
-+    } else if (strcmp(arg[iarg],"pafipath") == 0) {
-+      if (iarg+9 > narg) error->all(FLERR,"Illegal set command");
-+      vec1 = NULL;
-+      memory->create(vec1,9,"set:vec1");
-+      if (strstr(arg[iarg+1],"v_") == arg[iarg+1]) varparse(arg[iarg+1],1);
-+      else vec1[0] = force->numeric(FLERR,arg[iarg+1]);
-+      if (strstr(arg[iarg+2],"v_") == arg[iarg+2]) varparse(arg[iarg+2],2);
-+      else vec1[1] = force->numeric(FLERR,arg[iarg+2]);
-+      if (strstr(arg[iarg+3],"v_") == arg[iarg+3]) varparse(arg[iarg+3],3);
-+      else vec1[2] = force->numeric(FLERR,arg[iarg+3]);
-+      if (strstr(arg[iarg+4],"v_") == arg[iarg+4]) varparse(arg[iarg+4],4);
-+      else vec1[3] = force->numeric(FLERR,arg[iarg+4]);
-+      if (strstr(arg[iarg+5],"v_") == arg[iarg+5]) varparse(arg[iarg+5],5);
-+      else vec1[4] = force->numeric(FLERR,arg[iarg+5]);
-+      if (strstr(arg[iarg+6],"v_") == arg[iarg+6]) varparse(arg[iarg+6],6);
-+      else vec1[5] = force->numeric(FLERR,arg[iarg+6]);
-+      if (strstr(arg[iarg+7],"v_") == arg[iarg+7]) varparse(arg[iarg+7],7);
-+      else vec1[6] = force->numeric(FLERR,arg[iarg+7]);
-+      if (strstr(arg[iarg+8],"v_") == arg[iarg+8]) varparse(arg[iarg+8],8);
-+      else vec1[7] = force->numeric(FLERR,arg[iarg+8]);
-+      if (strstr(arg[iarg+9],"v_") == arg[iarg+9]) varparse(arg[iarg+9],9);
-+      else vec1[8] = force->numeric(FLERR,arg[iarg+9]);
-+      if (!atom->pafi_flag)
-+        error->all(FLERR,"Cannot set this attribute for this atom style");
-+      set(PAFIPATH);
-+      iarg += 10;
-+
-     } else if (strcmp(arg[iarg],"spin/random") == 0) {
-       if (iarg+3 > narg) error->all(FLERR,"Illegal set command");
-       ivalue = force->inumeric(FLERR,arg[iarg+1]);
-@@ -885,6 +912,25 @@
-       sp[i][3] = dvalue;
-     }
- 
-+    // set 0th,1st,2nd path derivative for USER-PAFI
-+
-+    else if (keyword == PAFIPATH) {
-+
-+      double **path = atom->path;
-+      path[i][0] = vec1[0];
-+      path[i][1] = vec1[1];
-+      path[i][2] = vec1[2];
-+      double **norm = atom->norm;
-+      norm[i][0] = vec1[3];
-+      norm[i][4] = vec1[4];
-+      norm[i][5] = vec1[5];
-+      double **dnorm = atom->dnorm;
-+      dnorm[i][0] = vec1[6];
-+      dnorm[i][1] = vec1[7];
-+      dnorm[i][2] = vec1[8];
++    int ifix = lmp->modify->find_fix(id);
++    if (ifix < 0) {
++      lmp->error->warning(FLERR,"lammps_gather_fix: unknown fix id");
++      return;
 +    }
 +
++    Fix *fix = lmp->modify->fix[ifix];
++    int natoms = static_cast<int> (lmp->atom->natoms);
 +
-     // set quaternion orientation of ellipsoid or tri or body particle
-     // set quaternion orientation of ellipsoid or tri or body particle
-     // enforce quat rotation vector in z dir for 2d systems
-diff -ruN src/style_angle.h new_src/style_angle.h
---- src/style_angle.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_angle.h	2018-11-15 17:10:29.361605321 +0100
-@@ -0,0 +1,2 @@
-+#include "angle_hybrid.h"
-+#include "angle_zero.h"
-diff -ruN src/style_atom.h new_src/style_atom.h
---- src/style_atom.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_atom.h	2018-11-15 17:10:29.373605321 +0100
-@@ -0,0 +1,9 @@
-+#include "atom_vec_atomic.h"
-+#include "atom_vec_body.h"
-+#include "atom_vec_charge.h"
-+#include "atom_vec_ellipsoid.h"
-+#include "atom_vec_hybrid.h"
-+#include "atom_vec_line.h"
-+#include "atom_vec_pafi.h"
-+#include "atom_vec_sphere.h"
-+#include "atom_vec_tri.h"
-diff -ruN src/style_bond.h new_src/style_bond.h
---- src/style_bond.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_bond.h	2018-11-15 17:10:29.393605322 +0100
-@@ -0,0 +1,2 @@
-+#include "bond_hybrid.h"
-+#include "bond_zero.h"
-diff -ruN src/style_command.h new_src/style_command.h
---- src/style_command.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_command.h	2018-11-15 17:10:29.409605323 +0100
-@@ -0,0 +1,23 @@
-+#include "balance.h"
-+#include "change_box.h"
-+#include "create_atoms.h"
-+#include "create_bonds.h"
-+#include "create_box.h"
-+#include "delete_atoms.h"
-+#include "delete_bonds.h"
-+#include "displace_atoms.h"
-+#include "info.h"
-+#include "minimize.h"
-+#include "read_data.h"
-+#include "read_dump.h"
-+#include "read_restart.h"
-+#include "replicate.h"
-+#include "rerun.h"
-+#include "reset_ids.h"
-+#include "run.h"
-+#include "set.h"
-+#include "velocity.h"
-+#include "write_coeff.h"
-+#include "write_data.h"
-+#include "write_dump.h"
-+#include "write_restart.h"
-diff -ruN src/style_compute.h new_src/style_compute.h
---- src/style_compute.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_compute.h	2018-11-15 17:10:29.421605323 +0100
-@@ -0,0 +1,61 @@
-+#include "compute_aggregate_atom.h"
-+#include "compute_angle.h"
-+#include "compute_angle_local.h"
-+#include "compute_angmom_chunk.h"
-+#include "compute_bond.h"
-+#include "compute_bond_local.h"
-+#include "compute_centro_atom.h"
-+#include "compute_chunk_atom.h"
-+#include "compute_cluster_atom.h"
-+#include "compute_cna_atom.h"
-+#include "compute_com.h"
-+#include "compute_com_chunk.h"
-+#include "compute_contact_atom.h"
-+#include "compute_coord_atom.h"
-+#include "compute_dihedral.h"
-+#include "compute_dihedral_local.h"
-+#include "compute_dipole_chunk.h"
-+#include "compute_displace_atom.h"
-+#include "compute_erotate_sphere.h"
-+#include "compute_erotate_sphere_atom.h"
-+#include "compute_fragment_atom.h"
-+#include "compute_global_atom.h"
-+#include "compute_group_group.h"
-+#include "compute_gyration.h"
-+#include "compute_gyration_chunk.h"
-+#include "compute_heat_flux.h"
-+#include "compute_hexorder_atom.h"
-+#include "compute_improper.h"
-+#include "compute_improper_local.h"
-+#include "compute_inertia_chunk.h"
-+#include "compute_ke.h"
-+#include "compute_ke_atom.h"
-+#include "compute_msd.h"
-+#include "compute_msd_chunk.h"
-+#include "compute_omega_chunk.h"
-+#include "compute_orientorder_atom.h"
-+#include "compute_pair.h"
-+#include "compute_pair_local.h"
-+#include "compute_pe.h"
-+#include "compute_pe_atom.h"
-+#include "compute_pressure.h"
-+#include "compute_property_atom.h"
-+#include "compute_property_chunk.h"
-+#include "compute_property_local.h"
-+#include "compute_rdf.h"
-+#include "compute_reduce.h"
-+#include "compute_reduce_region.h"
-+#include "compute_slice.h"
-+#include "compute_stress_atom.h"
-+#include "compute_temp.h"
-+#include "compute_temp_chunk.h"
-+#include "compute_temp_com.h"
-+#include "compute_temp_deform.h"
-+#include "compute_temp_partial.h"
-+#include "compute_temp_profile.h"
-+#include "compute_temp_ramp.h"
-+#include "compute_temp_region.h"
-+#include "compute_temp_sphere.h"
-+#include "compute_torque_chunk.h"
-+#include "compute_vacf.h"
-+#include "compute_vcm_chunk.h"
-diff -ruN src/style_dihedral.h new_src/style_dihedral.h
---- src/style_dihedral.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_dihedral.h	2018-11-15 17:10:29.429605324 +0100
-@@ -0,0 +1,2 @@
-+#include "dihedral_hybrid.h"
-+#include "dihedral_zero.h"
-diff -ruN src/style_dump.h new_src/style_dump.h
---- src/style_dump.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_dump.h	2018-11-15 17:10:29.441605324 +0100
-@@ -0,0 +1,8 @@
-+#include "dump_atom.h"
-+#include "dump_cfg.h"
-+#include "dump_custom.h"
-+#include "dump_dcd.h"
-+#include "dump_image.h"
-+#include "dump_local.h"
-+#include "dump_movie.h"
-+#include "dump_xyz.h"
-diff -ruN src/style_fix.h new_src/style_fix.h
---- src/style_fix.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_fix.h	2018-11-15 17:10:29.453605325 +0100
-@@ -0,0 +1,71 @@
-+#include "fix_adapt.h"
-+#include "fix_addforce.h"
-+#include "fix_ave_atom.h"
-+#include "fix_ave_chunk.h"
-+#include "fix_ave_correlate.h"
-+#include "fix_ave_histo.h"
-+#include "fix_ave_histo_weight.h"
-+#include "fix_ave_time.h"
-+#include "fix_aveforce.h"
-+#include "fix_balance.h"
-+#include "fix_box_relax.h"
-+#include "fix_controller.h"
-+#include "fix_deform.h"
-+#include "fix_deprecated.h"
-+#include "fix_drag.h"
-+#include "fix_dt_reset.h"
-+#include "fix_enforce2d.h"
-+#include "fix_external.h"
-+#include "fix_gravity.h"
-+#include "fix_group.h"
-+#include "fix_halt.h"
-+#include "fix_heat.h"
-+#include "fix_hp.h"
-+#include "fix_indent.h"
-+#include "fix_langevin.h"
-+#include "fix_lineforce.h"
-+#include "fix_minimize.h"
-+#include "fix_momentum.h"
-+#include "fix_move.h"
-+#include "fix_neigh_history.h"
-+#include "fix_nph.h"
-+#include "fix_nph_sphere.h"
-+#include "fix_npt.h"
-+#include "fix_npt_sphere.h"
-+#include "fix_nve.h"
-+#include "fix_nve_limit.h"
-+#include "fix_nve_noforce.h"
-+#include "fix_nve_sphere.h"
-+#include "fix_nvt.h"
-+#include "fix_nvt_sllod.h"
-+#include "fix_nvt_sphere.h"
-+#include "fix_planeforce.h"
-+#include "fix_press_berendsen.h"
-+#include "fix_print.h"
-+#include "fix_property_atom.h"
-+#include "fix_qeq_comb.h"
-+#include "fix_read_restart.h"
-+#include "fix_recenter.h"
-+#include "fix_respa.h"
-+#include "fix_restrain.h"
-+#include "fix_setforce.h"
-+#include "fix_spring.h"
-+#include "fix_spring_chunk.h"
-+#include "fix_spring_rg.h"
-+#include "fix_spring_self.h"
-+#include "fix_store.h"
-+#include "fix_store_force.h"
-+#include "fix_store_state.h"
-+#include "fix_temp_berendsen.h"
-+#include "fix_temp_csld.h"
-+#include "fix_temp_csvr.h"
-+#include "fix_temp_rescale.h"
-+#include "fix_tmd.h"
-+#include "fix_vector.h"
-+#include "fix_viscous.h"
-+#include "fix_wall_harmonic.h"
-+#include "fix_wall_lj1043.h"
-+#include "fix_wall_lj126.h"
-+#include "fix_wall_lj93.h"
-+#include "fix_wall_reflect.h"
-+#include "fix_wall_region.h"
-diff -ruN src/style_improper.h new_src/style_improper.h
---- src/style_improper.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_improper.h	2018-11-15 17:10:29.461605325 +0100
-@@ -0,0 +1,2 @@
-+#include "improper_hybrid.h"
-+#include "improper_zero.h"
-diff -ruN src/style_integrate.h new_src/style_integrate.h
---- src/style_integrate.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_integrate.h	2018-11-15 17:10:29.473605326 +0100
-@@ -0,0 +1,2 @@
-+#include "respa.h"
-+#include "verlet.h"
-diff -ruN src/style_minimize.h new_src/style_minimize.h
---- src/style_minimize.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_minimize.h	2018-11-15 17:10:29.485605327 +0100
-@@ -0,0 +1,5 @@
-+#include "min_cg.h"
-+#include "min_fire.h"
-+#include "min_hftn.h"
-+#include "min_quickmin.h"
-+#include "min_sd.h"
-diff -ruN src/style_nbin.h new_src/style_nbin.h
---- src/style_nbin.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_nbin.h	2018-11-15 17:10:29.489605327 +0100
-@@ -0,0 +1 @@
-+#include "nbin_standard.h"
-diff -ruN src/style_npair.h new_src/style_npair.h
---- src/style_npair.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_npair.h	2018-11-15 17:10:29.493605327 +0100
-@@ -0,0 +1,35 @@
-+#include "npair_copy.h"
-+#include "npair_full_bin.h"
-+#include "npair_full_bin_atomonly.h"
-+#include "npair_full_bin_ghost.h"
-+#include "npair_full_multi.h"
-+#include "npair_full_nsq.h"
-+#include "npair_full_nsq_ghost.h"
-+#include "npair_half_bin_atomonly_newton.h"
-+#include "npair_half_bin_newtoff.h"
-+#include "npair_half_bin_newtoff_ghost.h"
-+#include "npair_half_bin_newton.h"
-+#include "npair_half_bin_newton_tri.h"
-+#include "npair_half_multi_newtoff.h"
-+#include "npair_half_multi_newton.h"
-+#include "npair_half_multi_newton_tri.h"
-+#include "npair_half_nsq_newtoff.h"
-+#include "npair_half_nsq_newtoff_ghost.h"
-+#include "npair_half_nsq_newton.h"
-+#include "npair_half_respa_bin_newtoff.h"
-+#include "npair_half_respa_bin_newton.h"
-+#include "npair_half_respa_bin_newton_tri.h"
-+#include "npair_half_respa_nsq_newtoff.h"
-+#include "npair_half_respa_nsq_newton.h"
-+#include "npair_half_size_bin_newtoff.h"
-+#include "npair_half_size_bin_newton.h"
-+#include "npair_half_size_bin_newton_tri.h"
-+#include "npair_half_size_nsq_newtoff.h"
-+#include "npair_half_size_nsq_newton.h"
-+#include "npair_halffull_newtoff.h"
-+#include "npair_halffull_newton.h"
-+#include "npair_skip.h"
-+#include "npair_skip_respa.h"
-+#include "npair_skip_size.h"
-+#include "npair_skip_size_off2on.h"
-+#include "npair_skip_size_off2on_oneside.h"
-diff -ruN src/style_nstencil.h new_src/style_nstencil.h
---- src/style_nstencil.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_nstencil.h	2018-11-15 17:10:29.497605327 +0100
-@@ -0,0 +1,20 @@
-+#include "nstencil_full_bin_2d.h"
-+#include "nstencil_full_bin_3d.h"
-+#include "nstencil_full_ghost_bin_2d.h"
-+#include "nstencil_full_ghost_bin_3d.h"
-+#include "nstencil_full_multi_2d.h"
-+#include "nstencil_full_multi_3d.h"
-+#include "nstencil_half_bin_2d_newtoff.h"
-+#include "nstencil_half_bin_2d_newton.h"
-+#include "nstencil_half_bin_2d_newton_tri.h"
-+#include "nstencil_half_bin_3d_newtoff.h"
-+#include "nstencil_half_bin_3d_newton.h"
-+#include "nstencil_half_bin_3d_newton_tri.h"
-+#include "nstencil_half_ghost_bin_2d_newtoff.h"
-+#include "nstencil_half_ghost_bin_3d_newtoff.h"
-+#include "nstencil_half_multi_2d_newtoff.h"
-+#include "nstencil_half_multi_2d_newton.h"
-+#include "nstencil_half_multi_2d_newton_tri.h"
-+#include "nstencil_half_multi_3d_newtoff.h"
-+#include "nstencil_half_multi_3d_newton.h"
-+#include "nstencil_half_multi_3d_newton_tri.h"
-diff -ruN src/style_ntopo.h new_src/style_ntopo.h
---- src/style_ntopo.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_ntopo.h	2018-11-15 17:10:29.505605328 +0100
-@@ -0,0 +1,12 @@
-+#include "ntopo_angle_all.h"
-+#include "ntopo_angle_partial.h"
-+#include "ntopo_angle_template.h"
-+#include "ntopo_bond_all.h"
-+#include "ntopo_bond_partial.h"
-+#include "ntopo_bond_template.h"
-+#include "ntopo_dihedral_all.h"
-+#include "ntopo_dihedral_partial.h"
-+#include "ntopo_dihedral_template.h"
-+#include "ntopo_improper_all.h"
-+#include "ntopo_improper_partial.h"
-+#include "ntopo_improper_template.h"
-diff -ruN src/style_pair.h new_src/style_pair.h
---- src/style_pair.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_pair.h	2018-11-15 17:10:29.509605328 +0100
-@@ -0,0 +1,60 @@
-+#include "pair_adp.h"
-+#include "pair_airebo.h"
-+#include "pair_airebo_morse.h"
-+#include "pair_beck.h"
-+#include "pair_bop.h"
-+#include "pair_born.h"
-+#include "pair_born_coul_dsf.h"
-+#include "pair_born_coul_wolf.h"
-+#include "pair_buck.h"
-+#include "pair_buck_coul_cut.h"
-+#include "pair_comb.h"
-+#include "pair_comb3.h"
-+#include "pair_coul_cut.h"
-+#include "pair_coul_debye.h"
-+#include "pair_coul_dsf.h"
-+#include "pair_coul_streitz.h"
-+#include "pair_coul_wolf.h"
-+#include "pair_dpd.h"
-+#include "pair_dpd_tstat.h"
-+#include "pair_eam.h"
-+#include "pair_eam_alloy.h"
-+#include "pair_eam_cd.h"
-+#include "pair_eam_fs.h"
-+#include "pair_eim.h"
-+#include "pair_gauss.h"
-+#include "pair_gw.h"
-+#include "pair_gw_zbl.h"
-+#include "pair_hybrid.h"
-+#include "pair_hybrid_overlay.h"
-+#include "pair_lcbop.h"
-+#include "pair_lj96_cut.h"
-+#include "pair_lj_cubic.h"
-+#include "pair_lj_cut.h"
-+#include "pair_lj_cut_coul_cut.h"
-+#include "pair_lj_cut_coul_debye.h"
-+#include "pair_lj_cut_coul_dsf.h"
-+#include "pair_lj_cut_coul_wolf.h"
-+#include "pair_lj_expand.h"
-+#include "pair_lj_gromacs.h"
-+#include "pair_lj_gromacs_coul_gromacs.h"
-+#include "pair_lj_smooth.h"
-+#include "pair_lj_smooth_linear.h"
-+#include "pair_mie_cut.h"
-+#include "pair_morse.h"
-+#include "pair_nb3b_harmonic.h"
-+#include "pair_polymorphic.h"
-+#include "pair_rebo.h"
-+#include "pair_soft.h"
-+#include "pair_sw.h"
-+#include "pair_table.h"
-+#include "pair_tersoff.h"
-+#include "pair_tersoff_mod.h"
-+#include "pair_tersoff_mod_c.h"
-+#include "pair_tersoff_zbl.h"
-+#include "pair_ufm.h"
-+#include "pair_vashishta.h"
-+#include "pair_vashishta_table.h"
-+#include "pair_yukawa.h"
-+#include "pair_zbl.h"
-+#include "pair_zero.h"
-diff -ruN src/style_reader.h new_src/style_reader.h
---- src/style_reader.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_reader.h	2018-11-15 17:10:29.513605328 +0100
-@@ -0,0 +1,2 @@
-+#include "reader_native.h"
-+#include "reader_xyz.h"
-diff -ruN src/style_region.h new_src/style_region.h
---- src/style_region.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/style_region.h	2018-11-15 17:10:29.521605328 +0100
-@@ -0,0 +1,8 @@
-+#include "region_block.h"
-+#include "region_cone.h"
-+#include "region_cylinder.h"
-+#include "region_intersect.h"
-+#include "region_plane.h"
-+#include "region_prism.h"
-+#include "region_sphere.h"
-+#include "region_union.h"
-diff -ruN src/USER-PAFI/atom_vec_pafi.cpp new_src/USER-PAFI/atom_vec_pafi.cpp
++    // error if tags are not defined or not consecutive
++    int flag = 0;
++    if (lmp->atom->tag_enable == 0 || lmp->atom->tag_consecutive() == 0)
++      flag = 1;
++    if (lmp->atom->natoms > MAXSMALLINT) flag = 1;
++    if (flag) {
++      if (lmp->comm->me == 0)
++        lmp->error->warning(FLERR,"Library error in lammps_gather_peratom_fix");
++      return;
++    }
++
++    // copy = Natom length vector of per-atom values
++    // use atom ID to insert each atom's values into copy
++    // MPI_Allreduce with MPI_SUM to merge into data, ordered by atom ID
++
++    double *vector = NULL;
++    double **array = NULL;
++    if (count == 1) vector = (double *) fix->vector_atom; //vptr;
++    else array = (double **) fix->array_atom; //vptr;
++
++    double *copy;
++    lmp->memory->create(copy,count*natoms,"lib/gather:copy");
++    for (i = 0; i < count*natoms; i++) copy[i] = 0.0;
++
++    tagint *tag = lmp->atom->tag;
++    int nlocal = lmp->atom->nlocal;
++
++    if (count == 1) {
++      for (i = 0; i < nlocal; i++)
++        copy[tag[i]-1] = vector[i];
++    } else {
++      for (i = 0; i < nlocal; i++) {
++        offset = count*(tag[i]-1);
++        for (j = 0; j < count; j++)
++          copy[offset++] = array[i][j];
++      }
++    }
++    MPI_Allreduce(copy,data,count*natoms,MPI_DOUBLE,MPI_SUM,lmp->world);
++    lmp->memory->destroy(copy);
++  }
++  END_CAPTURE
++}
++
+ /* ----------------------------------------------------------------------
+    gather the named atom-based entity for all atoms
+      return it in user-allocated data
+@@ -957,7 +1034,7 @@
+     }
+ 
+     // perform MPI_Allgatherv on each proc's chunk of Nlocal atoms
+-    
++
+     int nprocs = lmp->comm->nprocs;
+ 
+     int *recvcounts,*displs;
+@@ -1078,7 +1155,7 @@
+   LAMMPS *lmp = (LAMMPS *) ptr;
+ 
+   BEGIN_CAPTURE
+-  { 
++  {
+     int i,j,m,offset;
+     tagint id;
+ 
+@@ -1319,9 +1396,9 @@
+ ------------------------------------------------------------------------- */
+ 
+ void lammps_scatter_atoms_subset(void *ptr, char *name,
+-                                 int type, int count, 
++                                 int type, int count,
+                                  int ndata, int *ids, void *data)
+-{ 
++{
+   LAMMPS *lmp = (LAMMPS *) ptr;
+ 
+   BEGIN_CAPTURE
+diff -ruN src/library.h clean_src/library.h
+--- src/library.h	2018-11-13 15:33:50.870074937 +0100
++++ clean_src/library.h	2018-11-22 17:56:23.334728635 +0100
+@@ -52,6 +52,8 @@
+ void lammps_gather_atoms(void *, char *, int, int, void *);
+ void lammps_gather_atoms_concat(void *, char *, int, int, void *);
+ void lammps_gather_atoms_subset(void *, char *, int, int, int, int *, void *);
++void lammps_gather_peratom_fix(void *, char *, int, void *);
++
+ void lammps_scatter_atoms(void *, char *, int, int, void *);
+ void lammps_scatter_atoms_subset(void *, char *, int, int, int, int *, void *);
+ 
+diff -ruN src/USER-PAFI/atom_vec_pafi.cpp clean_src/USER-PAFI/atom_vec_pafi.cpp
 --- src/USER-PAFI/atom_vec_pafi.cpp	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/USER-PAFI/atom_vec_pafi.cpp	2018-11-16 10:47:07.384045726 +0100
-@@ -0,0 +1,952 @@
++++ clean_src/USER-PAFI/atom_vec_pafi.cpp	2018-11-22 17:56:09.902560588 +0100
+@@ -0,0 +1,951 @@
 +/* ----------------------------------------------------------------------
 +
 +   LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
@@ -1524,7 +224,6 @@ diff -ruN src/USER-PAFI/atom_vec_pafi.cpp new_src/USER-PAFI/atom_vec_pafi.cpp
 +   Please cite the related publication:
 +   T.D. Swinburne and M.-C. Marinica, Unsupervised calculation of free energy barriers in large crystalline systems, Physical Review Letters 2018
 +------------------------------------------------------------------------- */
-+#include <iostream>
 +#include <cmath>
 +#include <cstdlib>
 +#include <cstring>
@@ -2455,9 +1154,9 @@ diff -ruN src/USER-PAFI/atom_vec_pafi.cpp new_src/USER-PAFI/atom_vec_pafi.cpp
 +
 +  return bytes;
 +}
-diff -ruN src/USER-PAFI/atom_vec_pafi.h new_src/USER-PAFI/atom_vec_pafi.h
+diff -ruN src/USER-PAFI/atom_vec_pafi.h clean_src/USER-PAFI/atom_vec_pafi.h
 --- src/USER-PAFI/atom_vec_pafi.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/USER-PAFI/atom_vec_pafi.h	2018-11-16 10:47:07.384045726 +0100
++++ clean_src/USER-PAFI/atom_vec_pafi.h	2018-11-22 17:56:09.902560588 +0100
 @@ -0,0 +1,91 @@
 +/* -*- c++ -*- ----------------------------------------------------------
 +   LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
@@ -2550,10 +1249,10 @@ diff -ruN src/USER-PAFI/atom_vec_pafi.h new_src/USER-PAFI/atom_vec_pafi.h
 +Atom types must range from 1 to specified # of types.
 +
 +*/
-diff -ruN src/USER-PAFI/atom_vec_pafipath.cpp new_src/USER-PAFI/atom_vec_pafipath.cpp
+diff -ruN src/USER-PAFI/atom_vec_pafipath.cpp clean_src/USER-PAFI/atom_vec_pafipath.cpp
 --- src/USER-PAFI/atom_vec_pafipath.cpp	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/USER-PAFI/atom_vec_pafipath.cpp	2018-11-16 10:47:07.384045726 +0100
-@@ -0,0 +1,968 @@
++++ clean_src/USER-PAFI/atom_vec_pafipath.cpp	2018-11-22 17:56:09.906560638 +0100
+@@ -0,0 +1,967 @@
 +/* ----------------------------------------------------------------------
 +
 +   LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
@@ -2575,7 +1274,6 @@ diff -ruN src/USER-PAFI/atom_vec_pafipath.cpp new_src/USER-PAFI/atom_vec_pafipat
 +   Please cite the related publication:
 +   T.D. Swinburne and M.-C. Marinica, Unsupervised calculation of free energy barriers in large crystalline systems, Physical Review Letters 2018
 +------------------------------------------------------------------------- */
-+#include <iostream>
 +#include <cmath>
 +#include <cstdlib>
 +#include <cstring>
@@ -3522,9 +2220,9 @@ diff -ruN src/USER-PAFI/atom_vec_pafipath.cpp new_src/USER-PAFI/atom_vec_pafipat
 +
 +  return bytes;
 +}
-diff -ruN src/USER-PAFI/atom_vec_pafipath.h new_src/USER-PAFI/atom_vec_pafipath.h
+diff -ruN src/USER-PAFI/atom_vec_pafipath.h clean_src/USER-PAFI/atom_vec_pafipath.h
 --- src/USER-PAFI/atom_vec_pafipath.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/USER-PAFI/atom_vec_pafipath.h	2018-11-16 10:47:07.384045726 +0100
++++ clean_src/USER-PAFI/atom_vec_pafipath.h	2018-11-22 17:56:09.906560638 +0100
 @@ -0,0 +1,91 @@
 +/* -*- c++ -*- ----------------------------------------------------------
 +   LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
@@ -3617,10 +2315,348 @@ diff -ruN src/USER-PAFI/atom_vec_pafipath.h new_src/USER-PAFI/atom_vec_pafipath.
 +Atom types must range from 1 to specified # of types.
 +
 +*/
-diff -ruN src/USER-PAFI/fix_hp.cpp new_src/USER-PAFI/fix_hp.cpp
+diff -ruN src/USER-PAFI/fix_ave_deviation.cpp clean_src/USER-PAFI/fix_ave_deviation.cpp
+--- src/USER-PAFI/fix_ave_deviation.cpp	1970-01-01 01:00:00.000000000 +0100
++++ clean_src/USER-PAFI/fix_ave_deviation.cpp	2018-11-22 17:56:09.906560638 +0100
+@@ -0,0 +1,259 @@
++/* ----------------------------------------------------------------------
++   LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
++   http://lammps.sandia.gov, Sandia National Laboratories
++   Steve Plimpton, sjplimp@sandia.gov
++
++   Copyright (2003) Sandia Corporation.  Under the terms of Contract
++   DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
++   certain rights in this software.  This software is distributed under
++   the GNU General Public License.
++
++   See the README file in the top-level LAMMPS directory.
++------------------------------------------------------------------------- */
++#include <cstdlib>
++#include <cstring>
++#include "fix_ave_deviation.h"
++#include "atom.h"
++#include "domain.h"
++#include "update.h"
++#include "modify.h"
++#include "compute.h"
++#include "input.h"
++#include "variable.h"
++#include "memory.h"
++#include "error.h"
++#include "force.h"
++
++using namespace LAMMPS_NS;
++using namespace FixConst;
++
++#define INVOKED_PERATOM 8
++
++/* ---------------------------------------------------------------------- */
++
++FixAveDeviation::FixAveDeviation(LAMMPS *lmp, int narg, char **arg) :
++  Fix(lmp, narg, arg), nvalues(3), array(NULL)
++{
++  if (narg < 6) error->all(FLERR,"Illegal fix ave/deviation command");
++
++  if (!atom->pafi_flag) error->all(FLERR,"Fix ave/deviation requires atom_style pafi or pafipath");
++
++  nevery = force->inumeric(FLERR,arg[3]);
++  nrepeat = force->inumeric(FLERR,arg[4]);
++  peratom_freq = force->inumeric(FLERR,arg[5]);
++
++  // this fix produces a per-atom array
++  nvalues = 3;
++  peratom_flag = 1;
++  array_flag = 1;
++  size_peratom_cols = 3;
++
++  // perform initial allocation of atom-based array
++  // register with Atom class
++  grow_arrays(atom->nmax);
++  atom->add_callback(0);
++
++  // set to initial deviation
++
++  int nlocal = atom->nlocal;
++  int *mask = atom->mask;
++  double **x = atom->x;
++  double **path = atom->path;
++  double deviation[3] = {0.,0.,0.};
++  for (int i = 0; i < nlocal; i++) if (mask[i] & groupbit) {
++    for(int j=0;j<3;j++) deviation[j] = x[i][j]-path[i][j]; // x-path
++    domain->minimum_image(deviation);
++    for(int j=0;j<3;j++) array[i][j] = deviation[j];
++  }
++
++  // nvalid = next step on which end_of_step does something
++  // add nvalid to all computes that store invocation times
++  // since don't know a priori which are invoked by this fix
++  // once in end_of_step() can set timestep for ones actually invoked
++
++  irepeat = 0;
++  nvalid_last = -1;
++  nvalid = nextvalid();
++  modify->addstep_compute_all(nvalid);
++}
++
++/* ---------------------------------------------------------------------- */
++
++FixAveDeviation::~FixAveDeviation()
++{
++  // unregister callback to this fix from Atom class
++
++  atom->delete_callback(id,0);
++  memory->destroy(array);
++}
++
++/* ---------------------------------------------------------------------- */
++
++int FixAveDeviation::setmask()
++{
++  int mask = 0;
++  mask |= END_OF_STEP;
++  return mask;
++}
++
++/* ---------------------------------------------------------------------- */
++
++void FixAveDeviation::init()
++{
++  // need to reset nvalid if nvalid < ntimestep b/c minimize was performed
++  if (nvalid < update->ntimestep) {
++    irepeat = 0;
++    nvalid = nextvalid();
++    modify->addstep_compute_all(nvalid);
++  }
++}
++
++/* ----------------------------------------------------------------------
++   only does something if nvalid = current timestep
++------------------------------------------------------------------------- */
++
++void FixAveDeviation::setup(int vflag)
++{
++  end_of_step();
++}
++
++/* ---------------------------------------------------------------------- */
++
++void FixAveDeviation::end_of_step()
++{
++  int i,j,m,n;
++
++  // skip if not step which requires doing something
++  // error check if timestep was reset in an invalid manner
++
++  bigint ntimestep = update->ntimestep;
++  if (ntimestep < nvalid_last || ntimestep > nvalid)
++    error->all(FLERR,"Invalid timestep reset for fix ave/deviation");
++  if (ntimestep != nvalid) return;
++  nvalid_last = nvalid;
++
++  // zero if first step
++
++  int nlocal = atom->nlocal;
++
++  if (irepeat == 0)
++    for (i = 0; i < nlocal; i++)
++      for (m = 0; m < nvalues; m++)
++        array[i][m] = 0.0;
++
++  // accumulate results of attributes,computes,fixes,variables to local copy
++  // compute/fix/variable may invoke computes so wrap with clear/add
++
++  //modify->clearstep_compute();
++
++  int *mask = atom->mask;
++  double **x = atom->x;
++  double **path = atom->path;
++  double deviation[3] = {0.,0.,0.};
++  for (i = 0; i < nlocal; i++)
++    if (mask[i] & groupbit) {
++      for(int j=0;j<3;j++) deviation[j] = x[i][j]-path[i][j]; // x-path
++      domain->minimum_image(deviation);
++      for(int j=0;j<3;j++) array[i][j] += deviation[j];
++    }
++
++  // done if irepeat < nrepeat
++  // else reset irepeat and nvalid
++
++  irepeat++;
++  if (irepeat < nrepeat) {
++    nvalid += nevery;
++    //modify->addstep_compute(nvalid);
++    return;
++  }
++
++  irepeat = 0;
++  nvalid = ntimestep+peratom_freq - (nrepeat-1)*nevery;
++  //modify->addstep_compute(nvalid);
++
++  if (array == NULL) return;
++
++  // average the final result for the Nfreq timestep
++  double repeat = nrepeat;
++  for (i = 0; i < nlocal; i++)
++    for (m = 0; m < nvalues; m++)
++      array[i][m] /= repeat;
++}
++
++/* ----------------------------------------------------------------------
++  return array value - need to MPI_reduce??
++------------------------------------------------------------------------- */
++
++double FixAveDeviation::compute_array(int i,int j) {
++  return array[i][j];
++}
++
++/* ----------------------------------------------------------------------
++   memory usage of local atom-based array
++------------------------------------------------------------------------- */
++
++double FixAveDeviation::memory_usage()
++{
++  double bytes;
++  bytes = atom->nmax*nvalues * sizeof(double);
++  return bytes;
++}
++
++/* ----------------------------------------------------------------------
++   allocate atom-based array
++------------------------------------------------------------------------- */
++
++void FixAveDeviation::grow_arrays(int nmax)
++{
++  memory->grow(array,nmax,nvalues,"fix_ave/deviation:array");
++  array_atom = array;
++  if (array) vector_atom = array[0];
++  else vector_atom = NULL;
++}
++
++/* ----------------------------------------------------------------------
++   copy values within local atom-based array
++------------------------------------------------------------------------- */
++
++void FixAveDeviation::copy_arrays(int i, int j, int delflag)
++{
++  for (int m = 0; m < nvalues; m++)
++    array[j][m] = array[i][m];
++}
++
++/* ----------------------------------------------------------------------
++   pack values in local atom-based array for exchange with another proc
++------------------------------------------------------------------------- */
++
++int FixAveDeviation::pack_exchange(int i, double *buf)
++{
++  for (int m = 0; m < nvalues; m++) buf[m] = array[i][m];
++  return nvalues;
++}
++
++/* ----------------------------------------------------------------------
++   unpack values in local atom-based array from exchange with another proc
++------------------------------------------------------------------------- */
++
++int FixAveDeviation::unpack_exchange(int nlocal, double *buf)
++{
++  for (int m = 0; m < nvalues; m++) array[nlocal][m] = buf[m];
++  return nvalues;
++}
++
++/* ----------------------------------------------------------------------
++   calculate nvalid = next step on which end_of_step does something
++   can be this timestep if multiple of nfreq and nrepeat = 1
++   else backup from next multiple of nfreq
++------------------------------------------------------------------------- */
++
++bigint FixAveDeviation::nextvalid()
++{
++  bigint nvalid = (update->ntimestep/peratom_freq)*peratom_freq + peratom_freq;
++  if (nvalid-peratom_freq == update->ntimestep && nrepeat == 1)
++    nvalid = update->ntimestep;
++  else
++    nvalid -= (nrepeat-1)*nevery;
++  if (nvalid < update->ntimestep) nvalid += peratom_freq;
++  return nvalid;
++}
+diff -ruN src/USER-PAFI/fix_ave_deviation.h clean_src/USER-PAFI/fix_ave_deviation.h
+--- src/USER-PAFI/fix_ave_deviation.h	1970-01-01 01:00:00.000000000 +0100
++++ clean_src/USER-PAFI/fix_ave_deviation.h	2018-11-22 17:56:09.906560638 +0100
+@@ -0,0 +1,71 @@
++/* -*- c++ -*- ----------------------------------------------------------
++   LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
++   http://lammps.sandia.gov, Sandia National Laboratories
++   Steve Plimpton, sjplimp@sandia.gov
++
++   Copyright (2003) Sandia Corporation.  Under the terms of Contract
++   DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
++   certain rights in this software.  This software is distributed under
++   the GNU General Public License.
++
++   See the README file in the top-level LAMMPS directory.
++------------------------------------------------------------------------- */
++
++#ifdef FIX_CLASS
++
++FixStyle(ave/deviation,FixAveDeviation)
++
++#else
++
++#ifndef LMP_FIX_AVE_DEVIATION_H
++#define LMP_FIX_AVE_DEVIATION_H
++
++#include <cstdio>
++#include "fix.h"
++
++namespace LAMMPS_NS {
++
++class FixAveDeviation : public Fix {
++ public:
++  FixAveDeviation(class LAMMPS *, int, char **);
++  ~FixAveDeviation();
++  int setmask();
++  void init();
++  void setup(int);
++  void end_of_step();
++
++  double memory_usage();
++  void grow_arrays(int);
++  void copy_arrays(int, int, int);
++  int pack_exchange(int, double *);
++  int unpack_exchange(int, double *);
++
++  double compute_array(int,int);
++
++ private:
++  int nvalues;
++  int nrepeat,irepeat;
++  bigint nvalid,nvalid_last;
++  double **array;
++  bigint nextvalid();
++};
++
++}
++
++#endif
++#endif
++
++/* ERROR/WARNING messages:
++
++E: Illegal ... command
++
++Self-explanatory.  Check the input script syntax and compare to the
++documentation for the command.  You can use -echo screen as a
++command-line option when running LAMMPS to see the offending line.
++
++E: Invalid timestep reset for fix ave/deviation
++
++Resetting the timestep has invalidated the sequence of timesteps this
++fix needs to process.
++
++*/
+diff -ruN src/USER-PAFI/fix_hp.cpp clean_src/USER-PAFI/fix_hp.cpp
 --- src/USER-PAFI/fix_hp.cpp	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/USER-PAFI/fix_hp.cpp	2018-11-16 15:58:42.096158293 +0100
-@@ -0,0 +1,634 @@
++++ clean_src/USER-PAFI/fix_hp.cpp	2018-11-22 17:56:09.902560588 +0100
+@@ -0,0 +1,630 @@
 +/* ----------------------------------------------------------------------
 +   LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
 +   http://lammps.sandia.gov, Sandia National Laboratories
@@ -3641,7 +2677,6 @@ diff -ruN src/USER-PAFI/fix_hp.cpp new_src/USER-PAFI/fix_hp.cpp
 +------------------------------------------------------------------------- */
 +
 +
-+//#include <iostream>
 +#include <mpi.h>
 +#include <math.h>
 +#include <string.h>
@@ -3679,6 +2714,8 @@ diff -ruN src/USER-PAFI/fix_hp.cpp new_src/USER-PAFI/fix_hp.cpp
 +  Fix(lmp, narg, arg), idregion(NULL), random(NULL)
 +{
 +  if (narg < 5) error->all(FLERR,"Illegal fix hp command");
++
++  if (!atom->pafi_flag) error->all(FLERR,"Fix hp requires atom_style pafi or pafipath");
 +
 +  dynamic_group_allow = 1;
 +  vector_flag = 1;
@@ -3955,12 +2992,12 @@ diff -ruN src/USER-PAFI/fix_hp.cpp new_src/USER-PAFI/fix_hp.cpp
 +      if (mask[i] & groupbit) {
 +        if (region && !region->match(x[i][0],x[i][1],x[i][2])) continue;
 +
-+        if(rmass) mass_f = rmass[i];
-+        else mass_f = mass[type[i]];
++        if(rmass) mass_f = sqrt(rmass[i]);
++        else mass_f = sqrt(mass[type[i]]);
 +
-+        f[i][0] += -gamma * mass_f * v[i][0] + sqrtD * sqrt(mass_f) * h[i][0];
-+        f[i][1] += -gamma * mass_f * v[i][1] + sqrtD * sqrt(mass_f) * h[i][1];
-+        f[i][2] += -gamma * mass_f * v[i][2] + sqrtD * sqrt(mass_f) * h[i][2];
++        f[i][0] += -gamma * mass_f * mass_f * v[i][0] + sqrtD * mass_f * h[i][0];
++        f[i][1] += -gamma * mass_f * mass_f * v[i][1] + sqrtD * mass_f * h[i][1];
++        f[i][2] += -gamma * mass_f * mass_f * v[i][2] + sqrtD * mass_f * h[i][2];
 +      }
 +    }
 +  } else {
@@ -3968,12 +3005,18 @@ diff -ruN src/USER-PAFI/fix_hp.cpp new_src/USER-PAFI/fix_hp.cpp
 +      if (mask[i] & groupbit) {
 +        if (region && !region->match(x[i][0],x[i][1],x[i][2])) continue;
 +
-+        if(rmass) mass_f = rmass[i];
-+        else mass_f = mass[type[i]];
++        if(rmass) mass_f = sqrt(rmass[i]);
++        else mass_f = sqrt(mass[type[i]]);
 +
-+        f[i][0] += sqrtD * h[i][0] / gamma / sqrt(mass_f);
-+        f[i][1] += sqrtD * h[i][1] / gamma / sqrt(mass_f);
-+        f[i][2] += sqrtD * h[i][2] / gamma / sqrt(mass_f);
++        f[i][0] += sqrtD * h[i][0] * mass_f;
++        f[i][1] += sqrtD * h[i][1] * mass_f;
++        f[i][2] += sqrtD * h[i][2] * mass_f;
++
++
++        f[i][0] /=  gamma * mass_f * mass_f;
++        f[i][1] /=  gamma * mass_f * mass_f;
++        f[i][2] /=  gamma * mass_f * mass_f;
++
 +      }
 +    }
 +  }
@@ -4010,17 +3053,6 @@ diff -ruN src/USER-PAFI/fix_hp.cpp new_src/USER-PAFI/fix_hp.cpp
 +
 +double FixHP::compute_vector(int n)
 +{
-+  // only sum across procs one time
-+  /*if (force_flag == 0) {
-+
-+    for(int i=0; i<4; i++) proj_all[i] = 0.;
-+    MPI_Allreduce(proj,proj_all,4,MPI_DOUBLE,MPI_SUM,world);
-+    force_flag = 1;
-+    results[0] = proj_all[0] * (1.-proj_all[3]);
-+    results[1] = results[0] * results[0];
-+    results[2] = 1.-proj_all[3];
-+  }*/
-+  //std::cout<<"LAMMPS ("<<update->ntimestep<<","<<comm->me<<") : "<<results_all[n]<<std::endl;
 +  return results_all[n];
 +};
 +
@@ -4255,9 +3287,9 @@ diff -ruN src/USER-PAFI/fix_hp.cpp new_src/USER-PAFI/fix_hp.cpp
 +  bytes = maxatom*3 * sizeof(double);
 +  return bytes;
 +};
-diff -ruN src/USER-PAFI/fix_hp.h new_src/USER-PAFI/fix_hp.h
+diff -ruN src/USER-PAFI/fix_hp.h clean_src/USER-PAFI/fix_hp.h
 --- src/USER-PAFI/fix_hp.h	1970-01-01 01:00:00.000000000 +0100
-+++ new_src/USER-PAFI/fix_hp.h	2018-11-16 15:58:42.096158293 +0100
++++ clean_src/USER-PAFI/fix_hp.h	2018-11-22 17:56:09.902560588 +0100
 @@ -0,0 +1,101 @@
 +/* -*- c++ -*- ----------------------------------------------------------
 +   LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator

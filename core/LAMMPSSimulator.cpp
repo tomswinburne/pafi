@@ -129,6 +129,7 @@ void LAMMPSSimulator::sample(double r, double T, std::vector<double> &results, s
   refE = getEnergy();
   cmd = "reset_timestep 0\n";
   cmd += "fix ae all ave/time 1 %TWindow% %TWindow% v_pe\n";
+  //cmd += "compute x all property/atom x y z\n";
   cmd += "run %ThermSteps%";
   run_commands(params->Parse(cmd));
 
@@ -140,8 +141,8 @@ void LAMMPSSimulator::sample(double r, double T, std::vector<double> &results, s
 
   cmd = "reset_timestep 0\n";
   cmd += "fix ae all ave/time 1 %TWindow% %TWindow% v_pe\n";
-  //cmd += "fix ad all ave/deviation 1 %SampleSteps% %SampleSteps%\n";
-  cmd += "fix ad all ave/atom 1 %SampleSteps% %SampleSteps% x y z\n";
+  cmd += "fix ad all ave/deviation 1 %SampleSteps% %SampleSteps%\n";
+  //cmd += "fix ad all ave/atom 1 %SampleSteps% %SampleSteps% c_x[1] c_x[2] c_x[3]\n";
   cmd += "fix af all ave/time 1 %SampleSteps% %SampleSteps% f_hp[1] f_hp[2] f_hp[3]\nrun %SampleSteps%";
   run_commands(params->Parse(cmd));
   refE = getEnergy()-refE;
@@ -164,16 +165,9 @@ void LAMMPSSimulator::sample(double r, double T, std::vector<double> &results, s
   results.push_back(*lmp_ptr);
 
   // TODO dump path efficiently....
-  for(int i=0;i<3*natoms;i++) deviation.push_back(0.);
   dm = 0.;
-  lmp_dev_ptr =  (double **) lammps_extract_fix(lmp,(char *)"ad",1,2,0,0);
-  if(tag==0) for(int i=0;i<natoms;i++) {
-    for(int j=0;j<3;j++) \
-      std::cout<<lmp_dev_ptr[i][j]<<" "<<pathway[3*i+j](r)<<"\n";
-    std::cout<<"\n";
-    //deviation[3*i+j] = lmp_dev_ptr[i][j];
-  }
-
+  for(int i=0;i<3*natoms;i++) deviation.push_back(0.);
+  lammps_gather_peratom_fix(lmp,(char *)"ad",3,&deviation[0]);
   dm=0.;
   pbc.wrap(deviation);
   for(int i=0;i<3*natoms;i++) dm += deviation[i] * deviation[i];
