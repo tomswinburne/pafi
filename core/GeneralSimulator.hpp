@@ -1,15 +1,14 @@
 #ifndef SIM_H
 #define SIM_H
 
-#include <mpi.h>
 #include <fstream>
 #include <vector>
+#include <array>
 #include <string>
 #include <boost/lexical_cast.hpp>
 
 #include "Parser.hpp"
 #include "Boundary.hpp"
-
 #include "Spline.hpp"
 
 class GeneralSimulator {
@@ -29,6 +28,8 @@ public:
   virtual double sample(std::vector<double> &results){};
 
   virtual double getEnergy(){};
+
+  virtual std::array<double,9> getCellData(){};
 
   virtual void close(){};
 

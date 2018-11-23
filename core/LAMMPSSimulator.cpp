@@ -23,7 +23,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int rank) 
   lammps_gather_atoms(lmp,(char *) "id",0,1,&id[0]);
 
   // get cell info
-  pbc.load(lmp);
+  pbc.load(getCellData());
 
   // Get type / image info
   species = std::vector<int>(natoms,1);
@@ -164,12 +164,13 @@ void LAMMPSSimulator::sample(double r, double T, std::vector<double> &results, s
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,3,0);
   results.push_back(*lmp_ptr);
 
-  // TODO dump path efficiently....
+  // TODO deviation needs to be gathered into global array....
   dm = 0.;
   for(int i=0;i<3*natoms;i++) deviation.push_back(0.);
   lammps_gather_peratom_fix(lmp,(char *)"ad",3,&deviation[0]);
   dm=0.;
-  pbc.wrap(deviation);
+  pbc.wrap(deviation); // shouldn't be required -wrapping already acheived...
+
   for(int i=0;i<3*natoms;i++) dm += deviation[i] * deviation[i];
   if(tag==0) std::cout<<"deviation: "<<dm<<std::endl;
 
@@ -177,9 +178,9 @@ void LAMMPSSimulator::sample(double r, double T, std::vector<double> &results, s
 
   run_commands(params->Parse(cmd));
 
-  //scale = 1. / scale;
-  //populate(r,scale,norm_mag);
-  //rescale_cell(scale);
+  scale = 1. / scale;
+  populate(r,scale,norm_mag);
+  rescale_cell(scale);
 };
 
 double LAMMPSSimulator::getEnergy() {
@@ -193,6 +194,24 @@ double LAMMPSSimulator::getEnergy() {
   }
   double baseE = *lmpE;
   return baseE;
+};
+
+// Fill 9D array with Lx, Ly, Lz, xy, xz, yz, then periodicity in x, y, z
+std::array<double,9> LAMMPSSimulator::getCellData() {
+  std::array<double,9> cell;
+  for(int i=0; i<9; i++) cell[i] = 0.;
+
+  double *boxlo = (double *) lammps_extract_global(lmp,(char *) "boxlo");
+  double *boxhi = (double *) lammps_extract_global(lmp,(char *) "boxhi");
+  int *pv = (int *) lammps_extract_global(lmp,(char *) "periodicity");
+
+  std::array<std::string,3> od;
+  od[0]="xy"; od[1]="xz"; od[2]="yz";
+  for(int i=0; i<3; i++) {
+    cell[i] = boxhi[i]-boxlo[i];
+    cell[3+i] = *((double *) lammps_extract_global(lmp,(char *)od[i].c_str()));
+    cell[6+i] = (double)pv[i];
+  }
 };
 
 void LAMMPSSimulator::close() {

@@ -1,5 +1,6 @@
 #ifndef LSIM_H
 #define LSIM_H
+#include <mpi.h>
 
 #include "GeneralSimulator.hpp"
 
@@ -38,6 +39,9 @@ public:
   void sample(double r, double T, std::vector<double> &results, std::vector<double> &deviation);
 
   double getEnergy();
+
+  // Fill 9D array with Lx, Ly, Lz, xy, xz, yz, then periodicity in x, y, z
+  std::array<double,9> getCellData();
 
   void close();
 
