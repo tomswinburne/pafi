@@ -107,20 +107,15 @@ void LAMMPSSimulator::rescale_cell(double scale) {
   Main sample run. Results vector should have thermalization temperature,
   sample temperature <f>, <f^2>, <psi> and <x-u>.n
 */
-void LAMMPSSimulator::sample(double r, double T, std::vector<double> &results, std::vector<double> &deviation) {
+void LAMMPSSimulator::sample(double r, double T, double * results, std::vector<double> &deviation) {
   std::string cmd;
   double norm_mag, scale, sampleT, dm;
   double *lmp_ptr;
   double **lmp_dev_ptr;
 
-  deviation.clear();
-  results.clear();
-
   scale = expansion(T);
   rescale_cell(scale);
   populate(r,scale,norm_mag);
-
-  //if(tag==0) std::cout<<"POPULATED\n";
 
   params->parameters["Temperature"] = boost::lexical_cast<std::string>(T);
   cmd = "fix hp all hp %Temperature% 0.01 %RANDOM% overdamped 1 com 0\nrun 0";
@@ -128,59 +123,50 @@ void LAMMPSSimulator::sample(double r, double T, std::vector<double> &results, s
 
   refE = getEnergy();
   cmd = "reset_timestep 0\n";
-  cmd += "fix ae all ave/time 1 %TWindow% %TWindow% v_pe\n";
-  //cmd += "compute x all property/atom x y z\n";
+  cmd += "fix ae all ave/time 1 %ThermSteps% %ThermSteps% v_pe\n";
   cmd += "run %ThermSteps%";
   run_commands(params->Parse(cmd));
-
+  
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
   sampleT = (*lmp_ptr-refE)/natoms/1.5/8.617e-5;
   cmd = "unfix ae\nrun 0";
   run_commands(params->Parse(cmd));
-  results.push_back(sampleT);
+  results[0] = sampleT;
 
   cmd = "reset_timestep 0\n";
-  cmd += "fix ae all ave/time 1 %TWindow% %TWindow% v_pe\n";
+  cmd += "fix ae all ave/time 1 %SampleSteps% %SampleSteps% v_pe\n";
   cmd += "fix ad all ave/deviation 1 %SampleSteps% %SampleSteps%\n";
-  //cmd += "fix ad all ave/atom 1 %SampleSteps% %SampleSteps% c_x[1] c_x[2] c_x[3]\n";
   cmd += "fix af all ave/time 1 %SampleSteps% %SampleSteps% f_hp[1] f_hp[2] f_hp[3]\nrun %SampleSteps%";
   run_commands(params->Parse(cmd));
-  refE = getEnergy()-refE;
-  if(tag==0) std::cout<<"Energy Change: "<<refE<<"\n";
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
   sampleT = (*lmp_ptr-refE)/natoms/1.5/8.617e-5;
-  results.push_back(sampleT);
+  results[1] = sampleT;
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,0,0);
-  results.push_back(*lmp_ptr * norm_mag);
+  results[2] = *lmp_ptr * norm_mag;
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,1,0);
-  results.push_back(*lmp_ptr * norm_mag * norm_mag - results[2] * results[2]);
+  results[3] = *lmp_ptr * norm_mag * norm_mag - results[2] * results[2];
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,2,0);
-  results.push_back(*lmp_ptr);
+  results[4] = *lmp_ptr;
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,3,0);
-  results.push_back(*lmp_ptr);
+  results[5] = *lmp_ptr;
 
-  // TODO deviation needs to be gathered into global array....
-  dm = 0.;
-  for(int i=0;i<3*natoms;i++) deviation.push_back(0.);
   lammps_gather_peratom_fix(lmp,(char *)"ad",3,&deviation[0]);
-  dm=0.;
-  pbc.wrap(deviation); // shouldn't be required -wrapping already acheived...
-
-  for(int i=0;i<3*natoms;i++) dm += deviation[i] * deviation[i];
-  if(tag==0) std::cout<<"deviation: "<<dm<<std::endl;
+  dm=0.; for(int i=0;i<3*natoms;i++) dm += deviation[i] * deviation[i];
+  results[6] = dm;
 
   cmd = "unfix ae\nunfix af\nunfix ad\nunfix hp";
-
   run_commands(params->Parse(cmd));
 
+  // rescale back
   scale = 1. / scale;
   populate(r,scale,norm_mag);
   rescale_cell(scale);
+
 };
 
 double LAMMPSSimulator::getEnergy() {
@@ -212,6 +198,7 @@ std::array<double,9> LAMMPSSimulator::getCellData() {
     cell[3+i] = *((double *) lammps_extract_global(lmp,(char *)od[i].c_str()));
     cell[6+i] = (double)pv[i];
   }
+  return cell;
 };
 
 void LAMMPSSimulator::close() {

@@ -25,7 +25,7 @@ public:
 
   virtual double thermalize(){};
 
-  virtual double sample(std::vector<double> &results){};
+  //virtual double sample(std::vector<double> &results){};
 
   virtual double getEnergy(){};
 

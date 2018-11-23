@@ -36,7 +36,7 @@ public:
     Main sample run. Results vector should have thermalization temperature,
     sample temperature <f>, <f^2>, <psi> and <x-u>.n
   */
-  void sample(double r, double T, std::vector<double> &results, std::vector<double> &deviation);
+  void sample(double r, double T, double *results, std::vector<double> &deviation);
 
   double getEnergy();
 
