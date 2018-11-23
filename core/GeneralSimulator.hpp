@@ -23,9 +23,7 @@ public:
 
   virtual void setup(double r, double T){};
 
-  virtual double thermalize(){};
-
-  //virtual double sample(std::vector<double> &results){};
+  virtual void sample(double r, double T, double *results, double *dev){};
 
   virtual double getEnergy(){};
 
@@ -41,7 +39,9 @@ public:
 
   // LAMMPS INDEPENDENT
 
-  void write(double r,std::string fn);
+  //void write(double r,std::string fn);
+
+  //void write_dev(double r,std::string fn, double *dev, double *dev_sq);
 
   double expansion(double T);
 
@@ -54,6 +54,7 @@ public:
   MinImage pbc;
   Parser *params;
   std::vector<spline> pathway;
+  bool s_flag;
 private:
   /* nothing */
 };

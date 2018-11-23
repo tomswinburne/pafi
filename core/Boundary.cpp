@@ -1,22 +1,26 @@
 #include "Boundary.hpp"
-
+#include <iostream>
 void MinImage::load(std::array<double,9> lcell) {
 
   Eigen::MatrixXd c(3,3), invc(3,3); // temp as array has faster access
   for(int i=0; i<9; i++) {
+    cell[i/3][i%3] = 0.;
+    invcell[i/3][i%3] = 0.;
     c(i/3,i%3) = 0.0;
     invc(i/3,i%3) = 0.0;
   }
 
   for(int i=0; i<3; i++) {
     cell[i][i] = lcell[i];
-    cell[int(i==2)][1+int(i>0)] = lcell[3+i];
+    if(lcell[3*i]>0.01) cell[int(i==2)][1+int(i>0)] = lcell[3+i];
     periodic[i] = lcell[6+i];
   }
 
   for(int i=0; i<3; i++) for(int j=0; j<3; j++) c(i,j)=cell[i][j];
   invc=c.inverse();
-  for(int i=0; i<3; i++) for(int j=0; j<3; j++) invcell[i][j]=invc(i,j);
+  for(int i=0; i<3; i++) for(int j=0; j<3; j++) {
+    invcell[i][j]=invc(i,j);
+  }
 };
 
 void MinImage::minimumImageVector(double *dr) {

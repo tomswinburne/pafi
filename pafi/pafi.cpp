@@ -22,63 +22,89 @@ int main(int narg, char **arg) {
   const int nWorkers = nProcs / params.CoresPerWorker;
   const int instance = rank / params.CoresPerWorker;
   const int local_rank = rank % params.CoresPerWorker;
-  const int nResults = 7;
+  const int nRes = 7;
+
 
 
   MPI_Comm instance_comm;
   MPI_Comm_split(MPI_COMM_WORLD,instance,0,&instance_comm);
+
+  if(rank==0) std::cout<<"\nSet up "<<nWorkers<<" workers with   "<<params.CoresPerWorker<<" cores per worker\n";
+
   Simulator sim(instance_comm,params,rank);
 
+  if (rank == 0) {
+    std::cout<<"Loaded input data of "<<sim.natoms<<"atoms\n";
+    std::cout<<"Supercell Matrix:\n";
+    auto cell = sim.getCellData();
+    for(int i=0;i<3;i++) {
+      std::cout<<"\t";
+      for(int j=0;j<3;j++) std::cout<<sim.pbc.cell[i][j]<<" ";
+      std::cout<<"\n";
+    }
+  }
+
   sim.make_path(params.KnotList);
+
   if(rank==0) std::cout<<"\n\nPATH LOADED\n";
 
   const int vsize = 3 * sim.natoms;
+  const int rsize = nRes*nWorkers;
 
 
-  double *all_results = new double[nResults*nWorkers];
-  double *local_results = new double[nResults*nWorkers];
-  double *results = new double[nResults];
-  std::vector<double> local_deviation(vsize,0.);
-  std::vector<double> all_deviation(vsize,0.);
-  std::vector<double> all_deviation_sq(vsize,0.);
+  double *local_res = new double[rsize];
+  double *results = new double[nRes];
+  double *local_dev = new double[vsize];
+  double *all_dev = NULL, *all_dev_sq = NULL, *all_res = NULL;
 
+  if (rank == 0) {
+    all_dev = new double[vsize];
+    all_dev_sq = new double[vsize];
+    all_res = new double[rsize];
+  }
 
-  for (int i=0;i<nResults;i++) results[i] = 0.;
-  for (int i=0;i<nResults*nWorkers;i++) local_results[i] = 0.;
-  for (int i=0;i<nResults*nWorkers;i++) all_results[i] = 0.;
+  for (double r=0.00; r<=1.; r+=0.1 ) {
 
+    for (int i=0;i<rsize;i++) local_res[i] = 0.;
 
+    sim.sample(r, T, results, local_dev);
 
-  for (double r=0.005; r<=1.; r+=0.1 ) {
-    for (int i=0;i<nResults;i++) results[i] = 0.;
-    for (int i=0;i<nResults*nWorkers;i++) local_results[i] = 0.;
-    for (int i=0;i<nResults*nWorkers;i++) all_results[i] = 0.;
-
-    local_deviation = std::vector<double>(vsize,0.);
-
-    sim.sample(r,T,results, local_deviation);
-
-    if(local_rank == 0) for(int i=0;i<nResults;i++)
-      local_results[instance*nResults + i] = results[i];
+    if(local_rank == 0)
+      for(int i=0;i<nRes;i++) local_res[instance*nRes + i] = results[i];
 
     MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Reduce(local_res,all_res,rsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 
-    MPI_Reduce(local_results,all_results,nResults*nWorkers,
-      MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+    MPI_Reduce(local_dev,all_dev,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_Gather(&local_deviation[0],vsize,MPI_DOUBLE,&all_deviation[0],vsize,
-      MPI_DOUBLE,0,MPI_COMM_WORLD);
-
+    for(int i=0;i<vsize;i++) local_dev[i] *= local_dev[i];
+    MPI_Reduce(local_dev,all_dev_sq,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 
     if (rank==0) {
-      std::cout<<"SAMPLED: r:"<<r<<" T:"<<T<<"\n";
-      for(int i=0;i<nWorkers;i++) {
-        for(int j=0;j<nResults;j++) std::cout<<all_results[i*nResults+j]<<" ";
-        std::cout<<"\n";
+      double *final_res = new double[2*nRes];
+
+      for(int j=0;j<2*nRes;j++) final_res[j] = 0.;
+
+      for(int i=0;i<nWorkers;i++) for(int j=0;j<nRes;j++) {
+        final_res[j] += all_res[i*nRes+j];
+        final_res[j+nRes] += all_res[i*nRes+j] * all_res[i*nRes+j];
       }
+
+      for(int j=0;j<nRes;j++) {
+        final_res[j] /= (double)nWorkers;
+        final_res[j+nRes] /= (double)nWorkers;
+        final_res[j+nRes] -= final_res[j] * final_res[j];
+        final_res[j+nRes] = sqrt(final_res[j+nRes]);
+      }
+
+      std::cout<<"SAMPLED: r:"<<r<<" T:"<<T<<"\n";
+
+      std::cout<<"\t <T>: "<<final_res[1]<<" +/- "<<final_res[1+nRes]<<"\n";
+      std::cout<<"\t <dF/dr>: "<<final_res[2]<<" +/- "<<final_res[2+nRes]<<"\n";
+      std::cout<<"\t <|dX|>: "<<final_res[6]<<" +/- "<<final_res[6+nRes]<<"\n";
       std::cout<<"\n\n\n";
     }
-    //sim.write(r,"PDN_"+boost::lexical_cast<std::string>(r));
   }
 
   // close down LAMMPS instances

@@ -1,19 +1,20 @@
 <PAFI>
 
-  <LowTemperature> 0. </LowTemperature>
+  <LowTemperature> 10. </LowTemperature>
+  <Position> 0.6 </Position>
 
-  <HighTemperature> 200 </HighTemperature>
+  <HighTemperature> 200. </HighTemperature>
 
-  <SampleSteps> 1 </SampleSteps>
+  <SampleSteps> 100 </SampleSteps>
 
-  <ThermSteps> 1 </ThermSteps>
-  <ThermWindow> 1 </ThermWindow>
+  <ThermSteps> 400 </ThermSteps>
+  <ThermWindow> 200 </ThermWindow>
 
-  <nPlanes> 21 </nPlanes>
+  <nPlanes> 11 </nPlanes>
 
   <!-- We require nprocs % CoresPerWorker==0-->
 
-  <CoresPerWorker> 4 </CoresPerWorker>
+  <CoresPerWorker> 2 </CoresPerWorker>
 
   <!--
     RELATIVE thermal expansion coefficients -
@@ -27,23 +28,17 @@
   <Scripts>
     <Input>
       units metal
-      atom_style atomic
+      atom_style pafi
       atom_modify map array sort 0 0.0
-
+      neigh_modify every 2 delay 10 check yes page 1000000 one 100000
       read_data  md/image_1.dat
       pair_style    eam/fs
       pair_coeff * * md/Fe.eam.fs Fe
       mass * 55.85
       run 0
+      thermo 10
+      run 0
     </Input>
-
-    <!--<Run>
-      fix T all langevin %Temperature% %Temperature% 0.1 %RANDOM%
-      fix NVE all nve
-      run %nSteps%
-      unfix NVE
-      unfix T
-    </Run>-->
 
     <!-- fix hp all hp temperature friction seed overdamped 0/1 com 0/1 -->
     <PreRun>

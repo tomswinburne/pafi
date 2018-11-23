@@ -36,7 +36,13 @@ public:
     Main sample run. Results vector should have thermalization temperature,
     sample temperature <f>, <f^2>, <psi> and <x-u>.n
   */
-  void sample(double r, double T, double *results, std::vector<double> &deviation);
+  void sample(double r, double T, double *results, double *dev);
+
+  std::string header();
+
+  //void lammps_dev_write(std::string fn, double r, double *dev, double *dev_sq);
+
+  //void lammps_path_write(std::string fn, double r);
 
   double getEnergy();
 

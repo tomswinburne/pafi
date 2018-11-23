@@ -16,7 +16,6 @@ public:
   std::array< std::array<double,3>, 3 > invcell;
   std::array<double,3> periodic;
   MinImage(){};
-
   void load(std::array<double,9> lcell);
   void minimumImageVector(double *dr);
   void wrap(std::vector<double> &dx);

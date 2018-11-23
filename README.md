@@ -23,21 +23,26 @@ Beta version of code used in [this paper](https://journals.aps.org/prl/abstract/
 
 1. [Download LAMMPS](http://lammps.sandia.gov/download.html) and read the [installation instructions](http://lammps.sandia.gov/doc/Section_start.html)
 
-2. Before installing any packages, in the LAMMPS root directory (parent directory of src folder) run the pafi patch
+2. Before installing any packages, in the LAMMPS root directory (parent directory of src folder) run the pafi patch, adding the USER-PAFI package and support for PAFI atom styles
 ```
-patch -p0 < /path/to/pafi_lammps_Aug18.patch
+cd /path/to/lammps_repo/
+patch -p0 < /path/to/user-pafi_lammps_Aug18.patch # modifies /path/to/lammps_repo/src folder
 ```
-3. Install any packages you desire
+
+3. Install USER-PAFI and any packages you desire (replica for NEB)
 ```
 cd src
+make yes-user-pafi
+make yes-replica # for NEB calculation
 make yes-package_name
 ```
+
 3. Compile as a static library (and optionally binary initial NEB calculation)
 ```
    make mpi mode=lib # liblammps_mpi.a library for pafi
-   make mpi # lmp_mpi binary for running initial NEB calculation
+   make mpi # lmp_mpi binary for running initial NEB calculation if desired
 ```
-4. Copy to your local include/ and lib/ directories, e.g. at ${HOME}/.local
+4. Copy library to your local lib/ and headers to local include/, at e.g. ${HOME}/.local
 ```
    cp liblammps_mpi.a ${HOME}/.local/lib
    mkdir ${HOME}/.local/include/lammps
@@ -60,14 +65,15 @@ make yes-package_name
 ```
 
 ## Compiling PAFI with cmake (recommended)
-1. Specify environment variables in CMakeLists.txt:
+1. Download and install cmake from https://cmake.org/download/
+2. Specify environment variables in CMakeLists.txt:
 ```
    set(CMAKE_INCLUDE_PATH ${HOME}/.local/include)
    set(CMAKE_LIBRARY_PATH ${HOME}/.local/lib)
    set(CMAKE_CXX_COMPILER ${HOME}/.local/bin/mpicxx)
    set(CMAKE_C_COMPILER ${HOME}/.local/bin/mpicc)
 ```
-2. Make pafi build folder and run cmake
+3. Make pafi build folder and run cmake
 ```
    mkdir build
    cd build
@@ -107,7 +113,4 @@ mpirun -np NPROCS ./pafi
 ```
 ## Output
 
-```
-dump_folder/free_energy_profile
-```
-The integrated force using the naive projection (dU/dr) and the PAFI projection (shown to be true free energy)
+TBA

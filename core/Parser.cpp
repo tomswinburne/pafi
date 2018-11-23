@@ -37,9 +37,6 @@ Parser::Parser(std::string file) {
 	parameters["ThermSteps"] = \
 	 rtws(tree.get<std::string>("PAFI.ThermSteps","100"));
 
-	parameters["TWindow"] = \
- 	 rtws(tree.get<std::string>("PAFI.ThermWindow","100"));
-
 	parameters["nPlanes"] = rtws(tree.get<std::string>("PAFI.nPlanes","100"));
 
 	KnotList = Parse(tree.get<std::string>("PAFI.KnotList"));

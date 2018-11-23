@@ -28,6 +28,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int rank) 
   // Get type / image info
   species = std::vector<int>(natoms,1);
   lammps_gather_atoms(lmp,(char *) "type",0,1,&species[0]);
+  s_flag=true;
 
   image = std::vector<int>(natoms,1);
   lammps_gather_atoms(lmp,(char *) "image",0,1,&image[0]);
@@ -107,7 +108,7 @@ void LAMMPSSimulator::rescale_cell(double scale) {
   Main sample run. Results vector should have thermalization temperature,
   sample temperature <f>, <f^2>, <psi> and <x-u>.n
 */
-void LAMMPSSimulator::sample(double r, double T, double * results, std::vector<double> &deviation) {
+void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   std::string cmd;
   double norm_mag, scale, sampleT, dm;
   double *lmp_ptr;
@@ -126,7 +127,7 @@ void LAMMPSSimulator::sample(double r, double T, double * results, std::vector<d
   cmd += "fix ae all ave/time 1 %ThermSteps% %ThermSteps% v_pe\n";
   cmd += "run %ThermSteps%";
   run_commands(params->Parse(cmd));
-  
+
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
   sampleT = (*lmp_ptr-refE)/natoms/1.5/8.617e-5;
   cmd = "unfix ae\nrun 0";
@@ -136,7 +137,7 @@ void LAMMPSSimulator::sample(double r, double T, double * results, std::vector<d
   cmd = "reset_timestep 0\n";
   cmd += "fix ae all ave/time 1 %SampleSteps% %SampleSteps% v_pe\n";
   cmd += "fix ad all ave/deviation 1 %SampleSteps% %SampleSteps%\n";
-  cmd += "fix af all ave/time 1 %SampleSteps% %SampleSteps% f_hp[1] f_hp[2] f_hp[3]\nrun %SampleSteps%";
+  cmd += "fix af all ave/time 1 %SampleSteps% %SampleSteps% f_hp[1] f_hp[2] f_hp[3] f_hp[4]\nrun %SampleSteps%";
   run_commands(params->Parse(cmd));
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
@@ -155,8 +156,8 @@ void LAMMPSSimulator::sample(double r, double T, double * results, std::vector<d
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,3,0);
   results[5] = *lmp_ptr;
 
-  lammps_gather_peratom_fix(lmp,(char *)"ad",3,&deviation[0]);
-  dm=0.; for(int i=0;i<3*natoms;i++) dm += deviation[i] * deviation[i];
+  lammps_gather_peratom_fix(lmp,(char *)"ad",3,dev);
+  dm=0.; for(int i=0;i<3*natoms;i++) dm += dev[i] * dev[i];
   results[6] = dm;
 
   cmd = "unfix ae\nunfix af\nunfix ad\nunfix hp";
@@ -186,7 +187,7 @@ double LAMMPSSimulator::getEnergy() {
 std::array<double,9> LAMMPSSimulator::getCellData() {
   std::array<double,9> cell;
   for(int i=0; i<9; i++) cell[i] = 0.;
-
+  double *lmp_ptr;
   double *boxlo = (double *) lammps_extract_global(lmp,(char *) "boxlo");
   double *boxhi = (double *) lammps_extract_global(lmp,(char *) "boxhi");
   int *pv = (int *) lammps_extract_global(lmp,(char *) "periodicity");
@@ -195,8 +196,9 @@ std::array<double,9> LAMMPSSimulator::getCellData() {
   od[0]="xy"; od[1]="xz"; od[2]="yz";
   for(int i=0; i<3; i++) {
     cell[i] = boxhi[i]-boxlo[i];
-    cell[3+i] = *((double *) lammps_extract_global(lmp,(char *)od[i].c_str()));
-    cell[6+i] = (double)pv[i];
+    lmp_ptr = (double *) lammps_extract_global(lmp,(char *)od[i].c_str());
+    cell[3+i] = *lmp_ptr;
+    cell[6+i] = pv[i];
   }
   return cell;
 };
@@ -204,3 +206,61 @@ std::array<double,9> LAMMPSSimulator::getCellData() {
 void LAMMPSSimulator::close() {
   lammps_close(lmp);
 };
+
+/*
+std::string LAMMPSSimulator::header() {
+  std::string res="LAMMPS dump file\n\n";
+  res += boost::lexical_cast<std::string>(natoms)+" atoms\n";
+  res += "1 atom types\n\n"; // TODO species
+  res += "0. "+boost::lexical_cast<std::string>(pbc.cell[0][0])+" xlo xhi\n";
+  res += "0. "+boost::lexical_cast<std::string>(pbc.cell[1][1])+" ylo yhi\n";
+  res += "0. "+boost::lexical_cast<std::string>(pbc.cell[2][2])+" zlo zhi\n";
+  //res += boost::lexical_cast<std::string>(pbc.cell[2][2])
+  res += "\nMasses\n\n 1 55.85\n Atoms\n\n";
+  return res;
+};
+
+void LAMMPSSimulator::lammps_path_write(std::string fn, double r) {
+  std::ofstream out;
+  out.open(fn.c_str(),std::ofstream::out);
+  out<<header();
+
+  double ncom[]={0.,0.,0.};
+  double c,nm=0.;
+
+  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) {
+    ncom[j] += pathway[3*i+j].deriv(1,r) / natoms;
+  }
+
+  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) {
+    c = pathway[3*i+j].deriv(1,r)-ncom[j];
+    nm += c * c;
+  }
+  nm = sqrt(nm);
+
+  for(int i=0;i<natoms;i++){
+    out<<i+1<<" 1 "; // TODO multispecies
+    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" "; // x y z
+    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" "; // path
+    for(int j=0;j<3;j++) out<<(pathway[3*i+j].deriv(1,r)-ncom[j])/nm<<" ";
+    for(int j=0;j<3;j++) out<<pathway[3*i+j].deriv(2,r)/nm/nm<<" ";
+    out<<std::endl;
+  }
+  out.close();
+};
+
+
+void LAMMPSSimulator::lammps_dev_write(std::string fn, double r, double *dev, double *dev_sq) {
+  std::ofstream out;
+  out.open(fn.c_str(),std::ofstream::out);
+  out<<header();
+  for(int i=0;i<natoms;i++){
+    out<<i+1<<" 1 "; // TODO multispecies
+    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" "; // x y z
+    for(int j=0;j<3;j++) out<<dev[3*i+j]<<" "; // <dev>
+    for(int j=0;j<3;j++) out<<sqrt(dev_sq[3*i+j]-dev[3*i+j]*dev[3*i+j])<<" ";
+    out<<std::endl;
+  }
+  out.close();
+};
+*/
