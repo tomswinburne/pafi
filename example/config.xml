@@ -23,7 +23,9 @@
   <LinearThermalExpansion> 0.0</LinearThermalExpansion>
   <QuadraticThermalExpansion>0.0</QuadraticThermalExpansion>
 
+  <!-- fix hp parameters -->
   <OverDamped> 1 </OverDamped>
+  <Friction> 0.05 </Friction>
 
   <Scripts>
     <Input>
@@ -40,12 +42,12 @@
       run 0
     </Input>
 
+    <!-- fixes for applied stress / boundary planes etc -->
     <PreRun>
-
     </PreRun>
 
+    <!-- Turn them off each time -->
     <PostRun>
-      
     </PostRun>
 
   </Scripts>

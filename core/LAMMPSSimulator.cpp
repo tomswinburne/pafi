@@ -118,9 +118,14 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   rescale_cell(scale);
   populate(r,scale,norm_mag);
 
+  // Stress Fixes
+  run_script("PreRun");
+  cmd = "run 0"; run_commands(params->Parse(cmd));
+
+
   params->parameters["Temperature"] = boost::lexical_cast<std::string>(T);
-  cmd = "fix hp all hp %Temperature% 0.01 %RANDOM% overdamped ";
-  cmd += params->parameters["OverDamped"]+" com 0\nrun 0";
+  cmd = "fix hp all hp %Temperature% %Friction% %RANDOM% overdamped ";
+  cmd += params->parameters["OverDamped"]+" com 1\nrun 0";
   run_commands(params->Parse(cmd));
 
   refE = getEnergy();
@@ -163,6 +168,10 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
 
   cmd = "unfix ae\nunfix af\nunfix ad\nunfix hp";
   run_commands(params->Parse(cmd));
+
+  // Stress Fixes
+  run_script("PostRun");
+  cmd = "run 0"; run_commands(params->Parse(cmd));
 
   // rescale back
   scale = 1. / scale;

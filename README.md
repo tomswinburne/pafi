@@ -64,7 +64,7 @@ make yes-package_name
    ./b2 install
 ```
 
-## Compiling PAFI with cmake (recommended)
+## Compiling PAFI
 1. Download and install cmake from https://cmake.org/download/
 2. Specify environment variables in CMakeLists.txt:
 ```
@@ -78,17 +78,6 @@ make yes-package_name
    mkdir build
    cd build
    cmake ..
-```
-## Compiling PAFI with make (doesn't run configure)
-1. Specify environment variables with PREFIX
-```
-   PREFIX=${HOME}/.local/
-```
-2. Make pafi build folder and run make
-```
-   mkdir build
-   cd build
-   make -f../makefile
 ```
 
 ## Calculation of free energy barrier between states

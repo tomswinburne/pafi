@@ -35,6 +35,8 @@ Parser::Parser(std::string file) {
 		rtws(tree.get<std::string>("PAFI.DumpFolder","dumps"));
 	parameters["OverDamped"] = \
 		rtws(tree.get<std::string>("PAFI.OverDamped","1"));
+	parameters["Friction"] = \
+		rtws(tree.get<std::string>("PAFI.Friction","0.05"));
 
 
 	// Now we can convert to type
@@ -45,6 +47,7 @@ Parser::Parser(std::string file) {
 	dump_dir = boost::lexical_cast<std::string>(parameters["DumpFolder"]);
 	lowT = boost::lexical_cast<double>(parameters["LowTemperature"]);
 	highT = boost::lexical_cast<double>(parameters["HighTemperature"]);
+	Friction = boost::lexical_cast<double>(parameters["Friction"]);
 	TSteps = boost::lexical_cast<int>(parameters["TemperatureSteps"]);
 
 
@@ -121,10 +124,16 @@ void Parser::welcome_message(){
   std::cout<<"      | )          | )   ( |    | )          ___) (___\n";
   std::cout<<"      |/           |/     \\|    |/           \\_______/\n";
   std::cout<<"      Projected    Average      Force        Integrator\n";
-  std::cout<<"          (c) TD Swinburne and M-C Marinica 2017\n\n";
+  std::cout<<"          (c) TD Swinburne and M-C Marinica 2018\n\n";
+
+	std::cout<<"\nScripts:\n\n";
+
+	for(auto s: scripts) std::cout<<s.first<<" : "<<s.second<<"\n";
+
+	std::cout<<"\nParameters:\n\n";
 
 	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, tree.get_child("PAFI")) if(v.first != "Scripts" && v.first != "KnotList") {
-		std::cout<<v.first<<" : "<<parameters[v.first]<<"\n";
+		std::cout<<"\t"<<v.first<<" : "<<parameters[v.first]<<"\n";
 	}
 	std::cout<<"\n\n";
 
