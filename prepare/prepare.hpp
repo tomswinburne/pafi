@@ -12,7 +12,7 @@
 #include <cmath>
 
 // PAFI files
-#include "Parser.hpp"
+//#include "Parser.hpp"
 
-#include "LAMMPSSimulator.hpp"
-typedef LAMMPSSimulator Simulator;
+//#include "LAMMPSSimulator.hpp"
+//typedef LAMMPSSimulator Simulator;

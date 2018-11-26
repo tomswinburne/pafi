@@ -11,8 +11,11 @@
 #include <map>
 #include <cmath>
 
+
 // PAFI files
+#include "Constants.hpp"
 #include "Parser.hpp"
+#include "Spline.hpp"
 
 #include "LAMMPSSimulator.hpp"
 typedef LAMMPSSimulator Simulator;

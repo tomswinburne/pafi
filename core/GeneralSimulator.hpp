@@ -7,6 +7,7 @@
 #include <string>
 #include <boost/lexical_cast.hpp>
 
+#include "Constants.hpp"
 #include "Parser.hpp"
 #include "Boundary.hpp"
 #include "Spline.hpp"
@@ -39,9 +40,9 @@ public:
 
   // LAMMPS INDEPENDENT
 
-  //void write(double r,std::string fn);
+  void write(std::string fn, double r);
 
-  //void write_dev(double r,std::string fn, double *dev, double *dev_sq);
+  void write_dev(std::string fn, double r, double *dev, double *dev_sq);
 
   double expansion(double T);
 

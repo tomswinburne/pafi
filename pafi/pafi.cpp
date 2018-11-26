@@ -56,11 +56,13 @@ int main(int narg, char **arg) {
   double *results = new double[nRes];
   double *local_dev = new double[vsize];
   double *all_dev = NULL, *all_dev_sq = NULL, *all_res = NULL;
+  std::vector<double> integr, dfer, dfere, psir;
 
   if (rank == 0) {
     all_dev = new double[vsize];
     all_dev_sq = new double[vsize];
     all_res = new double[rsize];
+
   }
 
   for (double r=0.00; r<=1.; r+=0.1 ) {
@@ -82,21 +84,26 @@ int main(int narg, char **arg) {
     MPI_Reduce(local_dev,all_dev_sq,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 
     if (rank==0) {
+      std::string dfn = "dumps/dev_"+boost::lexical_cast<std::string>(r)+".dat";
+      sim.write_dev(dfn,r,all_dev,all_dev_sq);
+
       double *final_res = new double[2*nRes];
 
       for(int j=0;j<2*nRes;j++) final_res[j] = 0.;
 
+      for(int i=0;i<nWorkers;i++) for(int j=0;j<nRes;j++)
+        final_res[j] += all_res[i*nRes+j] / (double)nWorkers;
+      double temp;
       for(int i=0;i<nWorkers;i++) for(int j=0;j<nRes;j++) {
-        final_res[j] += all_res[i*nRes+j];
-        final_res[j+nRes] += all_res[i*nRes+j] * all_res[i*nRes+j];
+        temp = all_res[i*nRes+j]-final_res[j];
+        final_res[j+nRes] += temp * temp / (double)nWorkers;
       }
+      for(int j=0;j<nRes;j++) final_res[j+nRes] = sqrt(final_res[j+nRes]);
 
-      for(int j=0;j<nRes;j++) {
-        final_res[j] /= (double)nWorkers;
-        final_res[j+nRes] /= (double)nWorkers;
-        final_res[j+nRes] -= final_res[j] * final_res[j];
-        final_res[j+nRes] = sqrt(final_res[j+nRes]);
-      }
+      integr.push_back(r);
+      dfer.push_back(final_res[2]); // <dF/dr>
+      dfere.push_back(final_res[2+nRes]); // std(dF/dr)
+      psir.push_back(final_res[4]); // <Psi>
 
       std::cout<<"SAMPLED: r:"<<r<<" T:"<<T<<"\n";
 
@@ -110,8 +117,41 @@ int main(int narg, char **arg) {
   // close down LAMMPS instances
   sim.close();
 
+
+  // Initial dump file,
+  if(rank==0){
+    std::cout<<"Simulation complete, integrating free energy profile....\n\n";
+    spline dfspl,psispl,dfespl;
+
+    dfspl.set_points(integr,dfer);
+    dfespl.set_points(integr,dfere);
+    psispl.set_points(integr,psir);
+
+    std::vector<std::array<double,3>> fF;
+    std::array<double,3> fline;
+    double dr = 1./(double)(30 * integr.size());
+    double rtF=0.0;
+
+    fline[0]=0.; fline[1]=rtF; fline[2]=0.;
+    fF.push_back(fline);
+    for(double sr=dr; sr<=1.0; sr+=dr) {
+      rtF -=  dr * dfspl(sr);
+      fline[0]=sr; fline[1]=rtF; fline[2]=BOLTZ*T*log(psispl(sr)/psispl(0.));
+      fF.push_back(fline);
+    }
+    std::ofstream out;
+    std::string fn = "free_energy_profile";
+    out.open(fn.c_str(),std::ofstream::out);
+    out<<"# r F(r) <dF/dr> std(dF/dr)\n";
+    for(auto l: fF)
+      out<<l[0]<<" "<<l[1]<<" "<<l[2]<<" "<<dfspl(l[0])<<" "<<dfespl(l[0])<<"\n";
+    out.close();
+  }
+
   // close down MPI
   MPI_Comm_free(&instance_comm);
+
+
 
   MPI_Finalize();
 

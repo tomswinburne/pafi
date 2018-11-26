@@ -207,7 +207,7 @@ void LAMMPSSimulator::close() {
   lammps_close(lmp);
 };
 
-/*
+
 std::string LAMMPSSimulator::header() {
   std::string res="LAMMPS dump file\n\n";
   res += boost::lexical_cast<std::string>(natoms)+" atoms\n";
@@ -263,4 +263,3 @@ void LAMMPSSimulator::lammps_dev_write(std::string fn, double r, double *dev, do
   }
   out.close();
 };
-*/

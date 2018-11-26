@@ -1,6 +1,6 @@
 #include "GeneralSimulator.hpp"
 
-/*void GeneralSimulator::write(double r,std::string fn) {
+void GeneralSimulator::write(std::string fn, double r) {
   std::ofstream out;
   out.open(fn.c_str(),std::ofstream::out);
   double ncom[]={0.,0.,0.};
@@ -16,8 +16,8 @@
   }
   nm = sqrt(nm);
 
-  for(int i=0;i<natoms;i++){
-    out<<i+1<<" 1 "; // TODO multispecies
+  for (int i=0;i<natoms;i++) {
+    out<<i<<" ";
     for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" "; // x y z
     for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" "; // path
     for(int j=0;j<3;j++) out<<(pathway[3*i+j].deriv(1,r)-ncom[j])/nm<<" ";
@@ -25,7 +25,22 @@
     out<<std::endl;
   }
   out.close();
-};*/
+};
+
+void GeneralSimulator::write_dev(std::string fn, double r, double *dev, double *dev_sq) {
+  std::ofstream out;
+  out.open(fn.c_str(),std::ofstream::out);
+
+  for(int i=0;i<natoms;i++) {
+    out<<i<<" ";
+    // x y z, <dx>, then std(dx)
+    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" ";
+    for(int j=0;j<3;j++) out<<dev[3*i+j]<<" ";
+    for(int j=0;j<3;j++) out<<sqrt(dev_sq[3*i+j]-dev[3*i+j]*dev[3*i+j])<<" ";
+    out<<std::endl;
+  }
+  out.close();
+};
 
 
 double GeneralSimulator::expansion(double T) {
@@ -84,7 +99,7 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
       ys[knot] = knots[3*natoms*knot + 3*i + 1];
       zs[knot] = knots[3*natoms*knot + 3*i + 2];
     }
-    
+
     xspl.set_points(r,xs);
     pathway.push_back(xspl);
 

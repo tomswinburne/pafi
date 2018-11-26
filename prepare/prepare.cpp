@@ -6,8 +6,7 @@ int main(int narg, char **arg)
   int rank, nProcs;
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   MPI_Comm_size(MPI_COMM_WORLD,&nProcs);
-  MPI_Group world;
-  MPI_Comm_group(MPI_COMM_WORLD,&world);
+
 
   if(rank==0) std::cout << "PAFI: MPI_Init done\n";
 
@@ -16,8 +15,17 @@ int main(int narg, char **arg)
 
   if(rank==0) std::cout << "PAFI: XML read\n";
 
+
+  if(nProcs%params.CoresPerWorker!=0) {
+    if(rank==0) std::cout<<"CoresPerWorker must factorize nProcs!\n";
+    exit(-1);
+  }
+
+  //MPI_Group world;
+  //MPI_Comm_group(MPI_COMM_WORLD,&world);
+
   MPI_Comm instance_comm;
-  MPI_Comm_split(MPI_COMM_WORLD,0,0,&instance_comm);
+  MPI_Comm_split(MPI_COMM_WORLD,me/params.CoresPerWorker,0,&instance_comm);
 
   Simulator sim(instance_comm,params,rank);
 
