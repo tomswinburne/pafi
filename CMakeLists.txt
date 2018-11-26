@@ -17,9 +17,8 @@ file(GLOB src_files "core/*")
 set(pafi_src_files ${src_files} pafi/pafi.cpp pafi/pafi.hpp)
 set(prepare_src_files ${src_files} prepare/prepare.cpp prepare/prepare.hpp)
 add_executable(pafi ${pafi_src_files})
-target_link_libraries ( pafi pthread lammps_mpi boost_random boost_system )
+target_link_libraries ( pafi pthread lammps_mpi boost_random boost_system boost_filesystem)
 
 # For later implemenation-
 # boost_timer boost_serialization
-# boost_wserialization boost_filesystem
-# boost_log boost_log_setup
+# boost_wserialization boost_log boost_log_setup

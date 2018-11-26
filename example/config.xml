@@ -1,9 +1,10 @@
 <PAFI>
+  <!-- omit trailing forward slash -->
+  <DumpFolder>./dumps</DumpFolder>
 
   <LowTemperature> 10. </LowTemperature>
-  <Position> 0.6 </Position>
-
   <HighTemperature> 200. </HighTemperature>
+  <TemperatureSteps> 2 </TemperatureSteps>
 
   <SampleSteps> 100 </SampleSteps>
 
@@ -13,7 +14,6 @@
   <nPlanes> 11 </nPlanes>
 
   <!-- We require nprocs % CoresPerWorker==0-->
-
   <CoresPerWorker> 2 </CoresPerWorker>
 
   <!--
@@ -40,16 +40,12 @@
       run 0
     </Input>
 
-    <!-- fix hp all hp temperature friction seed overdamped 0/1 com 0/1 -->
     <PreRun>
+
     </PreRun>
 
-    <Run>
-      run %SampleSteps%
-    </Run>
-
     <PostRun>
-      unfix af
+      
     </PostRun>
 
   </Scripts>

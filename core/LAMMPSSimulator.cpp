@@ -12,8 +12,8 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int rank) 
   lmparg[2] = (char *) "none";
   lmparg[3] = (char *) "-log";
   lmparg[4] = (char *) "none";
-  sprintf(str1,"log.lammps.%d.seule",rank);
-  if (rank==0) lmparg[4] = str1;
+  // sprintf(str1,"log.lammps.%d.seule",rank);
+  // if (rank==0) lmparg[4] = str1;
 
   lammps_open(5,lmparg,instance_comm,(void **) &lmp);
   run_script("Input");
@@ -119,7 +119,8 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   populate(r,scale,norm_mag);
 
   params->parameters["Temperature"] = boost::lexical_cast<std::string>(T);
-  cmd = "fix hp all hp %Temperature% 0.01 %RANDOM% overdamped 1 com 0\nrun 0";
+  cmd = "fix hp all hp %Temperature% 0.01 %RANDOM% overdamped ";
+  cmd += params->parameters["OverDamped"]+" com 0\nrun 0";
   run_commands(params->Parse(cmd));
 
   refE = getEnergy();

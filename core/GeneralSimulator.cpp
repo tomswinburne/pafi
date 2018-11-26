@@ -31,9 +31,10 @@ void GeneralSimulator::write_dev(std::string fn, double r, double *dev, double *
   std::ofstream out;
   out.open(fn.c_str(),std::ofstream::out);
 
+  out<<"# PAFI DUMP FILE. Reference path u(r) is a Nx3 vector.\n";
+  out<<"# For i=0,1,2: u_i(r) , < x_i-u_i | r > , sqrt(<(x_i-u_i)^2 | r >)\n";
   for(int i=0;i<natoms;i++) {
     out<<i<<" ";
-    // x y z, <dx>, then std(dx)
     for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" ";
     for(int j=0;j<3;j++) out<<dev[3*i+j]<<" ";
     for(int j=0;j<3;j++) out<<sqrt(dev_sq[3*i+j]-dev[3*i+j]*dev[3*i+j])<<" ";
@@ -45,9 +46,11 @@ void GeneralSimulator::write_dev(std::string fn, double r, double *dev, double *
 
 double GeneralSimulator::expansion(double T) {
   double coeff,new_scale = 1.0;
-  coeff = boost::lexical_cast<double>(params->parameters["Linear"]);
+  coeff = \
+  boost::lexical_cast<double>(params->parameters["LinearThermalExpansion"]);
   new_scale += coeff*T;
-  coeff = boost::lexical_cast<double>(params->parameters["Quadratic"]);
+  coeff = \
+  boost::lexical_cast<double>(params->parameters["QuadraticThermalExpansion"]);
   new_scale += coeff*T*T;
   return new_scale;
 };

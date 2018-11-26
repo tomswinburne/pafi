@@ -113,4 +113,6 @@ mpirun -np NPROCS ./pafi
 ```
 ## Output
 
-TBA
+1. PAFI will try to create a folder with a name given by the DumpFolder parameter in config.xml. If it already exists, PAFI will create the first available directory named DumpFolder_i, where i is an integer less than 20.
+
+2. In DumpFolder PAFI will create subfolders for each temperature in the run. In each subfolder there will be a file `dev_r_T.dat` with the ensemble average and variance pathway deviation from each hyperplane and a file `free_energy_profile_T` that has the integrated FEP.
