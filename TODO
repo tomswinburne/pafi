@@ -1,11 +1,10 @@
-finish prepare script -
 
-convert an existing NEB calculation - need to do the splines in house
+  Generation script for NEB calculation
 
-write in pafi style
+  Stress fixes
 
-need to think about charges etc etc.... grrr!
+  Restart files with boost_serialization ?
 
+  Fully test multi-species implementation
 
-
-
+  Allow for charged particles / molecules etc.
