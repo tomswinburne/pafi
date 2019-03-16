@@ -19,7 +19,7 @@ Beta version of code used in [this paper](https://journals.aps.org/prl/abstract/
 
 
 
-## Patching and compiling LAMMPS
+## Patch and compile LAMMPS
 
 1. [Download LAMMPS](http://lammps.sandia.gov/download.html) and read the [installation instructions](http://lammps.sandia.gov/doc/Section_start.html)
 
@@ -48,8 +48,20 @@ make yes-package_name
    mkdir ${HOME}/.local/include/lammps
    cp *.h ${HOME}/.local/include/lammps/
 ```
-
-## Compiling Boost C++ libraries
+## Compile Eigen C++ library
+0. Eigen is only used in Boundary.cpp to invert one 3x3 matrix for periodic boundary conditions with triclinic matricies. Straightforward to replace with your own code! (Trivial when cell is orthorhombic)
+1. Download and extract tarball from http://eigen.tuxfamily.org/index.php
+2. In root of distribution, make build directory and compile
+```
+mkdir build
+cd build
+FC="nofortran" cmake -DCMAKE_INSTALL_PREFIX=${HOME}/.local ../
+```
+3. Install
+```
+make install
+```
+## Compile Boost C++ library
 1. Download tarball from https://www.boost.org/users/download/
 2. Bootstrap with the local install prefix
 ```
@@ -64,7 +76,7 @@ make yes-package_name
    ./b2 install
 ```
 
-## Compiling PAFI
+## Compile PAFI
 1. Download and install cmake from https://cmake.org/download/
 2. Specify environment variables in CMakeLists.txt:
 ```
@@ -73,14 +85,17 @@ make yes-package_name
    set(CMAKE_LIBRARY_PATH ${HOME}/.local/lib)
    set(CMAKE_CXX_COMPILER path/to/mpic++)
 ```
-3. Make pafi build folder and run cmake
+3. Make pafi build folder, run cmake and make
 ```
    mkdir build
    cd build
    cmake ..
+   make
 ```
 
 ## Calculation of free energy barrier between states
+
+0. Tarball in example folder has premade NEB calculation (SIA in EAM-Fe) for testing
 
 1. First set up a LAMMPS neb calculation as described [here](http://lammps.sandia.gov/doc/neb.html)
 
@@ -105,3 +120,8 @@ mpirun -np NPROCS ./pafi
 1. PAFI will try to create a folder with a name given by the DumpFolder parameter in config.xml. If it already exists, PAFI will create the first available directory named DumpFolder_i, where i is an integer less than 20.
 
 2. In DumpFolder PAFI will create subfolders for each temperature in the run. In each subfolder there will be a file `dev_r_T.dat` with the ensemble average and variance pathway deviation from each hyperplane and a file `free_energy_profile_T` that has the integrated FEP.
+
+## TODO
+1. Restart files from pathway deviations
+2. Smoothed spline interpolation for more general reference pathways
+3. tbc....
