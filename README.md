@@ -68,10 +68,10 @@ make yes-package_name
 1. Download and install cmake from https://cmake.org/download/
 2. Specify environment variables in CMakeLists.txt:
 ```
+   set(HOME your/home/path)
    set(CMAKE_INCLUDE_PATH ${HOME}/.local/include)
    set(CMAKE_LIBRARY_PATH ${HOME}/.local/lib)
-   set(CMAKE_CXX_COMPILER ${HOME}/.local/bin/mpicxx)
-   set(CMAKE_C_COMPILER ${HOME}/.local/bin/mpicc)
+   set(CMAKE_CXX_COMPILER path/to/mpic++)
 ```
 3. Make pafi build folder and run cmake
 ```
