@@ -16,7 +16,7 @@ v0.4 :copyright: TD Swinburne and M-C Marinica 2018 MIT License
 Beta version of code used in [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503)
 > *Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems*   
 > T.D. Swinburne and M.-C. Marinica, Physical Review Letters 120 (13), 135503, 2018
-
+Please cite this paper when publishing results using PAFI
 
 
 ## Patch and compile LAMMPS

@@ -2,6 +2,13 @@ MIT License
 
 Copyright (c) 2018 TD Swinburne (Tom)
 
+PAFI- Projected Average Force Integrator
+
+If used, please cite:
+Unsupervised calculation of free energy barriers in large crystalline systems
+TD Swinburne and MC Marinica
+Physical Review Letters 120 (13), 135503, 2018
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
