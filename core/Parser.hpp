@@ -2,6 +2,7 @@
 #define PARSER_H
 
 #include <vector>
+#include <map>
 #include <string>
 
 #include <boost/property_tree/ptree.hpp>

@@ -9,7 +9,7 @@ export PREFIX=$HOME"/.local"
 export LD_LIBRARY_PATH=$PREFIX"/lib":$LD_LIBRARY_PATH
 export PATH=$PREFIX"/bin":$PATH
 
-ln -s ../build/pafi pafi
+ln -s ../new_build/pafi pafi
 
 NP=4
  # test example, not always required

@@ -9,8 +9,9 @@
         Projected    Average      Force        Integrator
 
 
-v0.4 :copyright: TD Swinburne and M-C Marinica 2018 MIT License
+v0.6 :copyright: TD Swinburne and M-C Marinica 2019 MIT License
 
+swinburne at cinam.univ-mrs.fr
 
 
 Beta version of code used in [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503)
@@ -18,6 +19,8 @@ Beta version of code used in [this paper](https://journals.aps.org/prl/abstract/
 > T.D. Swinburne and M.-C. Marinica, Physical Review Letters 120 (13), 135503, 2018
 
 Please cite the above when publishing results using PAFI
+
+# Installation
 
 ## Patch and compile LAMMPS
 
@@ -34,7 +37,7 @@ patch -p0 < /path/to/user-pafi_lammps_Aug18.patch # modifies /path/to/lammps_rep
 cd src
 make yes-user-pafi
 make yes-replica # for NEB calculation
-make yes-package_name
+make yes-package_name # (i.e. manybody for EAM potentials etc)
 ```
 
 3. Compile as a static library (and optionally binary initial NEB calculation)

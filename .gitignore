@@ -3,6 +3,16 @@ knots/*
 run/*
 build/*
 
+# dev data
+lammps/*
+new_build/*
+example/*
+!example/Fe*
+!example/config.xml
+
+lib/*
+notes.py
+
 # Prerequisites
 */*.d
 
