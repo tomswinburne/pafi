@@ -2,16 +2,18 @@
 #define PBC_H
 
 
+#include <math.h>
 #include <vector>
 #include <string>
 #include <array>
 
-#include <Eigen/Dense> // For Supercell and Hessian
+//#include <Eigen/Dense> // For Supercell and Hessian
 
 
 
 class MinImage {
 public:
+  double determinant;
   std::array< std::array<double,3>, 3 > cell;
   std::array< std::array<double,3>, 3 > invcell;
   std::array<double,3> periodic;

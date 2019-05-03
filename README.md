@@ -51,20 +51,8 @@ make yes-package_name # (i.e. manybody for EAM potentials etc)
    mkdir ${HOME}/.local/include/lammps
    cp *.h ${HOME}/.local/include/lammps/
 ```
-## Compile Eigen C++ library
-0. Eigen is only used in Boundary.cpp to invert one 3x3 matrix for periodic boundary conditions with triclinic matricies. Straightforward to replace with your own code! (Trivial when cell is orthorhombic)
-1. Download and extract tarball from http://eigen.tuxfamily.org/index.php
-2. In root of distribution, make build directory and compile
-```
-mkdir build
-cd build
-FC="nofortran" cmake -DCMAKE_INSTALL_PREFIX=${HOME}/.local ../
-```
-3. Install
-```
-make install
-```
 ## Compile Boost C++ library
+0. Your cluster may have Boost as a module, in which case this stage is not required.
 1. Download tarball from https://www.boost.org/users/download/
 2. Bootstrap with the local install prefix
 ```

@@ -16,7 +16,7 @@ add_definitions(-std=c++11 -O3 -g -DBOOST_ALL_DYN_LINK)
 file(GLOB src_files "core/*")
 
 set(pafi_src_files ${src_files} pafi/pafi.cpp pafi/pafi.hpp)
-set(prepare_src_files ${src_files} prepare/prepare.cpp prepare/prepare.hpp)
+#set(prepare_src_files ${src_files} prepare/prepare.cpp prepare/prepare.hpp)
 add_executable(pafi ${pafi_src_files})
 target_link_libraries ( pafi pthread lammps_mpi boost_random boost_system boost_filesystem )
 

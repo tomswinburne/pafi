@@ -1,5 +1,31 @@
 #include "Boundary.hpp"
-#include <iostream>
+
+void MinImage::load(std::array<double,9> lcell) {
+  determinant = 0.0;
+  for(int i=0; i<9; i++) cell[i/3][i%3] = 0.;
+
+  for(int i=0; i<3; i++) {
+    cell[i][i] = lcell[i];
+    cell[int(i==2)][1+int(i>0)] = lcell[3+i];
+    periodic[i] = lcell[6+i];
+  }
+  
+  determinant  = cell[0][0] * (cell[1][1]*cell[2][2] - cell[1][2] * cell[2][1]);
+  determinant -= cell[0][1] * (cell[1][0]*cell[2][2] - cell[1][2] * cell[2][0]);
+  determinant += cell[0][2] * (cell[1][0]*cell[2][1] - cell[1][1] * cell[2][0]);
+  
+  invcell[0][0] = (1.0/determinant) * (cell[1][1] * cell[2][2] - cell[1][2] * cell[2][1]);
+  invcell[1][0] = (1.0/determinant) * (cell[1][2] * cell[2][0] - cell[1][0] * cell[2][2]);
+  invcell[2][0] = (1.0/determinant) * (cell[1][0] * cell[2][1] - cell[1][1] * cell[2][0]);
+  invcell[0][1] = (1.0/determinant) * (cell[0][2] * cell[2][1] - cell[0][1] * cell[2][2]);
+  invcell[1][1] = (1.0/determinant) * (cell[0][0] * cell[2][2] - cell[0][2] * cell[2][0]);
+  invcell[2][1] = (1.0/determinant) * (cell[0][1] * cell[2][0] - cell[0][0] * cell[2][1]);
+  invcell[0][2] = (1.0/determinant) * (cell[0][1] * cell[1][2] - cell[0][2] * cell[1][1]);
+  invcell[1][2] = (1.0/determinant) * (cell[0][2] * cell[1][0] - cell[0][0] * cell[1][2]);
+  invcell[2][2] = (1.0/determinant) * (cell[0][0] * cell[1][1] - cell[0][1] * cell[1][0]);
+};
+
+/*
 void MinImage::load(std::array<double,9> lcell) {
   Eigen::MatrixXd c(3,3), invc(3,3); // temp as array has faster access
   for(int i=0; i<9; i++) {
@@ -17,6 +43,7 @@ void MinImage::load(std::array<double,9> lcell) {
   invc=c.inverse();
   for(int i=0; i<9; i++) invcell[i/3][i%3]=invc(i/3,i%3);
 };
+*/
 
 void MinImage::minimumImageVector(double *dr) {
 	std::array<double, 3> ds;
