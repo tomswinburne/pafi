@@ -115,8 +115,10 @@ int main(int narg, char **arg) {
       std::cout<<std::setw(15)<<"<dF/dr>";
       std::cout<<std::setw(15)<<"std(dF/dr)";
       std::cout<<std::setw(15)<<"|<X>-U|";
-      std::cout<<std::setw(15)<<"<std(|X-U|)";
+      std::cout<<std::setw(15)<<"std(|X-U|)";
       std::cout<<std::setw(15)<<"|(<X>-U).N|";
+      std::cout<<std::setw(15)<<"<N_true.N>";
+      std::cout<<std::setw(15)<<"std(N_true.N)";
       std::cout<<"\n";
     }
 
@@ -170,6 +172,8 @@ int main(int narg, char **arg) {
         std::cout<<std::setw(15)<<final_res[6];//"mean(|<X>-U|)";
         std::cout<<std::setw(15)<<final_res[6+nRes];//"<std(|<X>-U|)";
         std::cout<<std::setw(15)<<final_res[5];//"mean(|<X>-U).(dU/dr)|)";
+        std::cout<<std::setw(15)<<final_res[4];//"mean(Psi)";
+        std::cout<<std::setw(15)<<final_res[4+nRes];//"mean(Psi)";
         std::cout<<"\n";
       }
     }
@@ -183,25 +187,28 @@ int main(int narg, char **arg) {
       dfespl.set_points(integr,dfere);
       psispl.set_points(integr,psir);
 
-      std::vector<std::array<double,3>> fF;
-      std::array<double,3> fline;
+      std::vector<std::array<double,4>> fF;
+      std::array<double,4> fline;
       double dr = 1./(double)(30 * integr.size());
       double rtF=0.0;
 
-      fline[0]=0.; fline[1]=rtF; fline[2]=0.;
+      fline[0]=0.; fline[1]=rtF; fline[2]=0.; fline[3] = psispl(0.0);
       fF.push_back(fline);
       for(double sr=dr; sr<=1.0; sr+=dr) {
         rtF -=  dr * dfspl(sr);
-        fline[0]=sr; fline[1]=rtF; fline[2]=BOLTZ*T*log(psispl(sr)/psispl(0.));
+        fline[0]=sr;
+        fline[1]=rtF;
+        fline[2]=BOLTZ*T*log(psispl(sr)/psispl(0.));
+        fline[3] = psispl(sr);
         fF.push_back(fline);
       }
       std::ofstream out;
 
       fn = temp_dump_dir + "/free_energy_profile_"+Tstr+"K";
       out.open(fn.c_str(),std::ofstream::out);
-      out<<"# r F(r) <dF/dr> std(dF/dr)\n";
+      out<<"# r F(r) <dF/dr> std(dF/dr) <Psi>\n";
       for(auto l: fF)
-        out<<l[0]<<" "<<l[1]+l[2]<<" "<<dfspl(l[0])<<" "<<dfespl(l[0])<<"\n";
+        out<<l[0]<<" "<<l[1]+l[2]<<" "<<dfspl(l[0])<<" "<<dfespl(l[0])<<" "<<l[3]<<"\n";
       out.close();
       std::cout<<"Integration complete\n\n";
     }
