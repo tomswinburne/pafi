@@ -198,7 +198,7 @@ int main(int narg, char **arg) {
         rtF -=  dr * dfspl(sr);
         fline[0]=sr;
         fline[1]=rtF;
-        fline[2]=BOLTZ*T*log(psispl(sr)/psispl(0.));
+        fline[2]=BOLTZ*T*log(fabs(psispl(sr)/psispl(0.)));
         fline[3] = psispl(sr);
         fF.push_back(fline);
       }
