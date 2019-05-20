@@ -84,7 +84,7 @@ int main(int narg, char **arg) {
   double temp, dr;
   std::string rstr,Tstr,dump_fn,fn,temp_dump_dir;
 
-  if(params.nPlanes>1) dr = 1.0 / (double)(params.nPlanes-1);
+  if (params.nPlanes>1) dr = (params.stopr-params.startr)/(double)(params.nPlanes-1);
   else dr = 0.1;
 
 
@@ -122,7 +122,7 @@ int main(int narg, char **arg) {
       std::cout<<"\n";
     }
 
-    for (double r = 0.00; r <= 1.; r += dr ) {
+    for (double r = params.startr; r <= params.stopr; r += dr ) {
 
       rstr = boost::str(boost::format("%.4f") % r);
 

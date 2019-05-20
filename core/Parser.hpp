@@ -38,7 +38,7 @@ std::map<std::string,std::string> parameters;
 std::map<std::string,std::string> scripts;
 
 std::vector<std::string> KnotList;
-double lowT,highT,Friction;
+double lowT,highT,Friction,startr,stopr;
 int CoresPerWorker, nPlanes, TSteps;
 std::string dump_dir;
 bool seeded;

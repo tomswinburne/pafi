@@ -4,40 +4,43 @@
 
 Parser::Parser(std::string file) {
 
-	seeded = false;
+  seeded = false;
 
-	// Parse the XML into the property tree.
-	boost::property_tree::read_xml(file,tree,\
-		boost::property_tree::xml_parser::no_comments);
+  // Parse the XML into the property tree.
+  boost::property_tree::read_xml(file,tree,\
+  boost::property_tree::xml_parser::no_comments);
 
-	// | boost::property_tree::xml_parser::trim_whitespace); // RapidXML can bug
-	// => have to send everything through home rolled rtws(std::string s)
+  // | boost::property_tree::xml_parser::trim_whitespace); // RapidXML can bug
+  // => have to send everything through home rolled rtws(std::string s)
 
-	parameters["CoresPerWorker"]=\
-		rtws(tree.get<std::string>("PAFI.CoresPerWorker","1"));
+  parameters["CoresPerWorker"]=\
+    rtws(tree.get<std::string>("PAFI.CoresPerWorker","1"));
   parameters["LowTemperature"] = \
-		rtws(tree.get<std::string>("PAFI.LowTemperature","0."));
-	parameters["HighTemperature"] = \
-		rtws(tree.get<std::string>("PAFI.HighTemperature","100."));
-	parameters["TemperatureSteps"] = \
-		rtws(tree.get<std::string>("PAFI.TemperatureSteps","2"));
-	parameters["LinearThermalExpansion"] = \
-		rtws(tree.get<std::string>("PAFI.LinearThermalExpansion","0.0"));
-	parameters["QuadraticThermalExpansion"] = \
-		rtws(tree.get<std::string>("PAFI.QuadraticThermalExpansion","0.0"));
+    rtws(tree.get<std::string>("PAFI.LowTemperature","0."));
+  parameters["HighTemperature"] = \
+    rtws(tree.get<std::string>("PAFI.HighTemperature","100."));
+  parameters["TemperatureSteps"] = \
+    rtws(tree.get<std::string>("PAFI.TemperatureSteps","2"));
+  parameters["LinearThermalExpansion"] = \
+    rtws(tree.get<std::string>("PAFI.LinearThermalExpansion","0.0"));
+  parameters["QuadraticThermalExpansion"] = \
+    rtws(tree.get<std::string>("PAFI.QuadraticThermalExpansion","0.0"));
   parameters["SampleSteps"] = \
-		rtws(tree.get<std::string>("PAFI.SampleSteps","100"));
-	parameters["ThermSteps"] = \
-	 rtws(tree.get<std::string>("PAFI.ThermSteps","100"));
-	parameters["nPlanes"] = \
-		rtws(tree.get<std::string>("PAFI.nPlanes","100"));
-	parameters["DumpFolder"] = \
-		rtws(tree.get<std::string>("PAFI.DumpFolder","dumps"));
-	parameters["OverDamped"] = \
-		rtws(tree.get<std::string>("PAFI.OverDamped","1"));
-	parameters["Friction"] = \
-		rtws(tree.get<std::string>("PAFI.Friction","0.05"));
-
+    rtws(tree.get<std::string>("PAFI.SampleSteps","100"));
+  parameters["ThermSteps"] = \
+    rtws(tree.get<std::string>("PAFI.ThermSteps","100"));
+  parameters["nPlanes"] = \
+    rtws(tree.get<std::string>("PAFI.nPlanes","100"));
+  parameters["DumpFolder"] = \
+    rtws(tree.get<std::string>("PAFI.DumpFolder","dumps"));
+  parameters["OverDamped"] = \
+    rtws(tree.get<std::string>("PAFI.OverDamped","1"));
+  parameters["Friction"] = \
+    rtws(tree.get<std::string>("PAFI.Friction","0.05"));
+  parameters["StartCoordinate"] = \
+    rtws(tree.get<std::string>("PAFI.StartCoordinate","0.0"));
+  parameters["StopCoordinate"] = \
+    rtws(tree.get<std::string>("PAFI.StopCoordinate","1.0"));
 
 	// Now we can convert to type
 	KnotList = Parse(tree.get<std::string>("PAFI.KnotList"),false);
@@ -49,6 +52,8 @@ Parser::Parser(std::string file) {
 	highT = boost::lexical_cast<double>(parameters["HighTemperature"]);
 	Friction = boost::lexical_cast<double>(parameters["Friction"]);
 	TSteps = boost::lexical_cast<int>(parameters["TemperatureSteps"]);
+  startr = boost::lexical_cast<double>(parameters["StartCoordinate"]);
+  stopr = boost::lexical_cast<double>(parameters["StopCoordinate"]);
 
 
 	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, tree.get_child("PAFI.Scripts")) {
