@@ -122,7 +122,7 @@ int main(int narg, char **arg) {
       std::cout<<"\n";
     }
 
-    for (double r = params.startr; r <= params.stopr; r += dr ) {
+    for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr ) {
 
       rstr = boost::str(boost::format("%.4f") % r);
 
@@ -192,13 +192,13 @@ int main(int narg, char **arg) {
       double dr = 1./(double)(30 * integr.size());
       double rtF=0.0;
 
-      fline[0]=0.; fline[1]=rtF; fline[2]=0.; fline[3] = psispl(0.0);
+      fline[0]=params.startr; fline[1]=rtF; fline[2]=0.; fline[3] = psispl(params.startr);
       fF.push_back(fline);
-      for(double sr=dr; sr<=1.0; sr+=dr) {
+      for(double sr=params.startr+dr; sr<= params.stopr+dr*0.5; sr+=dr) {
         rtF -=  dr * dfspl(sr);
-        fline[0]=sr;
-        fline[1]=rtF;
-        fline[2]=BOLTZ*T*log(fabs(psispl(sr)/psispl(0.)));
+        fline[0] = sr;
+        fline[1] = rtF;
+        fline[2] = BOLTZ*T*log(fabs(psispl(sr)/psispl(0.)));
         fline[3] = psispl(sr);
         fF.push_back(fline);
       }
