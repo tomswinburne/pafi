@@ -149,18 +149,23 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
   sampleT = (*lmp_ptr-refE)/natoms/1.5/8.617e-5;
   results[1] = sampleT;
+  lammps_free(lmp_ptr);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,0,0);
   results[2] = *lmp_ptr * norm_mag;
+  lammps_free(lmp_ptr);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,1,0);
   results[3] = *lmp_ptr * norm_mag * norm_mag - results[2] * results[2];
+  lammps_free(lmp_ptr);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,2,0);
   results[4] = *lmp_ptr;
+  lammps_free(lmp_ptr);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,3,0);
   results[5] = *lmp_ptr;
+  lammps_free(lmp_ptr);
 
   lammps_gather_peratom_fix(lmp,(char *)"ad",3,dev);
   dm=0.; for(int i=0;i<3*natoms;i++) dm += dev[i] * dev[i];
