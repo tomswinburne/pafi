@@ -47,6 +47,8 @@ int main(int narg, char **arg) {
   const int local_rank = rank % params.CoresPerWorker;
   const int nRes = 7; // TODO remove this
 
+
+
   MPI_Comm instance_comm;
   MPI_Comm_split(MPI_COMM_WORLD,instance,0,&instance_comm);
 
@@ -83,6 +85,7 @@ int main(int narg, char **arg) {
 
   double temp, dr;
   std::string rstr,Tstr,dump_fn,fn,temp_dump_dir;
+  std::ofstream raw;
 
   if (params.nPlanes>1) dr = (params.stopr-params.startr)/(double)(params.nPlanes-1);
   else dr = 0.1;
@@ -95,6 +98,8 @@ int main(int narg, char **arg) {
     temp_dump_dir = params.dump_dir+"/"+Tstr+"K";
 
     if(rank==0) {
+      fn = temp_dump_dir + "/raw_output_"+Tstr+"K";
+      raw.open(fn.c_str(),std::ofstream::out);
       boost::filesystem::create_directory(temp_dump_dir);
       std::cout<<"\nStarting T="+Tstr+"K run\n\n";
     }
@@ -110,8 +115,9 @@ int main(int narg, char **arg) {
       all_res = new double[rsize];
 
       std::cout<<std::setw(15)<<"r";
-      std::cout<<std::setw(15)<<"<T>";
-      std::cout<<std::setw(15)<<"std(T)";
+      std::cout<<std::setw(15)<<"<Tpre>";
+      std::cout<<std::setw(15)<<"<Tpost>";
+      std::cout<<std::setw(15)<<"std(Tpost)";
       std::cout<<std::setw(15)<<"<dF/dr>";
       std::cout<<std::setw(15)<<"std(dF/dr)";
       std::cout<<std::setw(15)<<"|<X>-U|";
@@ -149,13 +155,17 @@ int main(int narg, char **arg) {
 
         sim.write_dev(dump_fn,r,all_dev,all_dev_sq);
 
+        for(int i=0;i<nWorkers;i++) raw<<all_res[i*nRes+2]<<" ";
+        raw<<std::endl;
+
         for(int j=0;j<2*nRes;j++) final_res[j] = 0.;
 
         for(int i=0;i<nWorkers;i++) for(int j=0;j<nRes;j++)
-          final_res[j] += all_res[i*nRes+j] / (double)nWorkers;
+          final_res[j] += all_res[i*nRes+j] / double(nWorkers);
+
         for(int i=0;i<nWorkers;i++) for(int j=0;j<nRes;j++) {
           temp = all_res[i*nRes+j]-final_res[j];
-          final_res[j+nRes] += temp * temp / (double)nWorkers;
+          final_res[j+nRes] += temp * temp / double(nWorkers);
         }
         for(int j=0;j<nRes;j++) final_res[j+nRes] = sqrt(final_res[j+nRes]);
 
@@ -165,21 +175,23 @@ int main(int narg, char **arg) {
         psir.push_back(final_res[4]); // <Psi>
 
         std::cout<<std::setw(15)<<r;//"r";
-        std::cout<<std::setw(15)<<final_res[1];//"mean(<T>)";
-        std::cout<<std::setw(15)<<final_res[1+nRes];//"std(<T>)";
+        std::cout<<std::setw(15)<<final_res[0];//"mean(<Tpre>)";
+        std::cout<<std::setw(15)<<final_res[1];//"mean(<Tpost>)";
+        std::cout<<std::setw(15)<<final_res[1+nRes];//"std(<Tpost>)";
         std::cout<<std::setw(15)<<final_res[2];//"mean(<dF/dr>)";
         std::cout<<std::setw(15)<<final_res[2+nRes];//"std(<dF/dr>)";
         std::cout<<std::setw(15)<<final_res[6];//"mean(|<X>-U|)";
         std::cout<<std::setw(15)<<final_res[6+nRes];//"<std(|<X>-U|)";
         std::cout<<std::setw(15)<<final_res[5];//"mean(|<X>-U).(dU/dr)|)";
         std::cout<<std::setw(15)<<final_res[4];//"mean(Psi)";
-        std::cout<<std::setw(15)<<final_res[4+nRes];//"mean(Psi)";
+        std::cout<<std::setw(15)<<final_res[4+nRes];//"std(Psi)";
         std::cout<<"\n";
       }
     }
 
     // free_energy_profile
     if(rank==0){
+      raw.close();
       std::cout<<"T="+Tstr+"K run complete, integrating FEP....\n\n";
       spline dfspl,psispl,dfespl;
 
@@ -211,6 +223,7 @@ int main(int narg, char **arg) {
         out<<l[0]<<" "<<l[1]+l[2]<<" "<<dfspl(l[0])<<" "<<dfespl(l[0])<<" "<<l[3]<<"\n";
       out.close();
       std::cout<<"Integration complete\n\n";
+
     }
 
     if( params.highT > params.lowT + 1.0 && params.TSteps > 1) \
