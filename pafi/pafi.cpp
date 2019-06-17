@@ -99,8 +99,8 @@ int main(int narg, char **arg) {
 
     if(rank==0) {
       fn = temp_dump_dir + "/raw_output_"+Tstr+"K";
-      raw.open(fn.c_str(),std::ofstream::out);
       boost::filesystem::create_directory(temp_dump_dir);
+      raw.open(fn.c_str(),std::ofstream::out);
       std::cout<<"\nStarting T="+Tstr+"K run\n\n";
     }
     double *local_res = new double[rsize];
