@@ -2,19 +2,26 @@
   <!-- omit trailing forward slash -->
   <DumpFolder>./dumps</DumpFolder>
 
-  <LowTemperature> 10. </LowTemperature>
+  <LowTemperature> 200. </LowTemperature>
   <HighTemperature> 200. </HighTemperature>
-  <TemperatureSteps> 2 </TemperatureSteps>
+  <TemperatureSteps> 1 </TemperatureSteps>
 
-  <SampleSteps> 100 </SampleSteps>
+
+  <SampleSteps> 200 </SampleSteps>
+  <!-- keep same as SampleSteps. experimental feature -->
+  <SampleWindow> 200 </SampleWindow>
 
   <ThermSteps> 400 </ThermSteps>
-  <ThermWindow> 200 </ThermWindow>
+  <!-- keep same as ThermSteps. experimental feature -->
+  <ThermWindow> 400 </ThermWindow>
 
-  <nPlanes> 11 </nPlanes>
+  <StartCoordinate>0.</StartCoordinate>
+  <StopCoordinate> 1. </StopCoordinate>
+
+  <nPlanes> 6 </nPlanes>
 
   <!-- We require nprocs % CoresPerWorker==0-->
-  <CoresPerWorker> 2 </CoresPerWorker>
+  <CoresPerWorker> 1 </CoresPerWorker>
 
   <!--
     RELATIVE thermal expansion coefficients -
@@ -25,7 +32,7 @@
 
   <!-- fix hp parameters -->
   <OverDamped> 1 </OverDamped>
-  <Friction> 0.05 </Friction>
+  <Friction> 0.1 </Friction>
 
   <Scripts>
     <Input>
@@ -37,8 +44,6 @@
       pair_style    eam/fs
       pair_coeff * * md/Fe.eam.fs Fe
       mass * 55.85
-      run 0
-      thermo 10
       run 0
     </Input>
 
