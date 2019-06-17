@@ -100,6 +100,7 @@ int main(int narg, char **arg) {
     if(rank==0) {
       fn = temp_dump_dir + "/raw_output_"+Tstr+"K";
       boost::filesystem::create_directory(temp_dump_dir);
+      std::cout<<"opening dump file "<<fn<<std::endl;
       raw.open(fn.c_str(),std::ofstream::out);
       std::cout<<"\nStarting T="+Tstr+"K run\n\n";
     }
@@ -215,7 +216,6 @@ int main(int narg, char **arg) {
         fF.push_back(fline);
       }
       std::ofstream out;
-
       fn = temp_dump_dir + "/free_energy_profile_"+Tstr+"K";
       out.open(fn.c_str(),std::ofstream::out);
       out<<"# r F(r) <dF/dr> std(dF/dr) <Psi>\n";
