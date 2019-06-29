@@ -1,9 +1,9 @@
 <PAFI>
   <!-- omit trailing forward slash -->
-  <DumpFolder>./dumps_1_0.1_1000</DumpFolder>
+  <DumpFolder>./dumps</DumpFolder>
 
-	<!-- how many times each replica performs an average -->
-	<nRepeats>2</nRepeats>
+  <!-- how many times each replica performs an average -->
+  <nRepeats>2</nRepeats>
 
   <LowTemperature> 200. </LowTemperature>
   <HighTemperature> 200. </HighTemperature>
@@ -14,7 +14,7 @@
 
   <ThermSteps> 1000 </ThermSteps>
 
-	<!-- ThermWindow must be less than ThermSteps -->
+  <!-- ThermWindow must be less than ThermSteps -->
   <ThermWindow> 200 </ThermWindow>
 
   <nPlanes> 11 </nPlanes>
