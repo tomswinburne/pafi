@@ -39,7 +39,7 @@ std::map<std::string,std::string> scripts;
 
 std::vector<std::string> KnotList;
 double lowT,highT,Friction,startr,stopr;
-int CoresPerWorker, nPlanes, TSteps;
+int CoresPerWorker, nPlanes, TSteps, nRepeats;
 std::string dump_dir;
 bool seeded;
 

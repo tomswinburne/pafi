@@ -46,19 +46,20 @@ int main(int narg, char **arg) {
   const int instance = rank / params.CoresPerWorker;
   const int local_rank = rank % params.CoresPerWorker;
   const int nRes = 7; // TODO remove this
+	const int nRepeats = params.nRepeats;
 
 
 
   MPI_Comm instance_comm;
   MPI_Comm_split(MPI_COMM_WORLD,instance,0,&instance_comm);
 
-  // Exactly the same seed for each instance. Should I worry about this?
-  int seed[1];
-  if(local_rank==0) seed[0]=instance+static_cast<int>(std::time(0))/1000;
-  MPI_Barrier(instance_comm);
-  MPI_Bcast(seed,1,MPI_INT,0,instance_comm);
-
-  params.seed(seed[0]);
+  int *seed = new int[nWorkers];
+  if(rank==0) for(int i=0;i<nWorkers;i++) seed[i]= 137*i + static_cast<int>(std::time(0))/1000;
+  MPI_Bcast(seed,nWorkers,MPI_INT,0,MPI_COMM_WORLD);
+  //if(local_rank==0) seed[0]=13*instance+static_cast<int>(std::time(0))/1000;
+  MPI_Barrier(MPI_COMM_WORLD);
+  //MPI_Bcast(seed,1,MPI_INT,0,instance_comm);
+  params.seed(seed[instance]);
 
   if(rank==0) std::cout<<"\n\nSet up "<<nWorkers<<" workers with   "<<params.CoresPerWorker<<" cores per worker\n\n";
 
@@ -81,7 +82,7 @@ int main(int narg, char **arg) {
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
 
   const int vsize = 3 * sim.natoms;
-  const int rsize = nRes*nWorkers;
+  const int rsize = nRes*nWorkers*nRepeats;
 
   double temp, dr;
   std::string rstr,Tstr,dump_fn,fn,temp_dump_dir;
@@ -98,7 +99,7 @@ int main(int narg, char **arg) {
     temp_dump_dir = params.dump_dir+"/"+Tstr+"K";
 
     if(rank==0) {
-      fn = temp_dump_dir + "/raw_output_"+Tstr+"K";
+      fn = temp_dump_dir + "/raw_ensemble_output_"+Tstr+"K";
       boost::filesystem::create_directory(temp_dump_dir);
       std::cout<<"opening dump file "<<fn<<std::endl;
       raw.open(fn.c_str(),std::ofstream::out);
@@ -107,6 +108,7 @@ int main(int narg, char **arg) {
     double *local_res = new double[rsize];
     double *results = new double[nRes];
     double *local_dev = new double[vsize];
+		double *local_dev_sq = new double[vsize];
     double *all_dev = NULL, *all_dev_sq = NULL, *all_res = NULL;
     std::vector<double> integr, dfer, dfere, psir;
 
@@ -114,18 +116,18 @@ int main(int narg, char **arg) {
       all_dev = new double[vsize];
       all_dev_sq = new double[vsize];
       all_res = new double[rsize];
-
+			std::cout<<"bra-kets <> == time averages,  mean/error : ensemble averages"<<std::endl;
       std::cout<<std::setw(15)<<"r";
-      std::cout<<std::setw(15)<<"<Tpre>";
-      std::cout<<std::setw(15)<<"<Tpost>";
-      std::cout<<std::setw(15)<<"std(Tpost)";
-      std::cout<<std::setw(15)<<"<dF/dr>";
-      std::cout<<std::setw(15)<<"std(dF/dr)";
-      std::cout<<std::setw(15)<<"|<X>-U|";
-      std::cout<<std::setw(15)<<"std(|X-U|)";
-      std::cout<<std::setw(15)<<"|(<X>-U).N|";
-      std::cout<<std::setw(15)<<"<N_true.N>";
-      std::cout<<std::setw(15)<<"std(N_true.N)";
+      std::cout<<std::setw(15)<<"mean(<Tpre>)";
+      std::cout<<std::setw(15)<<"mean(<Tpost>)";
+      std::cout<<std::setw(15)<<"error(<Tpost>)";
+      std::cout<<std::setw(15)<<"mean(<dF/dr>)";
+			std::cout<<std::setw(15)<<"error(<dF/dr>)";
+      std::cout<<std::setw(15)<<"mean(|<X>-U|)";
+      std::cout<<std::setw(15)<<"error(|<X>-U|)";
+      std::cout<<std::setw(15)<<"mean(|(<X>-U).N|)";
+      std::cout<<std::setw(15)<<"mean(<N_true>.N)";
+      std::cout<<std::setw(15)<<"error(<N_true>.N)";
       std::cout<<"\n";
     }
 
@@ -133,12 +135,23 @@ int main(int narg, char **arg) {
 
       rstr = boost::str(boost::format("%.4f") % r);
 
-      for (int i=0;i<rsize;i++) local_res[i] = 0.;
+      for(int i=0;i<rsize;i++) local_res[i] = 0.0;
+			for(int i=0;i<vsize;i++) local_dev_sq[i] = 0.0;
 
-      sim.sample(r, T, results, local_dev);
+			if(nRepeats>1 && rank==0) std::cout<<std::setw(15)<<"Repeat: ";//"r"
+			for (int ir=0;ir<nRepeats;ir++) {
+      	sim.sample(r, T, results, local_dev);
+      	if(local_rank == 0) {
+        	for(int i=0;i<nRes;i++) local_res[(instance*nRepeats+ir)*nRes  + i] = results[i];
+					for(int i=0;i<vsize;i++) local_dev_sq[i] += local_dev[i] / double(nRepeats);
+				}
+				if(nRepeats>1 && rank==0) std::cout<<std::setw(15)<<ir+1<<"/"<<nRepeats<<" "<<std::flush;
 
-      if(local_rank == 0)
-        for(int i=0;i<nRes;i++) local_res[instance*nRes + i] = results[i];
+			}
+			if(nRepeats>1 && rank==0) std::cout<<std::endl;
+			for(int i=0;i<vsize;i++) local_dev[i] = local_dev_sq[i];
+			for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i];
+
 
       MPI_Barrier(MPI_COMM_WORLD);
       MPI_Reduce(local_res,all_res,rsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
@@ -146,46 +159,52 @@ int main(int narg, char **arg) {
       MPI_Reduce(local_dev,all_dev,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
       MPI_Barrier(MPI_COMM_WORLD);
 
-      for(int i=0;i<vsize;i++) local_dev[i] *= local_dev[i];
-      MPI_Reduce(local_dev,all_dev_sq,vsize,\
-          MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+      MPI_Reduce(local_dev_sq,all_dev_sq,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+			MPI_Barrier(MPI_COMM_WORLD);
 
       if (rank==0) {
+
         double *final_res = new double[2*nRes];
         dump_fn = temp_dump_dir+"/dev_"+rstr+"_"+Tstr+"K.dat";
 
         sim.write_dev(dump_fn,r,all_dev,all_dev_sq);
 
-        for(int i=0;i<nWorkers;i++) raw<<all_res[i*nRes+2]<<" ";
+				// (instance*nRepeats+ir)*nRes  + i
+
+        for(int i=0;i<nWorkers*nRepeats;i++) raw<<all_res[i*nRes+2]<<" ";
         raw<<std::endl;
 
         for(int j=0;j<2*nRes;j++) final_res[j] = 0.;
 
-        for(int i=0;i<nWorkers;i++) for(int j=0;j<nRes;j++)
-          final_res[j] += all_res[i*nRes+j] / double(nWorkers);
+        for(int i=0;i<nWorkers*nRepeats;i++) for(int j=0;j<nRes;j++)
+          final_res[j] += all_res[i*nRes+j] / double(nWorkers*nRepeats);
 
-        for(int i=0;i<nWorkers;i++) for(int j=0;j<nRes;j++) {
+        for(int i=0;i<nWorkers*nRepeats;i++) for(int j=0;j<nRes;j++) {
           temp = all_res[i*nRes+j]-final_res[j];
-          final_res[j+nRes] += temp * temp / double(nWorkers);
+          final_res[j+nRes] += temp * temp / double(nWorkers*nRepeats);
         }
-        for(int j=0;j<nRes;j++) final_res[j+nRes] = sqrt(final_res[j+nRes]);
+				// under assumption that sample time is longer than sample autocorrelations,
+				// expected errors in time averages is ensemble average variance divided by nWorkers
+				// raw_output gives data to confirm this assumption (CLT with grouping)
+        for(int j=0;j<nRes;j++) final_res[j+nRes] = sqrt(final_res[j+nRes]/double(nWorkers*nRepeats));
 
         integr.push_back(r);
         dfer.push_back(final_res[2]); // <dF/dr>
-        dfere.push_back(final_res[2+nRes]); // std(dF/dr)
-        psir.push_back(final_res[4]); // <Psi>
 
-        std::cout<<std::setw(15)<<r;//"r";
-        std::cout<<std::setw(15)<<final_res[0];//"mean(<Tpre>)";
-        std::cout<<std::setw(15)<<final_res[1];//"mean(<Tpost>)";
-        std::cout<<std::setw(15)<<final_res[1+nRes];//"std(<Tpost>)";
-        std::cout<<std::setw(15)<<final_res[2];//"mean(<dF/dr>)";
-        std::cout<<std::setw(15)<<final_res[2+nRes];//"std(<dF/dr>)";
-        std::cout<<std::setw(15)<<final_res[6];//"mean(|<X>-U|)";
-        std::cout<<std::setw(15)<<final_res[6+nRes];//"<std(|<X>-U|)";
-        std::cout<<std::setw(15)<<final_res[5];//"mean(|<X>-U).(dU/dr)|)";
-        std::cout<<std::setw(15)<<final_res[4];//"mean(Psi)";
-        std::cout<<std::setw(15)<<final_res[4+nRes];//"std(Psi)";
+
+				dfere.push_back(final_res[2+nRes]);//"error(<dF/dr>)"
+        psir.push_back(final_res[4]); // <Psi>
+        std::cout<<std::setw(15)<<r;//"r"
+        std::cout<<std::setw(15)<<final_res[0];//"mean(<Tpre>)"
+        std::cout<<std::setw(15)<<final_res[1];//"mean(<Tpost>)"
+        std::cout<<std::setw(15)<<final_res[1+nRes];//"std(<Tpost>)"
+        std::cout<<std::setw(15)<<final_res[2];//"mean(<dF/dr>)"
+				std::cout<<std::setw(15)<<final_res[2+nRes];//"error(<dF/dr>)"
+        std::cout<<std::setw(15)<<final_res[6];//"mean(|<X>-U|)"
+        std::cout<<std::setw(15)<<final_res[6+nRes];//"error(|<X>-U|)"
+        std::cout<<std::setw(15)<<final_res[5];//"mean(|<X>-U).(dU/dr)|)"
+        std::cout<<std::setw(15)<<final_res[4];//"mean(Psi)"
+        std::cout<<std::setw(15)<<final_res[4+nRes];//"std(Psi)"
         std::cout<<"\n";
       }
     }
@@ -218,7 +237,7 @@ int main(int narg, char **arg) {
       std::ofstream out;
       fn = temp_dump_dir + "/free_energy_profile_"+Tstr+"K";
       out.open(fn.c_str(),std::ofstream::out);
-      out<<"# r F(r) <dF/dr> std(dF/dr) <Psi>\n";
+      out<<"# r F(r) mean(<dF/dr>) error(<dF/dr>) mean(<Psi>)\n";
       for(auto l: fF)
         out<<l[0]<<" "<<l[1]+l[2]<<" "<<dfspl(l[0])<<" "<<dfespl(l[0])<<" "<<l[3]<<"\n";
       out.close();

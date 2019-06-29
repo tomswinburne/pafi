@@ -27,12 +27,13 @@ Parser::Parser(std::string file) {
     rtws(tree.get<std::string>("PAFI.QuadraticThermalExpansion","0.0"));
   parameters["SampleSteps"] = \
     rtws(tree.get<std::string>("PAFI.SampleSteps","100"));
-  parameters["SampleWindow"] = \
-    rtws(tree.get<std::string>("PAFI.SampleWindow","100"));
   parameters["ThermSteps"] = \
     rtws(tree.get<std::string>("PAFI.ThermSteps","100"));
-    parameters["ThermWindow"] = \
-      rtws(tree.get<std::string>("PAFI.ThermWindow","100"));
+  parameters["ThermWindow"] = \
+    rtws(tree.get<std::string>("PAFI.ThermWindow","100"));
+	parameters["nRepeats"] = \
+    rtws(tree.get<std::string>("PAFI.nRepeats","1"));
+
   parameters["nPlanes"] = \
     rtws(tree.get<std::string>("PAFI.nPlanes","100"));
   parameters["DumpFolder"] = \
@@ -51,6 +52,7 @@ Parser::Parser(std::string file) {
 
   CoresPerWorker = boost::lexical_cast<int>(parameters["CoresPerWorker"]);
 	nPlanes = boost::lexical_cast<int>(parameters["nPlanes"]);
+	nRepeats = boost::lexical_cast<int>(parameters["nRepeats"]);
 	dump_dir = boost::lexical_cast<std::string>(parameters["DumpFolder"]);
 	lowT = boost::lexical_cast<double>(parameters["LowTemperature"]);
 	highT = boost::lexical_cast<double>(parameters["HighTemperature"]);

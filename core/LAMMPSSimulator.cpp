@@ -11,9 +11,9 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int rank) 
   lmparg[1] = (char *) "-screen";
   lmparg[2] = (char *) "none";
   lmparg[3] = (char *) "-log";
-  lmparg[4] = (char *) "none";
-  //sprintf(str1,"log.lammps.%d",rank);
-  //lmparg[4] = str1;
+  //lmparg[4] = (char *) "none";
+  sprintf(str1,"log.lammps.%d",rank);
+  lmparg[4] = str1;
 
   lammps_open(5,lmparg,instance_comm,(void **) &lmp);
   run_script("Input");
@@ -141,9 +141,9 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   results[0] = sampleT;
 
   cmd = "reset_timestep 0\n";
-  cmd += "fix ae all ave/time 1 %SampleWindow% %SampleSteps% v_pe\n";
-  cmd += "fix ad all ave/deviation 1 %SampleWindow% %SampleSteps%\n";
-  cmd += "fix af all ave/time 1 %SampleWindow% %SampleSteps% f_hp[1] f_hp[2] f_hp[3] f_hp[4]\nrun %SampleSteps%";
+  cmd += "fix ae all ave/time 1 %SampleSteps% %SampleSteps% v_pe\n";
+  cmd += "fix ad all ave/deviation 1 %SampleSteps% %SampleSteps%\n";
+  cmd += "fix af all ave/time 1 %SampleSteps% %SampleSteps% f_hp[1] f_hp[2] f_hp[3] f_hp[4]\nrun %SampleSteps%";
   run_commands(params->Parse(cmd));
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
