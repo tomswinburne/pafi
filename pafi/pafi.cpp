@@ -116,18 +116,18 @@ int main(int narg, char **arg) {
       all_dev = new double[vsize];
       all_dev_sq = new double[vsize];
       all_res = new double[rsize];
-			std::cout<<"bra-kets <> == time averages,  mean/error : ensemble averages"<<std::endl;
+			std::cout<<"bra-kets <> == time averages,  av/err== ensemble average/error"<<std::endl;
       std::cout<<std::setw(15)<<"r";
-      std::cout<<std::setw(15)<<"mean(<Tpre>)";
-      std::cout<<std::setw(15)<<"mean(<Tpost>)";
-      std::cout<<std::setw(15)<<"error(<Tpost>)";
-      std::cout<<std::setw(15)<<"mean(<dF/dr>)";
-			std::cout<<std::setw(15)<<"error(<dF/dr>)";
-      std::cout<<std::setw(15)<<"mean(|<X>-U|)";
-      std::cout<<std::setw(15)<<"error(|<X>-U|)";
-      std::cout<<std::setw(15)<<"mean(|(<X>-U).N|)";
-      std::cout<<std::setw(15)<<"mean(<N_true>.N)";
-      std::cout<<std::setw(15)<<"error(<N_true>.N)";
+      std::cout<<std::setw(15)<<"av(<Tpre>)";
+      std::cout<<std::setw(15)<<"av(<Tpost>)";
+      std::cout<<std::setw(15)<<"err(<Tpost>)";
+      std::cout<<std::setw(15)<<"av(<dF/dr>)";
+			std::cout<<std::setw(15)<<"err(<dF/dr>)";
+      std::cout<<std::setw(15)<<"av(|<X>-U|)";
+      std::cout<<std::setw(15)<<"err(|<X>-U|)";
+      std::cout<<std::setw(20)<<"av(|(<X>-U).N|)";
+      std::cout<<std::setw(20)<<"av(<N_true>.N)";
+      std::cout<<std::setw(20)<<"err(<N_true>.N)";
       std::cout<<"\n";
     }
 
@@ -138,7 +138,7 @@ int main(int narg, char **arg) {
       for(int i=0;i<rsize;i++) local_res[i] = 0.0;
 			for(int i=0;i<vsize;i++) local_dev_sq[i] = 0.0;
 
-			if(nRepeats>1 && rank==0) std::cout<<std::setw(15)<<"Repeat: ";//"r"
+			if(nRepeats>1 && rank==0) std::cout<<std::setw(15)<<"Repeat: "<<std::flush;
 			for (int ir=0;ir<nRepeats;ir++) {
       	sim.sample(r, T, results, local_dev);
       	if(local_rank == 0) {
@@ -192,19 +192,19 @@ int main(int narg, char **arg) {
         dfer.push_back(final_res[2]); // <dF/dr>
 
 
-				dfere.push_back(final_res[2+nRes]);//"error(<dF/dr>)"
+				dfere.push_back(final_res[2+nRes]);//"err(<dF/dr>)"
         psir.push_back(final_res[4]); // <Psi>
         std::cout<<std::setw(15)<<r;//"r"
-        std::cout<<std::setw(15)<<final_res[0];//"mean(<Tpre>)"
-        std::cout<<std::setw(15)<<final_res[1];//"mean(<Tpost>)"
+        std::cout<<std::setw(15)<<final_res[0];//"av(<Tpre>)"
+        std::cout<<std::setw(15)<<final_res[1];//"av(<Tpost>)"
         std::cout<<std::setw(15)<<final_res[1+nRes];//"std(<Tpost>)"
-        std::cout<<std::setw(15)<<final_res[2];//"mean(<dF/dr>)"
-				std::cout<<std::setw(15)<<final_res[2+nRes];//"error(<dF/dr>)"
-        std::cout<<std::setw(15)<<final_res[6];//"mean(|<X>-U|)"
-        std::cout<<std::setw(15)<<final_res[6+nRes];//"error(|<X>-U|)"
-        std::cout<<std::setw(15)<<final_res[5];//"mean(|<X>-U).(dU/dr)|)"
-        std::cout<<std::setw(15)<<final_res[4];//"mean(Psi)"
-        std::cout<<std::setw(15)<<final_res[4+nRes];//"std(Psi)"
+        std::cout<<std::setw(15)<<final_res[2];//"av(<dF/dr>)"
+				std::cout<<std::setw(15)<<final_res[2+nRes];//"err(<dF/dr>)"
+        std::cout<<std::setw(15)<<final_res[6];//"av(|<X>-U|)"
+        std::cout<<std::setw(15)<<final_res[6+nRes];//"err(|<X>-U|)"
+        std::cout<<std::setw(20)<<final_res[5];//"av(|<X>-U).(dU/dr)|)"
+        std::cout<<std::setw(20)<<final_res[4];//"av(Psi)"
+        std::cout<<std::setw(20)<<final_res[4+nRes];//"std(Psi)"
         std::cout<<"\n";
       }
     }
@@ -237,7 +237,7 @@ int main(int narg, char **arg) {
       std::ofstream out;
       fn = temp_dump_dir + "/free_energy_profile_"+Tstr+"K";
       out.open(fn.c_str(),std::ofstream::out);
-      out<<"# r F(r) mean(<dF/dr>) error(<dF/dr>) mean(<Psi>)\n";
+      out<<"# r F(r) av(<dF/dr>) err(<dF/dr>) av(<Psi>)\n";
       for(auto l: fF)
         out<<l[0]<<" "<<l[1]+l[2]<<" "<<dfspl(l[0])<<" "<<dfespl(l[0])<<" "<<l[3]<<"\n";
       out.close();
