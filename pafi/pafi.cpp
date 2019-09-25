@@ -94,7 +94,8 @@ int main(int narg, char **arg) {
 
   for(double T = params.lowT; T <= params.highT;) {
 
-    Tstr = boost::lexical_cast<std::string>((int)(T));
+    //Tstr = boost::lexical_cast<std::string>((int)(T));
+    Tstr = std::to_string((int)(T));
 
     temp_dump_dir = params.dump_dir+"/"+Tstr+"K";
 

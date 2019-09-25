@@ -98,7 +98,7 @@ void LAMMPSSimulator::populate(double r, double scale, double &norm_mag) {
 */
 void LAMMPSSimulator::rescale_cell(double scale) {
   std::string cmd, ss;
-  ss = boost::lexical_cast<std::string>(scale);
+  ss = std::to_string(scale);
   cmd ="change_box all x scale "+ss+" y scale "+ss+" z scale "+ss+"\n";
   cmd += "run 0";
   run_commands(params->Parse(cmd));
@@ -123,7 +123,7 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   cmd = "run 0"; run_commands(params->Parse(cmd));
 
 
-  params->parameters["Temperature"] = boost::lexical_cast<std::string>(T);
+  params->parameters["Temperature"] = std::to_string(T);
   cmd = "fix hp all hp %Temperature% %Friction% %RANDOM% overdamped ";
   cmd += params->parameters["OverDamped"]+" com 1\nrun 0";
   run_commands(params->Parse(cmd));
@@ -225,12 +225,12 @@ void LAMMPSSimulator::close() {
 
 std::string LAMMPSSimulator::header() {
   std::string res="LAMMPS dump file\n\n";
-  res += boost::lexical_cast<std::string>(natoms)+" atoms\n";
+  res += std::to_string(natoms)+" atoms\n";
   res += "1 atom types\n\n"; // TODO species
-  res += "0. "+boost::lexical_cast<std::string>(pbc.cell[0][0])+" xlo xhi\n";
-  res += "0. "+boost::lexical_cast<std::string>(pbc.cell[1][1])+" ylo yhi\n";
-  res += "0. "+boost::lexical_cast<std::string>(pbc.cell[2][2])+" zlo zhi\n";
-  //res += boost::lexical_cast<std::string>(pbc.cell[2][2])
+  res += "0. "+std::to_string(pbc.cell[0][0])+" xlo xhi\n";
+  res += "0. "+std::to_string(pbc.cell[1][1])+" ylo yhi\n";
+  res += "0. "+std::to_string(pbc.cell[2][2])+" zlo zhi\n";
+  //res += std::to_string(pbc.cell[2][2])
   res += "\nMasses\n\n 1 55.85\n Atoms\n\n";
   return res;
 };

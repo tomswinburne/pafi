@@ -50,20 +50,21 @@ Parser::Parser(std::string file) {
 	// Now we can convert to type
 	KnotList = Parse(tree.get<std::string>("PAFI.KnotList"),false);
 
-  CoresPerWorker = boost::lexical_cast<int>(parameters["CoresPerWorker"]);
-	nPlanes = boost::lexical_cast<int>(parameters["nPlanes"]);
-	nRepeats = boost::lexical_cast<int>(parameters["nRepeats"]);
-	dump_dir = boost::lexical_cast<std::string>(parameters["DumpFolder"]);
-	lowT = boost::lexical_cast<double>(parameters["LowTemperature"]);
-	highT = boost::lexical_cast<double>(parameters["HighTemperature"]);
-	Friction = boost::lexical_cast<double>(parameters["Friction"]);
-	TSteps = boost::lexical_cast<int>(parameters["TemperatureSteps"]);
-  startr = boost::lexical_cast<double>(parameters["StartCoordinate"]);
-  stopr = boost::lexical_cast<double>(parameters["StopCoordinate"]);
+  CoresPerWorker = std::stoi(parameters["CoresPerWorker"]);
+	nPlanes = std::stoi(parameters["nPlanes"]);
+	nRepeats = std::stoi(parameters["nRepeats"]);
+	//dump_dir = std::to_string(parameters["DumpFolder"]);
+  dump_dir = parameters["DumpFolder"];
+	lowT = std::stod(parameters["LowTemperature"]);
+	highT = std::stod(parameters["HighTemperature"]);
+	Friction = std::stod(parameters["Friction"]);
+	TSteps = std::stoi(parameters["TemperatureSteps"]);
+  startr = std::stod(parameters["StartCoordinate"]);
+  stopr = std::stod(parameters["StopCoordinate"]);
 
 
 	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, tree.get_child("PAFI.Scripts")) {
-		std::string key =  boost::lexical_cast<std::string>(v.first);
+		std::string key =  v.first;
 		scripts[key] = tree.get<std::string>("PAFI.Scripts."+v.first);
 	}
 
@@ -105,7 +106,8 @@ std::vector<std::string> Parser::Parse(std::string r, bool needseed) {
   std::string key="%RANDOM%";
 	while(not boost::find_first(raw, key).empty()) {
 		int r=d(rng);
-		std::string s=boost::lexical_cast<std::string>(boost::format("%1%" ) % r );
+		//std::string s=std::to_string(boost::format("%1%" ) % r );
+    std::string s=std::to_string(r);
 		boost::replace_first(raw, key, s);
 	}
   // Split Lines and remove trailing whitespace
@@ -119,7 +121,7 @@ std::vector<std::string> Parser::Parse(std::string r, bool needseed) {
 };
 
 std::vector<std::string> Parser::Script(std::string sn) {
-	//parameters["Temperature"] = boost::lexical_cast<std::string>(T);
+	//parameters["Temperature"] = std::to_string(T);
 	return Parse(scripts[sn]);
 };
 

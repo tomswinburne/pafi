@@ -47,10 +47,10 @@ void GeneralSimulator::write_dev(std::string fn, double r, double *dev, double *
 double GeneralSimulator::expansion(double T) {
   double coeff,new_scale = 1.0;
   coeff = \
-  boost::lexical_cast<double>(params->parameters["LinearThermalExpansion"]);
+  std::stod(params->parameters["LinearThermalExpansion"]);
   new_scale += coeff*T;
   coeff = \
-  boost::lexical_cast<double>(params->parameters["QuadraticThermalExpansion"]);
+  std::stod(params->parameters["QuadraticThermalExpansion"]);
   new_scale += coeff*T*T;
   return new_scale;
 };
