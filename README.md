@@ -9,7 +9,7 @@
         Projected    Average      Force        Integrator
 
 
-v0.6 :copyright: TD Swinburne and M-C Marinica 2019 MIT License
+v0.8 :copyright: TD Swinburne and M-C Marinica 2019 MIT License
 
 swinburne at cinam.univ-mrs.fr
 
@@ -20,12 +20,13 @@ Beta version of code used in [this paper](https://journals.aps.org/prl/abstract/
 
 Please cite the above when publishing results using PAFI
 
+This PAFI repository includes the [RapidXML](http://http://rapidxml.sourceforge.net) library for input parsing
+
 # Installation
 
 ## Compile LAMMPS with USER-PAFI package
 1.  RECOMMENDED: Download or clone fork of LAMMPS with USER-PAFI package [here](https://github.com/tomswinburne/lammps/)
-
-1.  ALTERNATIVE: [Download LAMMPS](http://lammps.sandia.gov/download.html) then, before installing any packages, in the LAMMPS root directory (parent directory of src folder) run the pafi patch, adding the USER-PAFI package and support for PAFI atom styles
+ALTERNATIVE: [Download LAMMPS](http://lammps.sandia.gov/download.html) then, before installing any packages, in the LAMMPS root directory (parent directory of src folder) run the pafi patch, adding the USER-PAFI package and support for PAFI atom styles
 ```
 cd /path/to/lammps_repo/
 patch -p0 < /path/to/user-pafi_lammps_Aug18.patch # modifies /path/to/lammps_repo/src folder
