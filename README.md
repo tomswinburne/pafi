@@ -22,17 +22,16 @@ Please cite the above when publishing results using PAFI
 
 # Installation
 
-## Patch and compile LAMMPS
+## Compile LAMMPS with USER-PAFI package
+1.  RECOMMENDED: Download or clone fork of LAMMPS with USER-PAFI package [here](https://github.com/tomswinburne/lammps/)
 
-1. [Download LAMMPS](http://lammps.sandia.gov/download.html) and read the [installation instructions](http://lammps.sandia.gov/doc/Section_start.html)
-
-2. Before installing any packages, in the LAMMPS root directory (parent directory of src folder) run the pafi patch, adding the USER-PAFI package and support for PAFI atom styles
+1.  ALTERNATIVE: [Download LAMMPS](http://lammps.sandia.gov/download.html) then, before installing any packages, in the LAMMPS root directory (parent directory of src folder) run the pafi patch, adding the USER-PAFI package and support for PAFI atom styles
 ```
 cd /path/to/lammps_repo/
 patch -p0 < /path/to/user-pafi_lammps_Aug18.patch # modifies /path/to/lammps_repo/src folder
 ```
 
-3. Install USER-PAFI and any packages you desire (replica for NEB)
+2. Install USER-PAFI and any packages you desire (e.g. replica for NEB)
 ```
 cd src
 make yes-user-pafi
@@ -40,7 +39,7 @@ make yes-replica # for NEB calculation
 make yes-package_name # (i.e. manybody for EAM potentials etc)
 ```
 
-3. Compile as a static library (and optionally binary initial NEB calculation)
+3. Compile as a static library (and optionally binary initial NEB calculation) Consult [LAMMPS documentation](http://lammps.sandia.gov/doc/Section_start.html) for details
 ```
    make mpi mode=lib # liblammps_mpi.a library for pafi
    make mpi # lmp_mpi binary for running initial NEB calculation if desired
@@ -53,15 +52,17 @@ make yes-package_name # (i.e. manybody for EAM potentials etc)
 ```
 
 ## Compile PAFI
-1. Download and install cmake from https://cmake.org/download/
-2. Specify environment variables in CMakeLists.txt:
+0. If required, download and install cmake from https://cmake.org/download/
+
+1. Specify environment variables in CMakeLists.txt:
 ```
    set(HOME your/home/path)
    set(CMAKE_INCLUDE_PATH ${HOME}/.local/include)
    set(CMAKE_LIBRARY_PATH ${HOME}/.local/lib)
    set(CMAKE_CXX_COMPILER path/to/mpic++)
 ```
-3. Make pafi build folder, run cmake and make
+
+2. Make pafi build folder, run cmake and make
 ```
    mkdir build
    cd build
@@ -91,11 +92,11 @@ mpirun -np NPROCS ./pafi
 ```
 ## Output
 
-1. PAFI will try to create a folder with a name given by the DumpFolder parameter in config.xml. If it already exists, PAFI will create the first available directory named DumpFolder_i, where i is an integer less than 20.
+1. PAFI will try to write to the directory as specified in "DumpFolder" in config.xml. Each dump file has a suffix `_T_n`, where `T` is the temperature and `n` is the smallest integer that does not overwrite previous files.
 
-2. In DumpFolder PAFI will create subfolders for each temperature in the run. In each subfolder there will be a file `dev_r_T.dat` with the ensemble average and variance pathway deviation from each hyperplane and a file `free_energy_profile_T` that has the integrated FEP.
+2. For each temperaturer there will be a files `dev_r_T_n.dat` with the ensemble average and variance pathway deviation from each hyperplane and a file `free_energy_profile_T_` that has the integrated FEP.
 
-## TODO
+## Coming Soon
 1. Restart files from pathway deviations
 2. Smoothed spline interpolation for more general reference pathways
 3. tbc....

@@ -1,17 +1,10 @@
 # test data
-knots/*
-run/*
 build/*
-rosa_tests/*
 
 # dev data
-tex/*
-lammps/*
-new_build/*
 example/*
 !example/Fe*
 !example/config.xml
-core_boost/*.*
 
 lib/*
 notes.py
