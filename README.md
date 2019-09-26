@@ -26,10 +26,11 @@ This PAFI repository includes the [RapidXML](http://http://rapidxml.sourceforge.
 
 ## Compile LAMMPS with USER-PAFI package
 1.  RECOMMENDED: Download or clone fork of LAMMPS with USER-PAFI package [here](https://github.com/tomswinburne/lammps/)
-ALTERNATIVE: [Download LAMMPS](http://lammps.sandia.gov/download.html) then, before installing any packages, in the LAMMPS root directory (parent directory of src folder) run the pafi patch, adding the USER-PAFI package and support for PAFI atom styles
+
+ALTERNATIVE: [Download LAMMPS](http://lammps.sandia.gov/download.html) then in the LAMMPS root directory run the pafi patch as
 ```
-cd /path/to/lammps_repo/
-patch -p0 < /path/to/user-pafi_lammps_Aug18.patch # modifies /path/to/lammps_repo/src folder
+cd /path/to/lammps/
+patch -p0 < /path/to/user-pafi_lammps_Aug18.patch # modifies /path/to/lammps/src folder
 ```
 
 2. Install USER-PAFI and any packages you desire (e.g. replica for NEB)
