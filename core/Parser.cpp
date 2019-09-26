@@ -3,52 +3,51 @@
 // Loads config file, lammps scripts etc
 
 Parser::Parser(std::string file) {
-
   seeded = false;
+  // Read the xml file into a vector
+	std::ifstream xmlfile(file);
+	std::vector<char> buffer((std::istreambuf_iterator<char>(xmlfile)), std::istreambuf_iterator<char>());
+	buffer.push_back('\0');
 
-  // Parse the XML into the property tree.
-  boost::property_tree::read_xml(file,tree,\
-  boost::property_tree::xml_parser::no_comments);
-
-  // | boost::property_tree::xml_parser::trim_whitespace); // RapidXML can bug
-  // => have to send everything through home rolled rtws(std::string s)
+  // Parse the buffer using the xml file parsing library into xml_doc
+	xml_doc.parse<0>(&buffer[0]);
+	root_node = xml_doc.first_node("PAFI");
 
   parameters["CoresPerWorker"]=\
-    rtws(tree.get<std::string>("PAFI.CoresPerWorker","1"));
+    rtws(root_node->first_node("CoresPerWorker")->value());
   parameters["LowTemperature"] = \
-    rtws(tree.get<std::string>("PAFI.LowTemperature","0."));
+    rtws(root_node->first_node("LowTemperature")->value());
   parameters["HighTemperature"] = \
-    rtws(tree.get<std::string>("PAFI.HighTemperature","100."));
+    rtws(root_node->first_node("HighTemperature")->value());
   parameters["TemperatureSteps"] = \
-    rtws(tree.get<std::string>("PAFI.TemperatureSteps","2"));
+    rtws(root_node->first_node("TemperatureSteps")->value());
   parameters["LinearThermalExpansion"] = \
-    rtws(tree.get<std::string>("PAFI.LinearThermalExpansion","0.0"));
+    rtws(root_node->first_node("LinearThermalExpansion")->value());
   parameters["QuadraticThermalExpansion"] = \
-    rtws(tree.get<std::string>("PAFI.QuadraticThermalExpansion","0.0"));
+    rtws(root_node->first_node("QuadraticThermalExpansion")->value());
   parameters["SampleSteps"] = \
-    rtws(tree.get<std::string>("PAFI.SampleSteps","100"));
+    rtws(root_node->first_node("SampleSteps")->value());
   parameters["ThermSteps"] = \
-    rtws(tree.get<std::string>("PAFI.ThermSteps","100"));
+    rtws(root_node->first_node("ThermSteps")->value());
   parameters["ThermWindow"] = \
-    rtws(tree.get<std::string>("PAFI.ThermWindow","100"));
+    rtws(root_node->first_node("ThermWindow")->value());
 	parameters["nRepeats"] = \
-    rtws(tree.get<std::string>("PAFI.nRepeats","1"));
-
+    rtws(root_node->first_node("nRepeats")->value());
   parameters["nPlanes"] = \
-    rtws(tree.get<std::string>("PAFI.nPlanes","100"));
+    rtws(root_node->first_node("nPlanes")->value());
   parameters["DumpFolder"] = \
-    rtws(tree.get<std::string>("PAFI.DumpFolder","dumps"));
+    rtws(root_node->first_node("DumpFolder")->value());
   parameters["OverDamped"] = \
-    rtws(tree.get<std::string>("PAFI.OverDamped","1"));
+    rtws(root_node->first_node("OverDamped")->value());
   parameters["Friction"] = \
-    rtws(tree.get<std::string>("PAFI.Friction","0.05"));
+    rtws(root_node->first_node("Friction")->value());
   parameters["StartCoordinate"] = \
-    rtws(tree.get<std::string>("PAFI.StartCoordinate","0.0"));
+    rtws(root_node->first_node("StartCoordinate")->value());
   parameters["StopCoordinate"] = \
-    rtws(tree.get<std::string>("PAFI.StopCoordinate","1.0"));
+    rtws(root_node->first_node("StopCoordinate")->value());
 
 	// Now we can convert to type
-	KnotList = Parse(tree.get<std::string>("PAFI.KnotList"),false);
+	KnotList = Parse(root_node->first_node("KnotList")->value());
 
   CoresPerWorker = std::stoi(parameters["CoresPerWorker"]);
 	nPlanes = std::stoi(parameters["nPlanes"]);
@@ -62,11 +61,12 @@ Parser::Parser(std::string file) {
   startr = std::stod(parameters["StartCoordinate"]);
   stopr = std::stod(parameters["StopCoordinate"]);
 
+  rapidxml::xml_node<> * scrs_n = root_node->first_node("Scripts");
 
-	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, tree.get_child("PAFI.Scripts")) {
-		std::string key =  v.first;
-		scripts[key] = tree.get<std::string>("PAFI.Scripts."+v.first);
-	}
+  for (rapidxml::xml_node<> * scr_n = scrs_n->first_node("Script"); scr_n; scr_n = scr_n->next_sibling()) {
+    std::string key = scr_n->first_attribute("name")->value();
+    scripts[key] = scr_n->value();
+  }
 
 };
 
@@ -81,43 +81,30 @@ std::string Parser::rtws(std::string s) {
 };
 
 void Parser::seed(int random_seed) {
-	rng.seed(random_seed);
+  rng.seed(random_seed);
 	seeded=true;
-}
+};
 
-std::vector<std::string> Parser::Parse(std::string r, bool needseed) {
-	if(!seeded && needseed) {
+std::vector<std::string> Parser::Parse(std::string r) {
+  std::vector< std::string > sc;
+  std::istringstream input;
+  input.str(r);
+  for (std::string line; std::getline(input, line); ) {
+    std::string nline = rtws(line);
+    if(!nline.empty()) sc.push_back(nline);
+  }
+	return sc;
+};
+
+std::string Parser::seed_str() {
+  if(!seeded) {
 		std::cout<<"NOT SEEDED!!!\n";
 		rng.seed(0);
 		seeded=true;
 	}
-
-  std::string raw=r;
-	//replacements based on parameters
-	for(auto it=parameters.begin(); it!=parameters.end(); it++ ) {
-		std::string key=it->first;
-		key="%"+key+"%";
-		boost::trim(key);
-		boost::replace_all(raw, key, it->second);
-	}
-  // random seed
-  boost::random::uniform_01<> uniform;
-	boost::random::uniform_int_distribution<> d(1,1000000);
-  std::string key="%RANDOM%";
-	while(not boost::find_first(raw, key).empty()) {
-		int r=d(rng);
-		//std::string s=std::to_string(boost::format("%1%" ) % r );
-    std::string s=std::to_string(r);
-		boost::replace_first(raw, key, s);
-	}
-  // Split Lines and remove trailing whitespace
-  std::vector< std::string > sc,ssc;
-	boost::split( sc, raw, boost::is_any_of("\n"), boost::token_compress_off );
-	for(auto s:sc){
-		std::string ns = rtws(s);
-		if(!ns.empty()) ssc.push_back(ns);
-	}
-	return ssc;
+  std::uniform_int_distribution<unsigned> d(1,1000000);
+  unsigned r=d(rng);
+  return std::to_string(r);
 };
 
 std::vector<std::string> Parser::Script(std::string sn) {
@@ -126,28 +113,27 @@ std::vector<std::string> Parser::Script(std::string sn) {
 };
 
 // Pointless :)
-void Parser::welcome_message(){
-	std::cout<<"\n";
-  std::cout<<"       _______      _______      _______     _________\n";
-  std::cout<<"      (  ____ )    (  ___  )    (  ____ \\    \\__   __/\n";
-  std::cout<<"      | (    )|    | (   ) |    | (    \\/       ) (\n";
-  std::cout<<"      | (____)|    | (___) |    | (__           | |\n";
-  std::cout<<"      |  _____)    |  ___  |    |  __)          | |\n";
-  std::cout<<"      | (          | (   ) |    | (             | |\n";
-  std::cout<<"      | )          | )   ( |    | )          ___) (___\n";
-  std::cout<<"      |/           |/     \\|    |/           \\_______/\n";
-  std::cout<<"      Projected    Average      Force        Integrator\n";
-  std::cout<<"          (c) TD Swinburne and M-C Marinica 2018\n\n";
 
-	std::cout<<"\nScripts:\n\n";
+std::string Parser::welcome_message(){
+  std::string str;
+	str="\n";
+  str+="       _______      _______      _______     _________\n";
+  str+="      (  ____ )    (  ___  )    (  ____ \\    \\__   __/\n";
+  str+="      | (    )|    | (   ) |    | (    \\/       ) (\n";
+  str+="      | (____)|    | (___) |    | (__           | |\n";
+  str+="      |  _____)    |  ___  |    |  __)          | |\n";
+  str+="      | (          | (   ) |    | (             | |\n";
+  str+="      | )          | )   ( |    | )          ___) (___\n";
+  str+="      |/           |/     \\|    |/           \\_______/\n";
+  str+="      Projected    Average      Force        Integrator\n";
+  str+="          (c) TD Swinburne and M-C Marinica 2018\n\n";
 
-	for(auto s: scripts) std::cout<<s.first<<" : "<<s.second<<"\n";
+	str+="\nScripts:\n\n";
+	for(auto s: scripts) str+=s.first+" : "+s.second+"\n";
 
-	std::cout<<"\nParameters:\n\n";
+	str+="\nParameters:\n\n";
+  for(auto s: parameters) if(s.first!="KnotList") str+=s.first+" : "+s.second+"\n";
+	str+="\n\n";
 
-	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, tree.get_child("PAFI")) if(v.first != "Scripts" && v.first != "KnotList") {
-		std::cout<<"\t"<<v.first<<" : "<<parameters[v.first]<<"\n";
-	}
-	std::cout<<"\n\n";
-
+  return str;
 };

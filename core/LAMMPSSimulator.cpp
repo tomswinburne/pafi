@@ -11,9 +11,9 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int rank) 
   lmparg[1] = (char *) "-screen";
   lmparg[2] = (char *) "none";
   lmparg[3] = (char *) "-log";
-  //lmparg[4] = (char *) "none";
-  sprintf(str1,"log.lammps.%d",rank);
-  lmparg[4] = str1;
+  lmparg[4] = (char *) "none";
+  //sprintf(str1,"log.lammps.%d",rank);
+  //lmparg[4] = str1;
 
   lammps_open(5,lmparg,instance_comm,(void **) &lmp);
   run_script("Input");
@@ -64,6 +64,11 @@ void LAMMPSSimulator::run_commands(std::vector<std::string> strv) {
   for(auto s:strv) lammps_command((void *)lmp,(char *)s.c_str());
 };
 
+void LAMMPSSimulator::run_commands(std::string strv) {
+  run_commands(params->Parse(strv));
+};
+
+
 /*
   Fill configuration, path, tangent and tangent gradient. Return tangent norm
 */
@@ -101,7 +106,7 @@ void LAMMPSSimulator::rescale_cell(double scale) {
   ss = std::to_string(scale);
   cmd ="change_box all x scale "+ss+" y scale "+ss+" z scale "+ss+"\n";
   cmd += "run 0";
-  run_commands(params->Parse(cmd));
+  run_commands(cmd);
 };
 
 /*
@@ -120,31 +125,35 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
 
   // Stress Fixes
   run_script("PreRun");
-  cmd = "run 0"; run_commands(params->Parse(cmd));
-
+  cmd = "run 0"; run_commands(cmd);
 
   params->parameters["Temperature"] = std::to_string(T);
-  cmd = "fix hp all hp %Temperature% %Friction% %RANDOM% overdamped ";
+  cmd = "fix hp all hp "+params->parameters["Temperature"]+" ";
+  cmd += params->parameters["Friction"]+" ";
+  cmd += params->seed_str()+" overdamped ";
   cmd += params->parameters["OverDamped"]+" com 1\nrun 0";
-  run_commands(params->Parse(cmd));
+  run_commands(cmd);
 
   refE = getEnergy();
   cmd = "reset_timestep 0\n";
-  cmd += "fix ae all ave/time 1 %ThermWindow% %ThermSteps% v_pe\n";
-  cmd += "run %ThermSteps%";
-  run_commands(params->Parse(cmd));
+  cmd += "fix ae all ave/time 1 "+params->parameters["ThermWindow"]+" ";
+  cmd += params->parameters["ThermSteps"]+" v_pe\n";
+  cmd += "run "+params->parameters["ThermSteps"];
+  run_commands(cmd);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
   sampleT = (*lmp_ptr-refE)/natoms/1.5/8.617e-5;
   cmd = "unfix ae\nrun 0";
-  run_commands(params->Parse(cmd));
+  run_commands(cmd);
   results[0] = sampleT;
 
+  std::string SampleSteps = params->parameters["SampleSteps"];
   cmd = "reset_timestep 0\n";
-  cmd += "fix ae all ave/time 1 %SampleSteps% %SampleSteps% v_pe\n";
-  cmd += "fix ad all ave/deviation 1 %SampleSteps% %SampleSteps%\n";
-  cmd += "fix af all ave/time 1 %SampleSteps% %SampleSteps% f_hp[1] f_hp[2] f_hp[3] f_hp[4]\nrun %SampleSteps%";
-  run_commands(params->Parse(cmd));
+  cmd += "fix ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" v_pe\n";
+  cmd += "fix ad all ave/deviation 1 "+SampleSteps+" "+SampleSteps+"\n";
+  cmd += "fix af all ave/time 1 "+SampleSteps+" "+SampleSteps+" f_hp[1] f_hp[2] f_hp[3] f_hp[4]\n";
+  cmd += "run "+SampleSteps;
+  run_commands(cmd);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
   sampleT = (*lmp_ptr-refE)/natoms/1.5/8.617e-5;
@@ -172,11 +181,11 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   results[6] = dm;
 
   cmd = "unfix ae\nunfix af\nunfix ad\nunfix hp";
-  run_commands(params->Parse(cmd));
+  run_commands(cmd);
 
   // Stress Fixes
   run_script("PostRun");
-  cmd = "run 0"; run_commands(params->Parse(cmd));
+  cmd = "run 0"; run_commands(cmd);
 
   // rescale back
   scale = 1. / scale;

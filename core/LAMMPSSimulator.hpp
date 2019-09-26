@@ -24,6 +24,8 @@ public:
     Parse and run script from string with linebreaks
   */
   void run_commands(std::vector<std::string> strv);
+  void run_commands(std::string strv);
+
   /*
     Fill configuration, path, tangent and tangent gradient. Return tangent norm
   */

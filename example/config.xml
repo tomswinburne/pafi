@@ -2,59 +2,65 @@
   <!-- omit trailing forward slash -->
   <DumpFolder>./dumps</DumpFolder>
 
-  <!-- how many times each replica performs an average -->
-  <nRepeats>2</nRepeats>
+  <!-- Number of samples per plane per worker -->
+  <nRepeats> 2 </nRepeats>
 
-  <LowTemperature> 200. </LowTemperature>
-  <HighTemperature> 200. </HighTemperature>
+  <!-- LowTemperature to HighTemperature in TemperatureSteps steps -->
+  <LowTemperature> 500. </LowTemperature>
+  <HighTemperature> 500. </HighTemperature>
   <TemperatureSteps> 1 </TemperatureSteps>
 
-  <SampleSteps> 1000 </SampleSteps>
-
-
-  <ThermSteps> 1000 </ThermSteps>
-
-  <!-- ThermWindow must be less than ThermSteps -->
-  <ThermWindow> 200 </ThermWindow>
+  <!-- Data gathering steps -->
+  <SampleSteps> 2000 </SampleSteps>
+  
+  <!-- We require ThermSteps > ThermWindow AND ThermSteps%ThermWindow==0 -->
+  <ThermSteps> 2000 </ThermSteps>
+  <ThermWindow> 500 </ThermWindow>
 
   <nPlanes> 11 </nPlanes>
 
-  <!-- We require nprocs % CoresPerWorker==0-->
+  <!-- We require nprocs % CoresPerWorker==0 -->
   <CoresPerWorker> 1 </CoresPerWorker>
 
   <!--
     RELATIVE thermal expansion coefficients -
     a(T) = a0 * (1 + Linear*T + Quadratic*T^2)
   -->
-  <LinearThermalExpansion> 0.0</LinearThermalExpansion>
+  <LinearThermalExpansion>0.0</LinearThermalExpansion>
   <QuadraticThermalExpansion>0.0</QuadraticThermalExpansion>
 
-  <!-- fix hp parameters -->
+  <!-- fix hp parameters (LAMMPS units) -->
   <OverDamped> 1 </OverDamped>
-  <Friction> 0.1 </Friction>
+  <Friction> 0.05 </Friction>
+
+  <!-- for NEB planes -->
+  <StartCoordinate> 0.0 </StartCoordinate>
+  <StopCoordinate> 1.0 </StopCoordinate>
 
   <Scripts>
-    <Input>
+    <Script name="Input">
       units metal
       atom_style pafi
       atom_modify map array sort 0 0.0
       neigh_modify every 2 delay 10 check yes page 1000000 one 100000
       read_data  md/image_1.dat
       pair_style    eam/fs
-      pair_coeff * * md/Fe.eam.fs Fe
+      pair_coeff * * Fe.eam.fs Fe
       mass * 55.85
       run 0
-    </Input>
+      thermo 10
+      run 0
+    </Script>
 
     <!-- fixes for applied stress / boundary planes etc -->
-    <PreRun>
-    </PreRun>
+    <Script name="PreRun">
+    </Script>
 
     <!-- Turn them off each time -->
-    <PostRun>
-    </PostRun>
-
+    <Script name="PostRun">
+    </Script>
   </Scripts>
+
   <KnotList>
     md/image_1.dat
     md/image_2.dat

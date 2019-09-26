@@ -51,21 +51,6 @@ make yes-package_name # (i.e. manybody for EAM potentials etc)
    mkdir ${HOME}/.local/include/lammps
    cp *.h ${HOME}/.local/include/lammps/
 ```
-## Compile Boost C++ library
-0. Your cluster may have Boost as a module, in which case this stage is not required.
-1. Download tarball from https://www.boost.org/users/download/
-2. Bootstrap with the local install prefix
-```
-   ./bootstrap.sh --prefix=${HOME}/.local
-```
-3. Build with gcc and c++11
-```
-   ./b2 toolset=gcc cxxflags=-std=c++11
-```
-4. Install
-```
-   ./b2 install
-```
 
 ## Compile PAFI
 1. Download and install cmake from https://cmake.org/download/
@@ -100,9 +85,7 @@ write_data neb_knot_file.$u
 ```
 3. Move the knots to folder and include and configure the configuratio xml file, as shown in the examples
 
-4. Move run.sh to run directory and change path for pafi binary soft link
-
-5. Run PAFI as e.g.
+4. Run PAFI as e.g.
 ```
 mpirun -np NPROCS ./pafi
 ```

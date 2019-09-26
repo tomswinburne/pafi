@@ -16,29 +16,33 @@ int main(int narg, char **arg) {
   }
 
 
-  // Find fresh dump folder name
-  std::string new_dump_dir = params.dump_dir;
-  boost::filesystem::path p(params.dump_dir);
 
-  if(boost::filesystem::is_directory(p)) {
-    for (int i = 1; boost::filesystem::is_directory(p) && i < 20; ++i) {
-      std::stringstream ss;
-      ss << params.dump_dir << "_" << i;
-      p = ss.str();
-      new_dump_dir = ss.str();
+  // Find fresh dump folder name - no nice solution here as
+  // directory creation requires platform dependent features
+  // which we omit for portability
+  int int_dump_suffix=0;
+  std::ofstream raw;
+  std::string params_file = params.dump_dir+"/params_"+std::to_string(int_dump_suffix);
+
+  // try to write to a file with a unique suffix
+  for (int_dump_suffix=0; int_dump_suffix < 100; int_dump_suffix++) {
+    params_file = params.dump_dir+"/params_"+std::to_string(int_dump_suffix);
+    if(!file_exists(params_file)) {
+      raw.open(params_file.c_str(),std::ofstream::out);
+      if(raw.is_open()) {
+        raw<<params.welcome_message();
+        raw.close();
+        break;
+      }
     }
-    params.dump_dir = new_dump_dir;
-    params.parameters["DumpFolder"] = new_dump_dir;
   }
-
-  if(boost::filesystem::is_directory(p)) {
-    if(rank==0) std::cout<<"Ran out of dump folder names!"<<std::endl;
+  if(int_dump_suffix==100) {
+    std::cout<<"Could not write to output path! Exiting."<<std::endl;
     exit(-1);
   }
 
   if(rank==0) {
-    boost::filesystem::create_directory(p);
-    params.welcome_message();
+    std::cout<<params.welcome_message();
   }
   MPI_Barrier(MPI_COMM_WORLD);
 
@@ -85,8 +89,7 @@ int main(int narg, char **arg) {
   const int rsize = nRes*nWorkers*nRepeats;
 
   double temp, dr;
-  std::string rstr,Tstr,dump_fn,fn,temp_dump_dir;
-  std::ofstream raw;
+  std::string rstr,Tstr,dump_fn,fn;
 
   if (params.nPlanes>1) dr = (params.stopr-params.startr)/(double)(params.nPlanes-1);
   else dr = 0.1;
@@ -94,14 +97,13 @@ int main(int narg, char **arg) {
 
   for(double T = params.lowT; T <= params.highT;) {
 
-    //Tstr = boost::lexical_cast<std::string>((int)(T));
     Tstr = std::to_string((int)(T));
 
-    temp_dump_dir = params.dump_dir+"/"+Tstr+"K";
+    std::string dump_suffix = "_"+Tstr+"K_"+std::to_string(int_dump_suffix);
+
 
     if(rank==0) {
-      fn = temp_dump_dir + "/raw_ensemble_output_"+Tstr+"K";
-      boost::filesystem::create_directory(temp_dump_dir);
+      fn = params.dump_dir + "/raw_ensemble_output"+dump_suffix;
       std::cout<<"opening dump file "<<fn<<std::endl;
       raw.open(fn.c_str(),std::ofstream::out);
       std::cout<<"\nStarting T="+Tstr+"K run\n\n";
@@ -117,8 +119,10 @@ int main(int narg, char **arg) {
       all_dev = new double[vsize];
       all_dev_sq = new double[vsize];
       all_res = new double[rsize];
-			std::cout<<"bra-kets <> == time averages,  av/err== ensemble average/error"<<std::endl;
-      std::cout<<std::setw(15)<<"r";
+			std::cout<<std::setw(15)<<"";
+      std::cout<<"bra-kets <> == time averages,  av/err== ensemble average/error"<<std::endl;
+      std::cout<<std::setw(12)<<"Repeat of "<<nRepeats;
+      std::cout<<std::setw(5)<<"r";
       std::cout<<std::setw(15)<<"av(<Tpre>)";
       std::cout<<std::setw(15)<<"av(<Tpost>)";
       std::cout<<std::setw(15)<<"err(<Tpost>)";
@@ -133,23 +137,23 @@ int main(int narg, char **arg) {
     }
 
     for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr ) {
-
-      rstr = boost::str(boost::format("%.4f") % r);
+      rstr = std::to_string(r);
 
       for(int i=0;i<rsize;i++) local_res[i] = 0.0;
 			for(int i=0;i<vsize;i++) local_dev_sq[i] = 0.0;
 
-			if(nRepeats>1 && rank==0) std::cout<<std::setw(15)<<"Repeat: "<<std::flush;
-			for (int ir=0;ir<nRepeats;ir++) {
+			//if(rank==0) std::cout<<" Repeat: "<<std::flush;
+      for (int ir=0;ir<nRepeats;ir++) {
       	sim.sample(r, T, results, local_dev);
       	if(local_rank == 0) {
         	for(int i=0;i<nRes;i++) local_res[(instance*nRepeats+ir)*nRes  + i] = results[i];
 					for(int i=0;i<vsize;i++) local_dev_sq[i] += local_dev[i] / double(nRepeats);
 				}
-				if(nRepeats>1 && rank==0) std::cout<<std::setw(15)<<ir+1<<"/"<<nRepeats<<" "<<std::flush;
-
+				if(rank==0) std::cout<<ir+1<<" "<<std::flush;
+        //std::cout<<"\n";
 			}
-			if(nRepeats>1 && rank==0) std::cout<<std::endl;
+      if(nRepeats<6) for(int i=nRepeats;i<=6;i++) std::cout<<"  "<<std::flush;
+			//if(rank==0) std::cout<<std::endl;
 			for(int i=0;i<vsize;i++) local_dev[i] = local_dev_sq[i];
 			for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i];
 
@@ -166,7 +170,7 @@ int main(int narg, char **arg) {
       if (rank==0) {
 
         double *final_res = new double[2*nRes];
-        dump_fn = temp_dump_dir+"/dev_"+rstr+"_"+Tstr+"K.dat";
+        dump_fn = params.dump_dir+"/dev_"+rstr+dump_suffix+".dat";
 
         sim.write_dev(dump_fn,r,all_dev,all_dev_sq);
 
@@ -195,7 +199,7 @@ int main(int narg, char **arg) {
 
 				dfere.push_back(final_res[2+nRes]);//"err(<dF/dr>)"
         psir.push_back(final_res[4]); // <Psi>
-        std::cout<<std::setw(15)<<r;//"r"
+        std::cout<<std::setw(5)<<r;//"r"
         std::cout<<std::setw(15)<<final_res[0];//"av(<Tpre>)"
         std::cout<<std::setw(15)<<final_res[1];//"av(<Tpost>)"
         std::cout<<std::setw(15)<<final_res[1+nRes];//"std(<Tpost>)"
@@ -213,7 +217,7 @@ int main(int narg, char **arg) {
     // free_energy_profile
     if(rank==0){
       raw.close();
-      std::cout<<"T="+Tstr+"K run complete, integrating FEP....\n\n";
+      std::cout<<"\nT="+Tstr+"K run complete, integrating FEP....\n\n";
       spline dfspl,psispl,dfespl;
 
       dfspl.set_points(integr,dfer);
@@ -236,7 +240,7 @@ int main(int narg, char **arg) {
         fF.push_back(fline);
       }
       std::ofstream out;
-      fn = temp_dump_dir + "/free_energy_profile_"+Tstr+"K";
+      fn = params.dump_dir + "/free_energy_profile"+dump_suffix;
       out.open(fn.c_str(),std::ofstream::out);
       out<<"# r F(r) av(<dF/dr>) err(<dF/dr>) av(<Psi>)\n";
       for(auto l: fF)

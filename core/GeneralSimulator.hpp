@@ -6,7 +6,6 @@
 #include <array>
 #include <string>
 #include <map>
-#include <boost/lexical_cast.hpp>
 
 #include "Constants.hpp"
 #include "Parser.hpp"
