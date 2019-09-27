@@ -45,6 +45,8 @@ Parser::Parser(std::string file) {
     rtws(root_node->first_node("StartCoordinate")->value());
   parameters["StopCoordinate"] = \
     rtws(root_node->first_node("StopCoordinate")->value());
+  parameters["LogLammps"] = \
+    rtws(root_node->first_node("LogLammps")->value());
 
 	// Now we can convert to type
 	KnotList = Parse(root_node->first_node("KnotList")->value());
@@ -60,6 +62,7 @@ Parser::Parser(std::string file) {
 	TSteps = std::stoi(parameters["TemperatureSteps"]);
   startr = std::stod(parameters["StartCoordinate"]);
   stopr = std::stod(parameters["StopCoordinate"]);
+  loglammps = bool(std::stoi(parameters["LogLammps"]));
 
   rapidxml::xml_node<> * scrs_n = root_node->first_node("Scripts");
 

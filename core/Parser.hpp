@@ -9,7 +9,7 @@
 #include <iostream>
 #include <random>
 
-#include "rapidxml/rapidxml.hpp"
+#include "rapidxml.hpp"
 
 
 class Parser {
@@ -41,7 +41,7 @@ std::vector<std::string> KnotList;
 double lowT,highT,Friction,startr,stopr;
 int CoresPerWorker, nPlanes, TSteps, nRepeats;
 std::string dump_dir;
-bool seeded;
+bool seeded,loglammps;
 
 private:
   std::mt19937 rng;
