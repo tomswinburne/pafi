@@ -24,23 +24,28 @@ int main(int narg, char **arg) {
   // Find fresh dump folder name - no nice solution here as
   // directory creation requires platform dependent features
   // which we omit for portability
-  int int_dump_suffix=0;
+  int *int_dump_suffix = new int[1];
   std::ofstream raw;
-  std::string params_file = params.dump_dir+"/params_"+std::to_string(int_dump_suffix);
+  std::string params_file = params.dump_dir+"/params_"+std::to_string(int_dump_suffix[0]);
 
   // try to write to a file with a unique suffix
-  for (int_dump_suffix=0; int_dump_suffix < 100; int_dump_suffix++) {
-    params_file = params.dump_dir+"/params_"+std::to_string(int_dump_suffix);
-    if(!file_exists(params_file)) {
-      raw.open(params_file.c_str(),std::ofstream::out);
-      if(raw.is_open()) {
-        raw<<params.welcome_message();
-        raw.close();
-        break;
+  if(rank==0) {
+    for (int_dump_suffix[0]=0; int_dump_suffix[0] < 100; int_dump_suffix[0]++) {
+      params_file = params.dump_dir+"/params_"+std::to_string(int_dump_suffix[0]);
+      if(!file_exists(params_file)) {
+        raw.open(params_file.c_str(),std::ofstream::out);
+        if(raw.is_open()) {
+          raw<<params.welcome_message();
+          raw.close();
+          break;
+        }
       }
     }
   }
-  if(int_dump_suffix==100) {
+  MPI_Bcast(int_dump_suffix,1,MPI_INT,0,MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  if(int_dump_suffix[0]==100) {
     if(rank==0) {
       std::cout<<"\n\n\n*****************************\n\n\n";
       std::cout<<"Could not write to output path / find directory! Exiting!"<<std::endl;
@@ -49,9 +54,8 @@ int main(int narg, char **arg) {
     exit(-1);
   }
 
-  if(rank==0) {
-    std::cout<<params.welcome_message();
-  }
+  if(rank==0)  std::cout<<params.welcome_message();
+
   MPI_Barrier(MPI_COMM_WORLD);
 
   const int nWorkers = nProcs / params.CoresPerWorker;
@@ -107,7 +111,7 @@ int main(int narg, char **arg) {
 
     Tstr = std::to_string((int)(T));
 
-    std::string dump_suffix = "_"+Tstr+"K_"+std::to_string(int_dump_suffix);
+    std::string dump_suffix = "_"+Tstr+"K_"+std::to_string(int_dump_suffix[0]);
 
 
     if(rank==0) {
