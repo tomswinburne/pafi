@@ -154,7 +154,8 @@ int main(int narg, char **arg) {
       for(int i=0;i<rsize;i++) local_res[i] = 0.0;
 			for(int i=0;i<vsize;i++) local_dev_sq[i] = 0.0;
 
-			//if(rank==0) std::cout<<" Repeat: "<<std::flush;
+
+      // store running average of local_dev in local_dev_sq
       for (int ir=0;ir<nRepeats;ir++) {
       	sim.sample(r, T, results, local_dev);
       	if(local_rank == 0) {
@@ -162,12 +163,15 @@ int main(int narg, char **arg) {
 					for(int i=0;i<vsize;i++) local_dev_sq[i] += local_dev[i] / double(nRepeats);
 				}
 				if(rank==0) std::cout<<ir+1<<" "<<std::flush;
-        //std::cout<<"\n";
 			}
-      if(nRepeats<6) for(int i=nRepeats;i<=6;i++) std::cout<<"  "<<std::flush;
-			//if(rank==0) std::cout<<std::endl;
-			for(int i=0;i<vsize;i++) local_dev[i] = local_dev_sq[i];
-			for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i];
+      if(rank==0) if(nRepeats<6) for(int i=nRepeats;i<=6;i++) std::cout<<"  "<<std::flush;
+
+      // transfer back
+      for(int i=0;i<vsize;i++) local_dev[i] = local_dev_sq[i];
+      // populate sq
+			for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i]/double(nWorkers);
+      // divide for mean
+      for(int i=0;i<vsize;i++) local_dev[i] /= double(nWorkers);
 
 
       MPI_Barrier(MPI_COMM_WORLD);
@@ -183,6 +187,7 @@ int main(int narg, char **arg) {
 
         double *final_res = new double[2*nRes];
         dump_fn = params.dump_dir+"/dev_"+rstr+dump_suffix+".dat";
+
 
         sim.write_dev(dump_fn,r,all_dev,all_dev_sq);
 

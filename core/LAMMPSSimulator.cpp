@@ -11,7 +11,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int rank) 
   lmparg[1] = (char *) "-screen";
   lmparg[2] = (char *) "none";
   lmparg[3] = (char *) "-log";
-  if(params->loglammps){
+  if(params->loglammps) {
     sprintf(str1,"log.lammps.%d",rank);
     lmparg[4] = str1;
   } else lmparg[4] = (char *) "none";
