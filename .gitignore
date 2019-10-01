@@ -1,5 +1,11 @@
 # test data
 build/*
+build_noboost/*
+core_boost/*
+lammps/*
+rosa_tests/*
+run/*
+tex/*
 
 # dev data
 example/*

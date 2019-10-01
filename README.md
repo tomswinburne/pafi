@@ -86,12 +86,14 @@ neb etol ftol N1 N2 Nevery file-style arg keyword
 
 write_data neb_knot_file.$u
 ```
-3. Move the knots to folder and include and configure the configuratio xml file, as shown in the examples
+3. Move the knots to folder and include and configure the configuration xml file, as shown in the examples
 
 4. Run PAFI as e.g.
 ```
+mkdir -p dumps
 mpirun -np NPROCS ./pafi
 ```
+where the first line ensures your dump folder (here the default value) actually exists
 ## Output
 
 1. PAFI will try to write to the directory as specified in "DumpFolder" in config.xml. Each dump file has a suffix `_T_n`, where `T` is the temperature and `n` is the smallest integer that does not overwrite previous files.
@@ -101,4 +103,3 @@ mpirun -np NPROCS ./pafi
 ## Coming Soon
 1. Restart files from pathway deviations
 2. Smoothed spline interpolation for more general reference pathways
-3. tbc....

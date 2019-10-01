@@ -11,7 +11,11 @@ int main(int narg, char **arg) {
 
 
   if(nProcs%params.CoresPerWorker!=0) {
-    if(rank==0) std::cout<<"CoresPerWorker must factorize nProcs!\n";
+    if(rank==0) {
+      std::cout<<"\n\n\n*****************************\n\n\n";
+      std::cout<<"CoresPerWorker must factorize nProcs!\n";
+      std::cout<<"\n\n\n*****************************\n\n\n";
+    }
     exit(-1);
   }
 
@@ -37,7 +41,11 @@ int main(int narg, char **arg) {
     }
   }
   if(int_dump_suffix==100) {
-    std::cout<<"Could not write to output path! Exiting."<<std::endl;
+    if(rank==0) {
+      std::cout<<"\n\n\n*****************************\n\n\n";
+      std::cout<<"Could not write to output path / find directory! Exiting!"<<std::endl;
+      std::cout<<"\n\n\n*****************************\n\n\n";
+    }
     exit(-1);
   }
 

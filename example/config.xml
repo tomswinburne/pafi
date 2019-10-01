@@ -6,15 +6,15 @@
   <nRepeats> 2 </nRepeats>
 
   <!-- LowTemperature to HighTemperature in TemperatureSteps steps -->
-  <LowTemperature> 500. </LowTemperature>
-  <HighTemperature> 500. </HighTemperature>
-  <TemperatureSteps> 1 </TemperatureSteps>
+  <LowTemperature> 100. </LowTemperature>
+  <HighTemperature> 1000. </HighTemperature>
+  <TemperatureSteps> 10 </TemperatureSteps>
 
   <!-- Data gathering steps -->
   <SampleSteps> 2000 </SampleSteps>
-  
+
   <!-- We require ThermSteps > ThermWindow AND ThermSteps%ThermWindow==0 -->
-  <ThermSteps> 2000 </ThermSteps>
+  <ThermSteps> 1000 </ThermSteps>
   <ThermWindow> 500 </ThermWindow>
 
   <nPlanes> 11 </nPlanes>
@@ -38,7 +38,7 @@
   <StopCoordinate> 1.0 </StopCoordinate>
 
   <!-- 0/1 Output LAMMPS logs -->
-  <LogLammps> 1 </LogLammps>
+  <LogLammps> 0 </LogLammps>
 
   <Scripts>
     <Script name="Input">
