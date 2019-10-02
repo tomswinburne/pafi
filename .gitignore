@@ -11,6 +11,7 @@ tex/*
 example/*
 !example/Fe*
 !example/config.xml
+!example/sample_plot.py
 
 lib/*
 notes.py

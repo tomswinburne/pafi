@@ -106,6 +106,9 @@ where the first line ensures your dump folder (here the default value) actually 
 
 2. For each temperaturer there will be a files `dev_r_T_n.dat` with the ensemble average and variance pathway deviation from each hyperplane and a file `free_energy_profile_T_` that has the integrated FEP.
 
+3. See `error_analysis.pdf' for an expanation of the error bars used in PAFI and `example/sample_plot.py' for a simple plotting example
+
+
 ## Coming Soon
 1. Restart files from pathway deviations
 2. Smoothed spline interpolation for more general reference pathways
