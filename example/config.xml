@@ -11,11 +11,11 @@
   <TemperatureSteps> 10 </TemperatureSteps>
 
   <!-- Data gathering steps -->
-  <SampleSteps> 2000 </SampleSteps>
+  <SampleSteps> 20 </SampleSteps>
 
   <!-- We require ThermSteps > ThermWindow AND ThermSteps%ThermWindow==0 -->
-  <ThermSteps> 1000 </ThermSteps>
-  <ThermWindow> 500 </ThermWindow>
+  <ThermSteps> 10 </ThermSteps>
+  <ThermWindow> 5 </ThermWindow>
 
   <nPlanes> 11 </nPlanes>
 
@@ -26,8 +26,15 @@
     RELATIVE thermal expansion coefficients -
     a(T) = a0 * (1 + Linear*T + Quadratic*T^2)
   -->
-  <LinearThermalExpansion>0.0</LinearThermalExpansion>
-  <QuadraticThermalExpansion>0.0</QuadraticThermalExpansion>
+  <LinearThermalExpansionX>0.0</LinearThermalExpansionX>
+  <QuadraticThermalExpansionX>0.0</QuadraticThermalExpansionX>
+
+  <LinearThermalExpansionY>0.0</LinearThermalExpansionY>
+  <QuadraticThermalExpansionY>0.0</QuadraticThermalExpansionY>
+
+  <LinearThermalExpansionZ>0.0</LinearThermalExpansionZ>
+  <QuadraticThermalExpansionZ>0.0</QuadraticThermalExpansionZ>
+
 
   <!-- fix hp parameters (LAMMPS units) -->
   <OverDamped> 1 </OverDamped>
@@ -62,8 +69,8 @@
 	region couchebot block INF INF INF INF INF 6.5 units box
 	group couchetop region couchetop
 	group couchebot region couchebot
-	fix freezetop couchetop setforce NULL NULL 0.0 
-	fix freezebot couchebot setforce NULL NULL 0.0 
+	fix freezetop couchetop setforce NULL NULL 0.0
+	fix freezebot couchebot setforce NULL NULL 0.0
     </Script>
 
     <Script name="PostRun">
@@ -76,7 +83,7 @@
     </Script>
     -->
     <Script name="PreRun">
-    
+
     </Script>
 
     <!-- Turn them off each time -->

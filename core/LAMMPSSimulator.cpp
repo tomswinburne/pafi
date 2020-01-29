@@ -73,16 +73,17 @@ void LAMMPSSimulator::run_commands(std::string strv) {
 /*
   Fill configuration, path, tangent and tangent gradient. Return tangent norm
 */
-void LAMMPSSimulator::populate(double r, double scale, double &norm_mag) {
+void LAMMPSSimulator::populate(double r, double *scale, double &norm_mag) {
+  //std::cout<<scale[0]<<" "<<scale[1]<<" "<<scale[2]<<std::endl;
   std::vector<double> t(3*natoms,0.);
   double ncom[]={0.,0.,0.};
   norm_mag=0.;
 
-  for(int i=0;i<3*natoms;i++) t[i] = pathway[i](r) * scale;
+  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) t[3*i+j] = pathway[3*i+j].deriv(0,r) * scale[j];
   lammps_scatter_atoms(lmp,(char *)"x",1,3,&t[0]);
   lammps_scatter_atoms(lmp,(char *)"path",1,3,&t[0]);
 
-  for(int i=0;i<3*natoms;i++) t[i] = pathway[i].deriv(1,r) * scale;
+  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) t[3*i+j] = pathway[3*i+j].deriv(1,r) * scale[j];
 
   // Center of mass projection and tangent length
   for(int i=0;i<3*natoms;i++) ncom[i%3] += t[i]/(double)natoms;
@@ -93,8 +94,8 @@ void LAMMPSSimulator::populate(double r, double scale, double &norm_mag) {
   for(int i=0;i<3*natoms;i++) t[i] /= norm_mag;
   lammps_scatter_atoms(lmp,(char *)"norm",1,3,&t[0]);
 
-  for(int i=0;i<3*natoms;i++) \
-    t[i] = pathway[i].deriv(2,r) * scale / norm_mag / norm_mag;
+  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) \
+    t[3*i+j] = pathway[3*i+j].deriv(2,r) * scale[j] / norm_mag / norm_mag;
   lammps_scatter_atoms(lmp,(char *)"dnorm",1,3,&t[0]);
   lammps_command(lmp,(char *)"run 0");
 };
@@ -102,10 +103,12 @@ void LAMMPSSimulator::populate(double r, double scale, double &norm_mag) {
 /*
   Rescale simulation cell
 */
-void LAMMPSSimulator::rescale_cell(double scale) {
-  std::string cmd, ss;
-  ss = std::to_string(scale);
-  cmd ="change_box all x scale "+ss+" y scale "+ss+" z scale "+ss+"\n";
+void LAMMPSSimulator::rescale_cell(double *scale) {
+  std::string cmd, ssx,ssy,ssz;
+  ssx = std::to_string(scale[0]);
+  ssy = std::to_string(scale[1]);
+  ssz = std::to_string(scale[2]);
+  cmd ="change_box all x scale "+ssx+" y scale "+ssy+" z scale "+ssz+"\n";
   cmd += "run 0";
   run_commands(cmd);
 };
@@ -116,16 +119,18 @@ void LAMMPSSimulator::rescale_cell(double scale) {
 */
 void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   std::string cmd;
-  double norm_mag, scale, sampleT, dm;
+  double norm_mag, sampleT, dm;
   double *lmp_ptr;
   double **lmp_dev_ptr;
+  double scale[3] = {1.0,1.0,1.0};
 
-  populate(r,1.0,norm_mag);
+  populate(r,scale,norm_mag);
   // Stress Fixes
   run_script("PreRun");
   cmd = "run 0"; run_commands(cmd);
-  
-  scale = expansion(T);
+
+  expansion(T,scale);
+
   rescale_cell(scale);
   populate(r,scale,norm_mag);
 
@@ -191,7 +196,7 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   cmd = "run 0"; run_commands(cmd);
 
   // rescale back
-  scale = 1. / scale;
+  for(int j=0;j<3;j++) scale[j] = 1.0/scale[j];
   populate(r,scale,norm_mag);
   rescale_cell(scale);
 

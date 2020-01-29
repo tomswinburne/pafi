@@ -36,7 +36,7 @@ public:
 
   virtual void populate(double r){};
 
-  virtual void rescale_cell(double scale){};
+  virtual void rescale_cell(double *scale){};
 
   virtual void sample(double r, double T, std::vector<double> &results){};
 
@@ -46,7 +46,7 @@ public:
 
   void write_dev(std::string fn, double r, double *dev, double *dev_sq);
 
-  double expansion(double T);
+  void expansion(double T,double *scale);
 
   void make_path(std::vector<std::string> knot_list);
 

@@ -21,10 +21,22 @@ Parser::Parser(std::string file) {
     rtws(root_node->first_node("HighTemperature")->value());
   parameters["TemperatureSteps"] = \
     rtws(root_node->first_node("TemperatureSteps")->value());
-  parameters["LinearThermalExpansion"] = \
-    rtws(root_node->first_node("LinearThermalExpansion")->value());
-  parameters["QuadraticThermalExpansion"] = \
-    rtws(root_node->first_node("QuadraticThermalExpansion")->value());
+
+  parameters["LinearThermalExpansionX"] = \
+    rtws(root_node->first_node("LinearThermalExpansionX")->value());
+  parameters["QuadraticThermalExpansionX"] = \
+    rtws(root_node->first_node("QuadraticThermalExpansionX")->value());
+
+  parameters["LinearThermalExpansionY"] = \
+    rtws(root_node->first_node("LinearThermalExpansionY")->value());
+  parameters["QuadraticThermalExpansionY"] = \
+    rtws(root_node->first_node("QuadraticThermalExpansionY")->value());
+
+  parameters["LinearThermalExpansionZ"] = \
+    rtws(root_node->first_node("LinearThermalExpansionZ")->value());
+  parameters["QuadraticThermalExpansionZ"] = \
+    rtws(root_node->first_node("QuadraticThermalExpansionZ")->value());
+
   parameters["SampleSteps"] = \
     rtws(root_node->first_node("SampleSteps")->value());
   parameters["ThermSteps"] = \

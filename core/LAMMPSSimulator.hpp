@@ -29,11 +29,11 @@ public:
   /*
     Fill configuration, path, tangent and tangent gradient. Return tangent norm
   */
-  void populate(double r, double scale, double &norm_mag);
+  void populate(double r, double *scale, double &norm_mag);
   /*
     Rescale simulation cell
   */
-  void rescale_cell(double scale);
+  void rescale_cell(double *scale);
   /*
     Main sample run. Results vector should have thermalization temperature,
     sample temperature <f>, <f^2>, <psi> and <x-u>.n

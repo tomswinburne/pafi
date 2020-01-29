@@ -43,15 +43,28 @@ void GeneralSimulator::write_dev(std::string fn, double r, double *dev, double *
 };
 
 
-double GeneralSimulator::expansion(double T) {
-  double coeff,new_scale = 1.0;
-  coeff = \
-  std::stod(params->parameters["LinearThermalExpansion"]);
-  new_scale += coeff*T;
-  coeff = \
-  std::stod(params->parameters["QuadraticThermalExpansion"]);
-  new_scale += coeff*T*T;
-  return new_scale;
+void GeneralSimulator::expansion(double T,double *scale) {
+  double coeff;
+
+  scale[0] = 1.0;
+  coeff = std::stod(params->parameters["LinearThermalExpansionX"]);
+  scale[0] += coeff*T;
+  coeff = std::stod(params->parameters["QuadraticThermalExpansionX"]);
+  scale[0] += coeff*T*T;
+
+  scale[1] = 1.0;
+  coeff = std::stod(params->parameters["LinearThermalExpansionY"]);
+  scale[1] += coeff*T;
+  coeff = std::stod(params->parameters["QuadraticThermalExpansionY"]);
+  scale[1] += coeff*T*T;
+
+  scale[2] = 1.0;
+  coeff = std::stod(params->parameters["LinearThermalExpansionZ"]);
+  scale[2] += coeff*T;
+  coeff = std::stod(params->parameters["QuadraticThermalExpansionZ"]);
+  scale[2] += coeff*T*T;
+
+  //std::cout<<scale[0]<<" "<<scale[1]<<" "<<scale[2]<<std::endl;
 };
 
 void GeneralSimulator::make_path(std::vector<std::string> knot_list) {

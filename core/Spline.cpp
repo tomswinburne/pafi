@@ -277,7 +277,7 @@ double spline::operator() (double x) const
 
 double spline::deriv(int order, double x) const
 {
-    assert(order>0);
+    assert(order>=0);
 
     size_t n=m_x.size();
     // find the closest point m_x[idx] < x, idx=0 even if x<m_x[0]
@@ -290,6 +290,9 @@ double spline::deriv(int order, double x) const
     if(x<m_x[0]) {
         // extrapolation to the left
         switch(order) {
+        case 0:
+            interpol=(m_b0*h + m_c0)*h + m_y[0];
+            break;
         case 1:
             interpol=2.0*m_b0*h + m_c0;
             break;
@@ -303,6 +306,9 @@ double spline::deriv(int order, double x) const
     } else if(x>m_x[n-1]) {
         // extrapolation to the right
         switch(order) {
+        case 0:
+            interpol=(m_b[n-1]*h + m_c[n-1])*h + m_y[n-1];
+            break;
         case 1:
             interpol=2.0*m_b[n-1]*h + m_c[n-1];
             break;
@@ -316,6 +322,9 @@ double spline::deriv(int order, double x) const
     } else {
         // interpolation
         switch(order) {
+        case 0:
+            interpol=((m_a[idx]*h + m_b[idx])*h + m_c[idx])*h + m_y[idx];
+            break;
         case 1:
             interpol=(3.0*m_a[idx]*h + 2.0*m_b[idx])*h + m_c[idx];
             break;
