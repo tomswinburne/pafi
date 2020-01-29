@@ -15,7 +15,8 @@ add_definitions(-std=c++11 -O3 -g)
 
 file(GLOB src_files "core/*")
 
-set(pafi_src_files ${src_files} pafi/pafi.cpp pafi/pafi.hpp)
-add_executable(pafi ${pafi_src_files})
+add_executable(pafi ${src_files} pafi/pafi.cpp pafi/pafi.hpp)
+add_executable(pafi-analyze ${src_files} pafi/pafi-analyze.cpp pafi/pafi-analyze.hpp)
 
 target_link_libraries(pafi lammps_mpi)
+target_link_libraries(pafi-analyze lammps_mpi)

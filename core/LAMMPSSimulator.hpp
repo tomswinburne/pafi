@@ -47,6 +47,7 @@ public:
   void lammps_path_write(std::string fn, double r);
 
   double getEnergy();
+  double getForceEnergy(double *f);
 
   // Fill 9D array with Lx, Ly, Lz, xy, xz, yz, then periodicity in x, y, z
   std::array<double,9> getCellData();

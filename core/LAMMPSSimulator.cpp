@@ -120,13 +120,15 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   double *lmp_ptr;
   double **lmp_dev_ptr;
 
+  populate(r,1.0,norm_mag);
+  // Stress Fixes
+  run_script("PreRun");
+  cmd = "run 0"; run_commands(cmd);
+  
   scale = expansion(T);
   rescale_cell(scale);
   populate(r,scale,norm_mag);
 
-  // Stress Fixes
-  run_script("PreRun");
-  cmd = "run 0"; run_commands(cmd);
 
   params->parameters["Temperature"] = std::to_string(T);
   cmd = "fix hp all hp "+params->parameters["Temperature"]+" ";
@@ -204,6 +206,20 @@ double LAMMPSSimulator::getEnergy() {
     lammps_command(lmp,(char *) "run 0");
     lmpE = (double *) lammps_extract_compute(lmp,(char *) "pe",0,0);
   }
+  double baseE = *lmpE;
+  return baseE;
+};
+
+double LAMMPSSimulator::getForceEnergy(double *f) {
+  lammps_command(lmp,(char *) "run 0");
+  double * lmpE = (double *) lammps_extract_compute(lmp,(char *) "pe",0,0);
+  if (lmpE == NULL) {
+    lammps_command(lmp,(char *) "compute pe all pe");
+    lammps_command(lmp,(char *) "variable pe equal pe");
+    lammps_command(lmp,(char *) "run 0");
+    lmpE = (double *) lammps_extract_compute(lmp,(char *) "pe",0,0);
+  }
+  lammps_gather_atoms(lmp,(char *) "f",1,3,f);
   double baseE = *lmpE;
   return baseE;
 };

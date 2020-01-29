@@ -29,7 +29,7 @@ This PAFI repository includes the [RapidXML](http://http://rapidxml.sourceforge.
 
 RECOMMENDED: Download or clone fork of LAMMPS with USER-PAFI package [here](https://github.com/tomswinburne/lammps/) or type
 ```
-git clone git@github.com:tomswinburne/lammps.git
+git clone https://github.com/tomswinburne/lammps.git
 ```
 
 ALTERNATIVE: [Download LAMMPS](http://lammps.sandia.gov/download.html) then in the LAMMPS root directory run the pafi patch as

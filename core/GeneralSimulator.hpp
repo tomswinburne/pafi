@@ -28,6 +28,8 @@ public:
 
   virtual double getEnergy(){};
 
+  virtual double getForceEnergy(double *f){};
+
   virtual std::array<double,9> getCellData(){};
 
   virtual void close(){};

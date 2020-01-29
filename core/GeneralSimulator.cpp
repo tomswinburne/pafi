@@ -30,7 +30,6 @@ void GeneralSimulator::write(std::string fn, double r) {
 void GeneralSimulator::write_dev(std::string fn, double r, double *dev, double *dev_sq) {
   std::ofstream out;
   out.open(fn.c_str(),std::ofstream::out);
-
   out<<"# PAFI DUMP FILE. Reference path u(r) is a Nx3 vector.\n";
   out<<"# For i=0,1,2: u_i(r) , < x_i-u_i | r > , <(x_i-u_i)^2 | r >)\n";
   for(int i=0;i<natoms;i++) {

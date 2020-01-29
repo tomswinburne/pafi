@@ -56,7 +56,27 @@
     </Script>
 
     <!-- fixes for applied stress / boundary planes etc -->
+    <!-- example for dislocation stress
     <Script name="PreRun">
+	region couchetop block INF INF INF INF 158.4 INF units box
+	region couchebot block INF INF INF INF INF 6.5 units box
+	group couchetop region couchetop
+	group couchebot region couchebot
+	fix freezetop couchetop setforce NULL NULL 0.0 
+	fix freezebot couchebot setforce NULL NULL 0.0 
+    </Script>
+
+    <Script name="PostRun">
+	unfix freezetop
+	unfix freezebot
+	group couchetop delete
+	group couchebot delete
+	region couchetop delete
+	region couchebot delete
+    </Script>
+    -->
+    <Script name="PreRun">
+    
     </Script>
 
     <!-- Turn them off each time -->
