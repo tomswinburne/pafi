@@ -23,15 +23,15 @@
   <CoresPerWorker> 1 </CoresPerWorker>
 
   <!--
-    RELATIVE thermal expansion coefficients -
-    a(T) = a0 * (1 + Linear*T + Quadratic*T^2)
+    RELATIVE thermal expansion coefficients along X,Y,Z directions of simulation-
+    X -> X *(1 + LinearThermalExpansionX*T + QuadraticThermalExpansionX*T^2)
+    Y -> X *(1 + LinearThermalExpansionY*T + QuadraticThermalExpansionY*T^2)
+    Z -> X *(1 + LinearThermalExpansionZ*T + QuadraticThermalExpansionZ*T^2)
   -->
   <LinearThermalExpansionX>0.0</LinearThermalExpansionX>
   <QuadraticThermalExpansionX>0.0</QuadraticThermalExpansionX>
-
   <LinearThermalExpansionY>0.0</LinearThermalExpansionY>
   <QuadraticThermalExpansionY>0.0</QuadraticThermalExpansionY>
-
   <LinearThermalExpansionZ>0.0</LinearThermalExpansionZ>
   <QuadraticThermalExpansionZ>0.0</QuadraticThermalExpansionZ>
 
@@ -61,7 +61,6 @@
       thermo 10
       run 0
     </Script>
-
     <!-- fixes for applied stress / boundary planes etc -->
     <!-- example for dislocation stress
     <Script name="PreRun">
