@@ -107,8 +107,8 @@ int main(int narg, char **arg) {
     if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
 
     for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr ) {
-
-      sim.populate(r,1.0,nm);
+      double scale[3] = {1.0,1.0,1.0};
+      sim.populate(r,scale,nm);
 
       std::string cmd = "run 0";
       sim.run_commands(cmd);
