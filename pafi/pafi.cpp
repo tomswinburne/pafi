@@ -32,14 +32,17 @@ int main(int narg, char **arg) {
   if(rank==0) {
     for (int_dump_suffix[0]=0; int_dump_suffix[0] < 100; int_dump_suffix[0]++) {
       params_file = params.dump_dir+"/params_"+std::to_string(int_dump_suffix[0]);
+      std::cout<<"Testing for existence of "<<params_file<<".... ";
       if(!file_exists(params_file)) {
+        std::cout<<"it doesn't!, trying to open for writing.... ";
         raw.open(params_file.c_str(),std::ofstream::out);
         if(raw.is_open()) {
+          std::cout<<" done!\n";
           raw<<params.welcome_message();
           raw.close();
           break;
-        }
-      }
+        } else std::cout<<"cannot!\n";
+      } else std::cout<<"it exists!\n";
     }
   }
   MPI_Bcast(int_dump_suffix,1,MPI_INT,0,MPI_COMM_WORLD);
