@@ -155,24 +155,26 @@ int main(int narg, char **arg) {
       rstr = std::to_string(r);
 
       for(int i=0;i<rsize;i++) local_res[i] = 0.0;
-			for(int i=0;i<vsize;i++) local_dev_sq[i] = 0.0;
+      for(int i=0;i<vsize;i++) local_dev_sq[i] = 0.0;
 
 
       // store running average of local_dev in local_dev_sq
       for (int ir=0;ir<nRepeats;ir++) {
       	sim.sample(r, T, results, local_dev);
       	if(local_rank == 0) {
-        	for(int i=0;i<nRes;i++) local_res[(instance*nRepeats+ir)*nRes  + i] = results[i];
-					for(int i=0;i<vsize;i++) local_dev_sq[i] += local_dev[i] / double(nRepeats);
-				}
-				if(rank==0) std::cout<<ir+1<<" "<<std::flush;
-			}
+          for(int i=0;i<nRes;i++) local_res[(instance*nRepeats+ir)*nRes  + i] = results[i];
+          for(int i=0;i<vsize;i++) local_dev_sq[i] += local_dev[i] / double(nRepeats);
+	}
+	if(rank==0) std::cout<<ir+1<<" "<<std::flush;
+      }
       if(rank==0) if(nRepeats<6) for(int i=nRepeats;i<=6;i++) std::cout<<"  "<<std::flush;
 
       // transfer back
       for(int i=0;i<vsize;i++) local_dev[i] = local_dev_sq[i];
+      
       // populate sq
-			for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i]/double(nWorkers);
+      for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i]/double(nWorkers);
+      
       // divide for mean
       for(int i=0;i<vsize;i++) local_dev[i] /= double(nWorkers);
 
@@ -190,13 +192,11 @@ int main(int narg, char **arg) {
 
         double *final_res = new double[2*nRes];
         dump_fn = params.dump_dir+"/dev_"+rstr+dump_suffix+".dat";
-
-
         sim.write_dev(dump_fn,r,all_dev,all_dev_sq);
 
-				// (instance*nRepeats+ir)*nRes  + i
-
-        for(int i=0;i<nWorkers*nRepeats;i++) raw<<all_res[i*nRes+2]<<" ";
+        // (instance*nRepeats+ir)*nRes  + i
+        for(int i=0;i<nWorkers*nRepeats;i++) raw<<all_res[i*nRes+2]<<" "; // <f>
+        for(int i=0;i<nWorkers*nRepeats;i++) raw<<all_res[i*nRes+3]<<" "; // <f^2>-<f>^2
         raw<<std::endl;
 
         for(int j=0;j<2*nRes;j++) final_res[j] = 0.;
@@ -217,14 +217,14 @@ int main(int narg, char **arg) {
         dfer.push_back(final_res[2]); // <dF/dr>
 
 
-				dfere.push_back(final_res[2+nRes]);//"err(<dF/dr>)"
+	dfere.push_back(final_res[2+nRes]);//"err(<dF/dr>)"
         psir.push_back(final_res[4]); // <Psi>
         std::cout<<std::setw(5)<<r;//"r"
         std::cout<<std::setw(15)<<final_res[0];//"av(<Tpre>)"
         std::cout<<std::setw(15)<<final_res[1];//"av(<Tpost>)"
         std::cout<<std::setw(15)<<final_res[1+nRes];//"std(<Tpost>)"
         std::cout<<std::setw(15)<<final_res[2];//"av(<dF/dr>)"
-				std::cout<<std::setw(15)<<final_res[2+nRes];//"err(<dF/dr>)"
+        std::cout<<std::setw(15)<<final_res[2+nRes];//"err(<dF/dr>)"
         std::cout<<std::setw(15)<<final_res[6];//"av(|<X>-U|)"
         std::cout<<std::setw(15)<<final_res[6+nRes];//"err(|<X>-U|)"
         std::cout<<std::setw(20)<<final_res[5];//"av(|<X>-U).(dU/dr)|)"
