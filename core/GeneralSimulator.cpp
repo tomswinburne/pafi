@@ -43,7 +43,7 @@ void GeneralSimulator::write_dev(std::string fn, double r, double *dev, double *
 };
 
 
-void GeneralSimulator::expansion(double T,double *scale) {
+void GeneralSimulator::expansion(double T) {
   double coeff;
 
   scale[0] = 1.0;
