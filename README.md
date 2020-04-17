@@ -25,7 +25,7 @@ This PAFI repository includes the [RapidXML](http://http://rapidxml.sourceforge.
 # Installation
 
 ## Compile LAMMPS with USER-PAFI package
-1. USER-PAFI is in the process of integration into LAMMPS. In the meantime it is best to download or clone [this](https://github.com/tomswinburne/lammps/) fork or simply execute
+1. PAFI is in the process of integration into LAMMPS. In the meantime it is best to download or clone [this](https://github.com/tomswinburne/lammps/) fork or simply execute
 ```
 git clone https://github.com/tomswinburne/lammps.git
 ```
