@@ -31,10 +31,10 @@ git clone https://github.com/tomswinburne/lammps.git
 ```
 You could also run a diff to apply changes to an existing version of LAMMPS but this is not recommended
 
-2. Install USER-PAFI and any packages you desire (e.g. replica for NEB)
+2. Install USER-MISC and any packages you desire (e.g. replica for NEB)
 ```
 cd src
-make yes-user-pafi
+make yes-user-misc
 make yes-replica # for NEB calculation
 make yes-package_name # (i.e. manybody for EAM potentials etc)
 ```
