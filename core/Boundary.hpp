@@ -13,7 +13,7 @@
 
 class MinImage {
 public:
-  double determinant;
+  double volume;
   std::array< std::array<double,3>, 3 > cell;
   std::array< std::array<double,3>, 3 > invcell;
   std::array<double,3> periodic;
@@ -21,5 +21,6 @@ public:
   void load(std::array<double,9> lcell);
   void minimumImageVector(double *dr);
   void wrap(std::vector<double> &dx);
+  void wrap(double *dx,int dxsize);
 };
 #endif

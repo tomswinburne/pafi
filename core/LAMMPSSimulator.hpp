@@ -29,22 +29,24 @@ public:
   /*
     Fill configuration, path, tangent and tangent gradient. Return tangent norm
   */
-  void populate(double r, double *scale, double &norm_mag);
+  void populate(double r, double &norm_mag);
   /*
     Rescale simulation cell
   */
-  void rescale_cell(double *scale);
+  void rescale_cell();
   /*
     Main sample run. Results vector should have thermalization temperature,
     sample temperature <f>, <f^2>, <psi> and <x-u>.n
   */
   void sample(double r, double T, double *results, double *dev);
 
-  std::string header();
+  std::string header(double mass);
 
   void lammps_dev_write(std::string fn, double r, double *dev, double *dev_sq);
 
   void lammps_path_write(std::string fn, double r);
+
+  double getVirial();
 
   double getEnergy();
   double getForceEnergy(double *f);
@@ -58,6 +60,7 @@ public:
   std::vector<int> species,q,image,id;
 private:
   void *lmp;
+  bool made_fix,made_compute;
 };
 
 #endif

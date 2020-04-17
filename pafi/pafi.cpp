@@ -80,9 +80,14 @@ int main(int narg, char **arg) {
   //MPI_Bcast(seed,1,MPI_INT,0,instance_comm);
   params.seed(seed[instance]);
 
-  if(rank==0) std::cout<<"\n\nSet up "<<nWorkers<<" workers with   "<<params.CoresPerWorker<<" cores per worker\n\n";
+  if(rank==0) std::cout<<"\n\nInitializing "<<nWorkers<<" workers with "<<params.CoresPerWorker<<" cores per worker\n\n";
 
   Simulator sim(instance_comm,params,rank);
+
+  if(!sim.has_pafi) {
+    if(rank==0) std::cout<<"MD Driver Error (no PAFI package)! Exiting"<<std::endl;
+    exit(-1);
+  }
 
   if (rank == 0) {
     std::cout<<"Loaded input data of "<<sim.natoms<<" atoms\n";
@@ -160,7 +165,9 @@ int main(int narg, char **arg) {
 
       // store running average of local_dev in local_dev_sq
       for (int ir=0;ir<nRepeats;ir++) {
-      	sim.sample(r, T, results, local_dev);
+
+        sim.sample(r, T, results, local_dev);
+
       	if(local_rank == 0) {
           for(int i=0;i<nRes;i++) local_res[(instance*nRepeats+ir)*nRes  + i] = results[i];
           for(int i=0;i<vsize;i++) local_dev_sq[i] += local_dev[i] / double(nRepeats);
@@ -171,10 +178,10 @@ int main(int narg, char **arg) {
 
       // transfer back
       for(int i=0;i<vsize;i++) local_dev[i] = local_dev_sq[i];
-      
+
       // populate sq
       for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i]/double(nWorkers);
-      
+
       // divide for mean
       for(int i=0;i<vsize;i++) local_dev[i] /= double(nWorkers);
 

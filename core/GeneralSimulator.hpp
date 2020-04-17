@@ -26,17 +26,25 @@ public:
 
   virtual void sample(double r, double T, double *results, double *dev){};
 
-  virtual double getEnergy(){};
+  virtual double getEnergy(){
+    return 0.0;
+  };
 
-  virtual double getForceEnergy(double *f){};
+  virtual double getForceEnergy(double *f){
+    return 0.0;
+  };
 
-  virtual std::array<double,9> getCellData(){};
+  virtual std::array<double,9> getCellData(){
+    std::array<double,9> res;
+    res.fill(0.0);
+    return res;
+  };
 
   virtual void close(){};
 
   virtual void populate(double r){};
 
-  virtual void rescale_cell(double *scale){};
+  virtual void rescale_cell(){};
 
   virtual void sample(double r, double T, std::vector<double> &results){};
 
@@ -46,18 +54,18 @@ public:
 
   void write_dev(std::string fn, double r, double *dev, double *dev_sq);
 
-  void expansion(double T,double *scale);
+  void expansion(double T);
 
   void make_path(std::vector<std::string> knot_list);
 
   void evaluate(std::vector<double> &results);
-
-  double refE;
+  double *scale;
+  double refE,refP;
   int natoms, tag, nknots;
   MinImage pbc;
   Parser *params;
   std::vector<spline> pathway;
-  bool s_flag;
+  bool s_flag,has_pafi;
 private:
   /* nothing */
 };
