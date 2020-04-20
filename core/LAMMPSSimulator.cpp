@@ -39,6 +39,9 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int rank) 
   made_fix=false;
   made_compute=false;
 
+  expansion(0.0);
+  rescale_cell();
+
   // prepare for fix?
   //lammps_command(lmp,"fix pafipath all property/atom d_nx d_ny d_nz d_dnx d_dny d_dnz d_ddnx d_ddny d_ddnz");
   //lammps_command(lmp,"run 0");
@@ -186,6 +189,7 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   // Stress Fixes
   run_script("PreRun");
   lammps_command(lmp,(char *)"run 0");
+
   expansion(T);
   rescale_cell();
   populate(r,norm_mag);
@@ -197,6 +201,8 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   cmd += params->seed_str()+" overdamped ";
   cmd += params->parameters["OverDamped"]+" com 1\nrun 0";
   run_commands(cmd);
+
+
 
   refE = getEnergy();
 
@@ -223,7 +229,7 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   cmd += "fix af all ave/time 1 "+SampleSteps+" "+SampleSteps+" f_hp[1] f_hp[2] f_hp[3] f_hp[4]\n";
   cmd += "run "+SampleSteps;
   run_commands(cmd);
-  
+
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
   sampleT = (*lmp_ptr-refE)/natoms/1.5/BOLTZ;
   lammps_free(lmp_ptr);

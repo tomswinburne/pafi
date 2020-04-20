@@ -20,7 +20,7 @@
   <nPlanes> 11 </nPlanes>
 
   <!-- We require nprocs % CoresPerWorker==0 -->
-  <CoresPerWorker> 2 </CoresPerWorker>
+  <CoresPerWorker> 1 </CoresPerWorker>
 
   <!--
     RELATIVE thermal expansion coefficients along X,Y,Z directions of simulation-
@@ -82,7 +82,6 @@
     </Script>
     -->
     <Script name="PreRun">
-
     </Script>
 
     <!-- Turn them off each time -->
