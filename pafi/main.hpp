@@ -1,5 +1,4 @@
 #include <iostream>
-#include <fstream>
 #include <sstream>
 #include <iostream>
 #include <iomanip>
@@ -21,17 +20,7 @@
 #include "Constants.hpp"
 #include "Parser.hpp"
 #include "Spline.hpp"
-
-bool file_exists (const std::string& name) {
-    if (FILE *file = fopen(name.c_str(), "r")) {
-        fclose(file);
-        return true;
-    } else {
-        return false;
-    }
-}
-
-
+#include "File.hpp"
 
 #include "LAMMPSSimulator.hpp"
 typedef LAMMPSSimulator Simulator;

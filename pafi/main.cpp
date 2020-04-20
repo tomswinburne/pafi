@@ -85,7 +85,7 @@ int main(int narg, char **arg) {
   Simulator sim(instance_comm,params,rank);
 
   if(!sim.has_pafi) {
-    if(rank==0) std::cout<<"MD Driver Error (no PAFI package)! Exiting"<<std::endl;
+    if(rank==0) std::cout<<"MD Driver Error (no USER-MISC package)! Exiting"<<std::endl;
     exit(-1);
   }
 

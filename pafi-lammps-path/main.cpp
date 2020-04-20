@@ -94,7 +94,7 @@ int main(int narg, char **arg) {
 
   sim.make_path(params.KnotList);
   MPI_Barrier(MPI_COMM_WORLD);
-
+  int fileindex=1;
   if(instance==0) {
     double *t,*f;
     double dr,E,nm,fE,fs;
@@ -122,9 +122,11 @@ int main(int narg, char **arg) {
       }
 
       if(r==params.startr) fE = E;
-      std::cout<<std::setprecision(15)<<r<<" "<<E-fE<<" "<<nm<<" "<<fs<<std::endl;
+      std::cout<<std::setprecision(15)<<r<<" "<<fileindex<<" "<<E-fE<<" "<<nm<<" "<<sqrt(fs)<<std::endl;
+      //sim.write_dev("path_dpath/path_dpath_f_"+std::to_string(r),r,t,f);
 
-      sim.write_dev("path_dpath/path_dpath_f_"+std::to_string(r),r,t,f);
+      sim.lammps_path_write("pafipath."+std::to_string(fileindex)+".data",r);
+      fileindex++;
     }
   }
 

@@ -3,24 +3,24 @@
   <DumpFolder>./dumps</DumpFolder>
 
   <!-- Number of samples per plane per worker -->
-  <nRepeats> 2 </nRepeats>
+  <nRepeats> 1 </nRepeats>
 
   <!-- LowTemperature to HighTemperature in TemperatureSteps steps -->
-  <LowTemperature> 100. </LowTemperature>
-  <HighTemperature> 1000. </HighTemperature>
-  <TemperatureSteps> 10 </TemperatureSteps>
+  <LowTemperature> 100 </LowTemperature>
+  <HighTemperature> 400 </HighTemperature>
+  <TemperatureSteps> 4 </TemperatureSteps>
 
   <!-- Data gathering steps -->
-  <SampleSteps> 20 </SampleSteps>
+  <SampleSteps> 100 </SampleSteps>
 
   <!-- We require ThermSteps > ThermWindow AND ThermSteps%ThermWindow==0 -->
-  <ThermSteps> 10 </ThermSteps>
-  <ThermWindow> 5 </ThermWindow>
+  <ThermSteps> 200 </ThermSteps>
+  <ThermWindow> 100 </ThermWindow>
 
   <nPlanes> 11 </nPlanes>
 
   <!-- We require nprocs % CoresPerWorker==0 -->
-  <CoresPerWorker> 1 </CoresPerWorker>
+  <CoresPerWorker> 2 </CoresPerWorker>
 
   <!--
     RELATIVE thermal expansion coefficients along X,Y,Z directions of simulation-
@@ -38,19 +38,19 @@
 
   <!-- fix hp parameters (LAMMPS units) -->
   <OverDamped> 1 </OverDamped>
-  <Friction> 0.05 </Friction>
+  <Friction> 0.01 </Friction>
 
   <!-- for NEB planes -->
   <StartCoordinate> 0.0 </StartCoordinate>
   <StopCoordinate> 1.0 </StopCoordinate>
 
   <!-- 0/1 Output LAMMPS logs -->
-  <LogLammps> 0 </LogLammps>
+  <LogLammps> 1 </LogLammps>
 
   <Scripts>
     <Script name="Input">
       units metal
-      atom_style pafi
+      atom_style atomic
       atom_modify map array sort 0 0.0
       neigh_modify every 2 delay 10 check yes page 1000000 one 100000
       read_data  md/image_1.dat
