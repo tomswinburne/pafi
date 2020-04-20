@@ -31,12 +31,12 @@ void GeneralSimulator::write_dev(std::string fn, double r, double *dev, double *
   std::ofstream out;
   out.open(fn.c_str(),std::ofstream::out);
   out<<"# PAFI DUMP FILE. Reference path u(r) is a Nx3 vector.\n";
-  out<<"# For i=0,1,2: u_i(r) , < x_i-u_i | r > , <(x_i-u_i)^2 | r >)\n";
+  out<<"# For i=0,1,2: u_i(r) , mean(x_i-u_i|r) , std(x_i-u_i|r) across ensemble\n";
   for(int i=0;i<natoms;i++) {
-    out<<i<<" ";
+    out<<i+1<<" ";
     for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" ";
     for(int j=0;j<3;j++) out<<dev[3*i+j]<<" ";
-    for(int j=0;j<3;j++) out<<dev_sq[3*i+j]<<" ";
+    for(int j=0;j<3;j++) out<<dev_sq[3*i+j]-dev[3*i+j]*dev[3*i+j]<<" ";
     out<<std::endl;
   }
   out.close();

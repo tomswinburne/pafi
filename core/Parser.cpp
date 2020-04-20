@@ -60,6 +60,10 @@ Parser::Parser(std::string file) {
   parameters["LogLammps"] = \
     rtws(root_node->first_node("LogLammps")->value());
 
+  parameters["MaxJump"] = \
+      rtws(root_node->first_node("MaxJump")->value());
+
+
 	// Now we can convert to type
 	KnotList = Parse(root_node->first_node("KnotList")->value());
 
@@ -75,6 +79,7 @@ Parser::Parser(std::string file) {
   startr = std::stod(parameters["StartCoordinate"]);
   stopr = std::stod(parameters["StopCoordinate"]);
   loglammps = bool(std::stoi(parameters["LogLammps"]));
+  maxjump_thresh = std::stod(parameters["MaxJump"]);
 
   rapidxml::xml_node<> * scrs_n = root_node->first_node("Scripts");
 

@@ -90,7 +90,7 @@ int main(int narg, char **arg) {
     std::cout<<std::setprecision(15)<<r<<" "<<fileindex<<" "<<E-fE<<" "<<nm<<" "<<sqrt(fs)<<std::endl;
     //sim.write_dev("path_dpath/path_dpath_f_"+std::to_string(r),r,t,f);
 
-    sim.lammps_path_write("dumps/pafipath."+std::to_string(fileindex)+".data",r);
+    sim.lammps_dump_path("dumps/pafipath."+std::to_string(fileindex)+".data",r);
     fileindex++;
   }
 

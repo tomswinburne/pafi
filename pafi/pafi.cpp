@@ -64,8 +64,8 @@ int main(int narg, char **arg) {
   const int nWorkers = nProcs / params.CoresPerWorker;
   const int instance = rank / params.CoresPerWorker;
   const int local_rank = rank % params.CoresPerWorker;
-  const int nRes = 7; // TODO remove this
-	const int nRepeats = params.nRepeats;
+  const int nRes = 8; // TODO remove this
+  const int nRepeats = params.nRepeats;
 
 
 
@@ -106,7 +106,8 @@ int main(int narg, char **arg) {
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
 
   const int vsize = 3 * sim.natoms;
-  const int rsize = nRes*nWorkers*nRepeats;
+  const int jsize = nRepeats*nWorkers;
+  const int rsize = nRes*jsize;
 
   double temp, dr;
   std::string rstr,Tstr,dump_fn,fn;
@@ -128,31 +129,32 @@ int main(int narg, char **arg) {
       raw.open(fn.c_str(),std::ofstream::out);
       std::cout<<"\nStarting T="+Tstr+"K run\n\n";
     }
+    double *local_jump = new double[jsize];
     double *local_res = new double[rsize];
     double *results = new double[nRes];
     double *local_dev = new double[vsize];
-		double *local_dev_sq = new double[vsize];
-    double *all_dev = NULL, *all_dev_sq = NULL, *all_res = NULL;
+    double *local_dev_sq = new double[vsize];
+    double *all_dev = NULL, *all_dev_sq = NULL;
+    double *all_res = NULL, *max_jump = NULL;
     std::vector<double> integr, dfer, dfere, psir;
 
     if (rank == 0) {
       all_dev = new double[vsize];
       all_dev_sq = new double[vsize];
       all_res = new double[rsize];
-			std::cout<<std::setw(15)<<"";
+      max_jump = new double[jsize];
+      std::cout<<std::setw(20)<<"";
       std::cout<<"bra-kets <> == time averages,  av/err== ensemble average/error"<<std::endl;
       std::cout<<std::setw(12)<<"Repeat of "<<nRepeats;
       std::cout<<std::setw(5)<<"r";
-      std::cout<<std::setw(15)<<"av(<Tpre>)";
-      std::cout<<std::setw(15)<<"av(<Tpost>)";
-      std::cout<<std::setw(15)<<"err(<Tpost>)";
-      std::cout<<std::setw(15)<<"av(<dF/dr>)";
-			std::cout<<std::setw(15)<<"err(<dF/dr>)";
-      std::cout<<std::setw(15)<<"av(|<X>-U|)";
-      std::cout<<std::setw(15)<<"err(|<X>-U|)";
+      std::cout<<std::setw(20)<<"av(<Tpre>)";
+      std::cout<<std::setw(20)<<"av(<Tpost>)";
+      std::cout<<std::setw(20)<<"av(<dF/dr>)";
+      std::cout<<std::setw(20)<<"err(<dF/dr>)";
       std::cout<<std::setw(20)<<"av(|(<X>-U).N|)";
       std::cout<<std::setw(20)<<"av(<N_true>.N)";
-      std::cout<<std::setw(20)<<"err(<N_true>.N)";
+      std::cout<<std::setw(20)<<"Max Jump";
+      std::cout<<std::setw(20)<<"P(Jump > Thresh)";
       std::cout<<"\n";
     }
 
@@ -170,9 +172,10 @@ int main(int narg, char **arg) {
 
       	if(local_rank == 0) {
           for(int i=0;i<nRes;i++) local_res[(instance*nRepeats+ir)*nRes  + i] = results[i];
+          local_jump[instance*nRepeats+ir] = results[nRes-1];
           for(int i=0;i<vsize;i++) local_dev_sq[i] += local_dev[i] / double(nRepeats);
-	}
-	if(rank==0) std::cout<<ir+1<<" "<<std::flush;
+        }
+        if(rank==0) std::cout<<ir+1<<" "<<std::flush;
       }
       if(rank==0) if(nRepeats<6) for(int i=nRepeats;i<=6;i++) std::cout<<"  "<<std::flush;
 
@@ -189,21 +192,30 @@ int main(int narg, char **arg) {
       MPI_Barrier(MPI_COMM_WORLD);
       MPI_Reduce(local_res,all_res,rsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 
+      MPI_Barrier(MPI_COMM_WORLD);
+      MPI_Reduce(local_jump,max_jump,jsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+
       MPI_Reduce(local_dev,all_dev,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
       MPI_Barrier(MPI_COMM_WORLD);
 
       MPI_Reduce(local_dev_sq,all_dev_sq,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
-			MPI_Barrier(MPI_COMM_WORLD);
+      MPI_Barrier(MPI_COMM_WORLD);
 
       if (rank==0) {
-
+        double t_max_jump = 0.0, p_jump=0.0;
+        for(int i=0;i<jsize;i++) {
+          t_max_jump = std::max(t_max_jump,max_jump[i]);
+          p_jump += double(max_jump[i] > params.maxjump_thresh) / double(jsize);
+        }
         double *final_res = new double[2*nRes];
         dump_fn = params.dump_dir+"/dev_"+rstr+dump_suffix+".dat";
         sim.write_dev(dump_fn,r,all_dev,all_dev_sq);
 
         // (instance*nRepeats+ir)*nRes  + i
-        for(int i=0;i<nWorkers*nRepeats;i++) raw<<all_res[i*nRes+2]<<" "; // <f>
-        for(int i=0;i<nWorkers*nRepeats;i++) raw<<all_res[i*nRes+3]<<" "; // <f^2>-<f>^2
+        for(int i=0;i<jsize;i++) raw<<all_res[i*nRes+2]<<" "; // <f>
+        for(int i=0;i<jsize;i++) raw<<all_res[i*nRes+3]<<" "; // <f^2>-<f>^2
+        for(int i=0;i<jsize;i++) raw<<all_res[i*nRes+4]<<" "; // <Psi>
+        for(int i=0;i<jsize;i++) raw<<max_jump[i]<<" "; // max displacement after the run
         raw<<std::endl;
 
         for(int j=0;j<2*nRes;j++) final_res[j] = 0.;
@@ -215,28 +227,27 @@ int main(int narg, char **arg) {
           temp = all_res[i*nRes+j]-final_res[j];
           final_res[j+nRes] += temp * temp / double(nWorkers*nRepeats);
         }
-				// under assumption that sample time is longer than sample autocorrelations,
-				// expected errors in time averages is ensemble average variance divided by nWorkers
-				// raw_output gives data to confirm this assumption (CLT with grouping)
+        // under assumption that sample time is longer than sample autocorrelations,
+        // expected errors in time averages is ensemble average variance divided by nWorkers
+        // raw_output gives data to confirm this assumption (CLT with grouping)
         for(int j=0;j<nRes;j++) final_res[j+nRes] = sqrt(final_res[j+nRes]/double(nWorkers*nRepeats));
 
         integr.push_back(r);
         dfer.push_back(final_res[2]); // <dF/dr>
 
 
-	dfere.push_back(final_res[2+nRes]);//"err(<dF/dr>)"
+        dfere.push_back(final_res[2+nRes]);//"err(<dF/dr>)"
         psir.push_back(final_res[4]); // <Psi>
         std::cout<<std::setw(5)<<r;//"r"
-        std::cout<<std::setw(15)<<final_res[0];//"av(<Tpre>)"
-        std::cout<<std::setw(15)<<final_res[1];//"av(<Tpost>)"
-        std::cout<<std::setw(15)<<final_res[1+nRes];//"std(<Tpost>)"
-        std::cout<<std::setw(15)<<final_res[2];//"av(<dF/dr>)"
-        std::cout<<std::setw(15)<<final_res[2+nRes];//"err(<dF/dr>)"
-        std::cout<<std::setw(15)<<final_res[6];//"av(|<X>-U|)"
-        std::cout<<std::setw(15)<<final_res[6+nRes];//"err(|<X>-U|)"
+        std::cout<<std::setw(20)<<final_res[0];//"av(<Tpre>)"
+        std::cout<<std::setw(20)<<final_res[1];//"av(<Tpost>)"
+        std::cout<<std::setw(20)<<final_res[2];//"av(<dF/dr>)"
+        std::cout<<std::setw(20)<<final_res[2+nRes];//"err(<dF/dr>)"
         std::cout<<std::setw(20)<<final_res[5];//"av(|<X>-U).(dU/dr)|)"
         std::cout<<std::setw(20)<<final_res[4];//"av(Psi)"
-        std::cout<<std::setw(20)<<final_res[4+nRes];//"std(Psi)"
+        //std::cout<<std::setw(20)<<final_res[4+nRes];//"std(Psi)"
+        std::cout<<std::setw(20)<<t_max_jump;// max jump
+        std::cout<<std::setw(20)<<p_jump;// ratio of jumps
         std::cout<<"\n";
       }
     }

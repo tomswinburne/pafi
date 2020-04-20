@@ -177,7 +177,7 @@ void LAMMPSSimulator::rescale_cell() {
 
 /*
   Main sample run. Results vector should have thermalization temperature,
-  sample temperature <f>, <f^2>, <psi> and <x-u>.n
+  sample temperature <f>, <f^2>, <psi> and <x-u>.n, and max_jump
 */
 void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   std::string cmd;
@@ -186,6 +186,7 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   double **lmp_dev_ptr;
   for(int j=0;j<3;j++) scale[j] = 1.0;
   populate(r,norm_mag);
+
   // Stress Fixes
   run_script("PreRun");
   lammps_command(lmp,(char *)"run 0");
@@ -201,7 +202,6 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   cmd += params->seed_str()+" overdamped ";
   cmd += params->parameters["OverDamped"]+" com 1\nrun 0";
   run_commands(cmd);
-
 
 
   refE = getEnergy();
@@ -251,12 +251,31 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   results[5] = *lmp_ptr;
   lammps_free(lmp_ptr);
 
+
+  cmd = "min_style fire\n minimize 0 0 ";
+  cmd += params->parameters["ThermSteps"]+" "+params->parameters["ThermSteps"];
+  run_commands(cmd);
+  lammps_gather_atoms(lmp,(char *)"x",1,3,dev);
+  for(int i=0;i<3*natoms;i++) dev[i] -= pathway[i].deriv(0,r)*scale[i%3];
+  pbc.wrap(dev,3*natoms);
+  double a_disp=0.0,max_disp = 0.0;
+  for(int i=0;i<natoms;i++) {
+    a_disp = 0.0;
+    for(int j=0;j<3;j++) a_disp += dev[3*i+j]*dev[3*i+j];
+    max_disp = std::max(a_disp,max_disp);
+    for(int j=0;j<3;j++) dev[3*i+j] = 0.0;
+  }
+  
   lammps_gather_fix(lmp,(char *)"ap",1,3,dev);
   for(int i=0;i<3*natoms;i++) dev[i] -= pathway[i].deriv(0,r)*scale[i%3];
   pbc.wrap(dev,3*natoms);
 
+
+
   dm=0.; for(int i=0;i<3*natoms;i++) dm += dev[i] * dev[i];
   results[6] = dm;
+
+  results[7] = max_disp;
 
   cmd = "unfix ae\nunfix af\nunfix ap\nunfix hp";
   run_commands(cmd);
@@ -338,7 +357,7 @@ std::string LAMMPSSimulator::header(double mass=55.85) {
   return res;
 };
 
-void LAMMPSSimulator::lammps_path_write(std::string fn, double r) {
+void LAMMPSSimulator::lammps_dump_path(std::string fn, double r) {
   std::ofstream out;
   out.open(fn.c_str(),std::ofstream::out);
   out<<header();
@@ -367,7 +386,7 @@ void LAMMPSSimulator::lammps_path_write(std::string fn, double r) {
   out.close();
 };
 
-void LAMMPSSimulator::lammps_dev_write(std::string fn, double r, double *dev, double *dev_sq) {
+void LAMMPSSimulator::lammps_write_dev(std::string fn, double r, double *dev, double *dev_sq) {
   std::ofstream out;
   out.open(fn.c_str(),std::ofstream::out);
   out<<header();

@@ -42,9 +42,8 @@ public:
 
   std::string header(double mass);
 
-  void lammps_dev_write(std::string fn, double r, double *dev, double *dev_sq);
-
-  void lammps_path_write(std::string fn, double r);
+  void lammps_write_dev(std::string fn, double r, double *dev, double *dev_sq);
+  void lammps_dump_path(std::string fn, double r);
 
   double getVirial();
 
