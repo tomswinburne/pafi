@@ -251,7 +251,7 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   results[5] = *lmp_ptr;
   lammps_free(lmp_ptr);
 
-  lammps_gather_peratom_fix(lmp,(char *)"ap",1,3,dev);
+  lammps_gather_fix(lmp,(char *)"ap",1,3,dev);
   for(int i=0;i<3*natoms;i++) dev[i] -= pathway[i].deriv(0,r)*scale[i%3];
   pbc.wrap(dev,3*natoms);
 
