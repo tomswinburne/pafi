@@ -20,7 +20,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int rank) 
   run_script("Input");
   natoms = *((int *) lammps_extract_global(lmp,(char *) "natoms"));
 
-  has_pafi = (bool)lammps_config_has_package((char *)"USER-PAFI");
+  has_pafi = (bool)lammps_config_has_package((char *)"USER-MISC");
 
   id = std::vector<int>(natoms,0);
   lammps_gather_atoms(lmp,(char *) "id",0,1,&id[0]);
@@ -192,7 +192,7 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
 
 
   params->parameters["Temperature"] = std::to_string(T);
-  cmd = "fix hp all hp __pafipath "+params->parameters["Temperature"]+" ";
+  cmd = "fix hp all pafi __pafipath "+params->parameters["Temperature"]+" ";
   cmd += params->parameters["Friction"]+" ";
   cmd += params->seed_str()+" overdamped ";
   cmd += params->parameters["OverDamped"]+" com 1\nrun 0";

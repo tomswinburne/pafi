@@ -15,6 +15,7 @@ add_definitions(-std=c++11 -O3 -g)
 
 file(GLOB src_files "core/*")
 
-add_executable(pafi ${src_files} pafi/pafi.cpp pafi/pafi.hpp)
+add_executable(pafi ${src_files} pafi/main.cpp pafi/main.hpp)
+add_executable(pafi-lammps-path ${src_files} pafi-lammps-path/main.cpp pafi-lammps-path/main.hpp)
 
 target_link_libraries(pafi lammps_mpi)

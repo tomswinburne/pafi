@@ -1,6 +1,6 @@
-export PREFIX=$HOME"/.local"
-export LD_LIBRARY_PATH=$PREFIX"/lib":$LD_LIBRARY_PATH
-export PATH=$PREFIX"/bin":$PATH
+#export PREFIX=$HOME"/.local"
+#export LD_LIBRARY_PATH=$PREFIX"/lib":$LD_LIBRARY_PATH
+#export PATH=$PREFIX"/bin":$PATH
 
 touch pafi
 rm pafi
