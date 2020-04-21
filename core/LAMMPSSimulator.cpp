@@ -103,7 +103,16 @@ void LAMMPSSimulator::log_error(std::vector<std::string> lc) {
 
 // over load for type
 void LAMMPSSimulator::gather(std::string name, int c, int *v){
+  #ifdef NEWFIX
   lammps_gather(lmp,(char *)name.c_str(),0,c,v);
+  #else
+  char * lname = (char *)name.c_str();
+  if(strncmp(lname,"f_",2) == 0) {
+    lammps_gather_fix(lmp,&lname[2],0,c,v);
+  } else {
+    lammps_gather_atoms(lmp,lname,0,c,v);
+  }
+  #endif
   std::string lc = "lammps_gather("+name+",int,"+std::to_string(c)+")";
   log_error(lc);
 };
@@ -111,21 +120,48 @@ void LAMMPSSimulator::gather(std::string name, int c, int *v){
 
 // over load for type
 void LAMMPSSimulator::gather(std::string name, int c, double *v){
+  #ifdef NEWFIX
   lammps_gather(lmp,(char *)name.c_str(),1,c,v);
+  #else
+  char * lname = (char *)name.c_str();
+  if(strncmp(lname,"f_",2) == 0) {
+    lammps_gather_fix(lmp,&lname[2],1,c,v);
+  } else {
+    lammps_gather_atoms(lmp,lname,1,c,v);
+  }
+  #endif
   std::string lc = "lammps_gather("+name+",double,"+std::to_string(c)+")";
   log_error(lc);
 };
 
 // over load for type
 void LAMMPSSimulator::scatter(std::string name, int c, int *v){
+  #ifdef NEWFIX
   lammps_scatter(lmp,(char *)name.c_str(),0,c,v);
+  #else
+  char * lname = (char *)name.c_str();
+  if(strncmp(lname,"d_",2) == 0) {
+    lammps_scatter_atoms(lmp,&lname[2],0,c,v);
+  } else {
+    lammps_scatter_atoms(lmp,lname,0,c,v);
+  }
+  #endif
   std::string lc="lammps_scatter("+name+",int,"+std::to_string(c)+")";
   log_error(lc);
 };
 
 // over load for type
 void LAMMPSSimulator::scatter(std::string name, int c, double * v){
+  #ifdef NEWFIX
   lammps_scatter(lmp,(char *)name.c_str(),1,c,v);
+  #else
+  char * lname = (char *)name.c_str();
+  if(strncmp(lname,"d_",2) == 0) {
+    lammps_scatter_atoms(lmp,&lname[2],1,c,v);
+  } else {
+    lammps_scatter_atoms(lmp,lname,1,c,v);
+  }
+  #endif
   std::string lc="lammps_scatter("+name+",double,"+std::to_string(c)+")";
   log_error(lc);
 };
