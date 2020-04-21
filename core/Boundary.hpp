@@ -20,7 +20,6 @@ public:
   MinImage(){};
   void load(std::array<double,9> lcell);
   void minimumImageVector(double *dr);
-  void wrap(std::vector<double> &dx);
   void wrap(double *dx,int dxsize);
 };
 #endif

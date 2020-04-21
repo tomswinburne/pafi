@@ -82,12 +82,13 @@ int main(int narg, char **arg) {
 
   if(rank==0) std::cout<<"\n\nInitializing "<<nWorkers<<" workers with "<<params.CoresPerWorker<<" cores per worker\n\n";
 
-  Simulator sim(instance_comm,params,rank);
+  Simulator sim(instance_comm,params,instance);
 
   if(!sim.has_pafi) {
     if(rank==0) std::cout<<"MD Driver Error (no USER-MISC package)! Exiting"<<std::endl;
     exit(-1);
   }
+  if(sim.error_count>0 && local_rank==0) std::cout<<sim.last_error()<<std::endl;
 
   if (rank == 0) {
     std::cout<<"Loaded input data of "<<sim.natoms<<" atoms\n";
@@ -102,6 +103,7 @@ int main(int narg, char **arg) {
   }
 
   sim.make_path(params.KnotList);
+  if(sim.error_count>0 && local_rank==0) std::cout<<sim.last_error()<<std::endl;
 
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
 
@@ -169,6 +171,7 @@ int main(int narg, char **arg) {
       for (int ir=0;ir<nRepeats;ir++) {
 
         sim.sample(r, T, results, local_dev);
+        if(sim.error_count>0 && local_rank==0) std::cout<<sim.last_error()<<std::endl;
 
       	if(local_rank == 0) {
           for(int i=0;i<nRes;i++) local_res[(instance*nRepeats+ir)*nRes  + i] = results[i];

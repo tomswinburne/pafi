@@ -15,7 +15,7 @@ public:
   /*
     Load xyz configuration from data file and put in vector
   */
-  void load_config(std::string file_string,std::vector<double> &x);
+  void load_config(std::string file_string,double *x);
   /*
     Parse and run script from configuration file
   */
@@ -55,11 +55,26 @@ public:
 
   void close();
 
+  int error_count;
+
+  std::string last_error();
+
+  void log_error(std::string lc);
+  void log_error(std::vector<std::string> lc);
+
+  void gather(std::string name, int c, double *v);
+  void gather(std::string name, int c, int *v);
+  void scatter(std::string name, int c, double *v);
+  void scatter(std::string name, int c, int *v);
+
+
   // LAMMPS specific
-  std::vector<int> species,q,image,id;
+  int *species,*q, *image, *id;
 private:
   void *lmp;
   bool made_fix,made_compute;
+  std::string last_error_message, last_command;
+
 };
 
 #endif

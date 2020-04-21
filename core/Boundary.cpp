@@ -61,15 +61,6 @@ void MinImage::minimumImageVector(double *dr) {
 	}
 };
 
-void MinImage::wrap(std::vector<double> &dx) {
-  double t[3];
-  for(int i=0;i<dx.size()/3;i++) {
-    for(int j=0;j<3;j++) t[j] = dx[3*i+j];
-    minimumImageVector(t);
-    for(int j=0;j<3;j++) dx[3*i+j] = t[j];
-  }
-};
-
 void MinImage::wrap(double *dx,int dxsize) {
   double t[3];
   for(int i=0;i<dxsize/3;i++) {
