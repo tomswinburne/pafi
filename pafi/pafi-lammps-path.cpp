@@ -61,9 +61,7 @@ int main(int narg, char **arg) {
   sim.make_path(params.KnotList);
   int fileindex=1;
 
-  double *t,*f;
   double dr,E,nm,fE,fs;
-  t = new double[3*sim.natoms];
   f = new double[3*sim.natoms];
 
   if (params.nPlanes>1) dr = (params.stopr-params.startr)/(double)(params.nPlanes-1);
@@ -81,16 +79,12 @@ int main(int narg, char **arg) {
     E = sim.getForceEnergy(f);
 
     fs=0.0;
-    for(int i=0; i<3*sim.natoms; i++) {
-      t[i] = sim.pathway[i].deriv(1,r);
-      fs += f[i]*f[i];
-    }
+    for(int i=0; i<3*sim.natoms; i++) fs += f[i]*f[i];
 
     if(r==params.startr) fE = E;
     std::cout<<std::setprecision(15)<<r<<" "<<fileindex<<" "<<E-fE<<" "<<nm<<" "<<sqrt(fs)<<std::endl;
-    //sim.write_dev("path_dpath/path_dpath_f_"+std::to_string(r),r,t,f);
 
-    sim.lammps_path_write("dumps/pafipath."+std::to_string(fileindex)+".data",r);
+    sim.lammps_dump_path("dumps/pafipath."+std::to_string(fileindex)+".data",r);
     fileindex++;
   }
 

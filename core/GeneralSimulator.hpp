@@ -16,7 +16,7 @@ class GeneralSimulator {
 
 public:
 
-  virtual void load_config(std::string file_string,std::vector<double> &x){};
+  virtual void load_config(std::string file_string,double *x){};
 
   virtual void run_script(std::string sn){};
 

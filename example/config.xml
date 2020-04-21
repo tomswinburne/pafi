@@ -6,12 +6,12 @@
   <nRepeats> 1 </nRepeats>
 
   <!-- LowTemperature to HighTemperature in TemperatureSteps steps -->
-  <LowTemperature> 100 </LowTemperature>
-  <HighTemperature> 400 </HighTemperature>
+  <LowTemperature> 600 </LowTemperature>
+  <HighTemperature> 1000 </HighTemperature>
   <TemperatureSteps> 4 </TemperatureSteps>
 
   <!-- Data gathering steps -->
-  <SampleSteps> 100 </SampleSteps>
+  <SampleSteps> 500 </SampleSteps>
 
   <!-- We require ThermSteps > ThermWindow AND ThermSteps%ThermWindow==0 -->
   <ThermSteps> 200 </ThermSteps>
@@ -46,7 +46,11 @@
 
   <!-- 0/1 Output LAMMPS logs -->
   <LogLammps> 1 </LogLammps>
-
+  <!-- Maximum Atomic Displacement between local in-plane minima
+  before and after sampling run which can still be considered "in basin"
+  Check for shallow metastability on hyperplane
+  -->
+  <MaxJump> 0.1 </MaxJump>
   <Scripts>
     <Script name="Input">
       units metal

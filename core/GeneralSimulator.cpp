@@ -31,12 +31,12 @@ void GeneralSimulator::write_dev(std::string fn, double r, double *dev, double *
   std::ofstream out;
   out.open(fn.c_str(),std::ofstream::out);
   out<<"# PAFI DUMP FILE. Reference path u(r) is a Nx3 vector.\n";
-  out<<"# For i=0,1,2: u_i(r) , < x_i-u_i | r > , <(x_i-u_i)^2 | r >)\n";
+  out<<"# For i=0,1,2: u_i(r) , mean(x_i-u_i|r) , std(x_i-u_i|r) across ensemble\n";
   for(int i=0;i<natoms;i++) {
-    out<<i<<" ";
+    out<<i+1<<" ";
     for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" ";
     for(int j=0;j<3;j++) out<<dev[3*i+j]<<" ";
-    for(int j=0;j<3;j++) out<<dev_sq[3*i+j]<<" ";
+    for(int j=0;j<3;j++) out<<dev_sq[3*i+j]-dev[3*i+j]*dev[3*i+j]<<" ";
     out<<std::endl;
   }
   out.close();
@@ -70,10 +70,10 @@ void GeneralSimulator::expansion(double T) {
 void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
   int nknots = knot_list.size();
   // no way around it- have to store all the knots
-  std::vector<double> x(3*natoms,0.);
   std::vector<double> xs(nknots,0.), ys(nknots,0.), zs(nknots,0.);
   std::vector<double> r(nknots,0.), rr(nknots,0.);
   double *knots = new double[(const int)(3*natoms*nknots)];
+  double *x = new double[(const int)(3*natoms)];
   spline xspl,yspl,zspl;
   double dx;
 
@@ -85,7 +85,7 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
   for (int knot=1; knot<nknots; knot++) {
     load_config(knot_list[knot],x);
     for(int i=0;i<3*natoms;i++) x[i]-=knots[i];
-    pbc.wrap(x);
+    pbc.wrap(x,3*natoms);
     for(int i=0;i<3*natoms;i++) \
       knots[i+knot*3*natoms] = x[i]+knots[i];
   }
