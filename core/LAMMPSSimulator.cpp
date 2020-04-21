@@ -1,11 +1,13 @@
 #include "LAMMPSSimulator.hpp"
 
-LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int rank) {
+LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
+                                  int t, int nr) {
   error_count = 0;
+  scale[0]=1.0; scale[1]=1.0; scale[2]=1.0;
   last_error_message="";
-  tag = rank;
+  tag = t;
+  nres = nr;
   params = &p;
-  scale = new double[3];
   // set up LAMMPS
   char str1[32];
   char **lmparg = new char*[5];
@@ -14,7 +16,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int rank) 
   lmparg[2] = (char *) "none";
   lmparg[3] = (char *) "-log";
   if(params->loglammps) {
-    sprintf(str1,"log.lammps.%d",rank);
+    sprintf(str1,"log.lammps.%d",tag);
     lmparg[4] = str1;
   } else lmparg[4] = (char *) "none";
 
@@ -33,6 +35,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int rank) 
   // Get type / image info
   species = new int[natoms];
   gather("type",1,species);
+
   s_flag=true;
 
   image = new int[natoms];
@@ -41,8 +44,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int rank) 
   made_fix=false;
   made_compute=false;
 
-  expansion(0.0);
-  rescale_cell();
+
 
 };
 
@@ -64,6 +66,7 @@ void LAMMPSSimulator::load_config(std::string file_string, double *x) {
 */
 void LAMMPSSimulator::run_script(std::string sn){
   std::vector<std::string> strv = params->Script(sn);
+  strv.push_back("run 0");
   run_commands(strv);
 };
 
@@ -116,7 +119,6 @@ void LAMMPSSimulator::gather(std::string name, int c, int *v){
   std::string lc = "lammps_gather("+name+",int,"+std::to_string(c)+")";
   log_error(lc);
 };
-
 
 // over load for type
 void LAMMPSSimulator::gather(std::string name, int c, double *v){
@@ -177,21 +179,21 @@ void LAMMPSSimulator::run_commands(std::string strv) {
   run_commands(params->Parse(strv));
 };
 
-
 /*
   Fill configuration, path, tangent and tangent gradient. Return tangent norm
 */
-void LAMMPSSimulator::populate(double r, double &norm_mag) {
-  double *t,*lt;
-  t = new double[3*natoms];
-  lt = new double[natoms];
+void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
 
+  rescale_cell(T); // updates scale vector
+
+  //populate(r,norm_mag,0.0);
+
+  double t[3*natoms],lt[natoms];
   std::string cmd;
   double ncom[]={0.,0.,0.};
   norm_mag=0.;
   // check for __pafipath fix and compute
   if (!made_fix) {
-
     #ifdef VERBOSE
     std::cout<<"making __pafipath fix"<<std::endl;
     #endif
@@ -242,42 +244,39 @@ void LAMMPSSimulator::populate(double r, double &norm_mag) {
   }
 };
 
-/*
-  Rescale simulation cell
-*/
-void LAMMPSSimulator::rescale_cell() {
+/* Rescale simulation cell */
+void LAMMPSSimulator::rescale_cell(double T) {
+  double newscale[3];
   std::string cmd, ssx,ssy,ssz;
-  ssx = std::to_string(scale[0]);
-  ssy = std::to_string(scale[1]);
-  ssz = std::to_string(scale[2]);
+  expansion(T,newscale);
+  ssx = std::to_string(newscale[0]/scale[0]);
+  ssy = std::to_string(newscale[1]/scale[1]);
+  ssz = std::to_string(newscale[2]/scale[2]);
   cmd ="change_box all x scale "+ssx+" y scale "+ssy+" z scale "+ssz+"\n";
   cmd += "run 0";
   run_commands(cmd);
+  scale[0]=newscale[0]; scale[1]=newscale[1]; scale[2]=newscale[2];
 };
 
 /*
   Main sample run. Results vector should have thermalization temperature,
   sample temperature <f>, <f^2>, <psi> and <x-u>.n, and max_jump
 */
-void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
-  std::string cmd;
+void LAMMPSSimulator::sample(double r, double T,
+            std::map<std::string,double> &results, double *dev) {
   error_count = 0;
   last_error_message="";
+  results.clear();
+  double a_disp=0.0,max_disp = 0.0;
+  std::string cmd;
   double norm_mag, sampleT, dm;
   double *lmp_ptr;
-  double **lmp_dev_ptr;
-  for(int j=0;j<3;j++) scale[j] = 1.0;
-  populate(r,norm_mag);
 
-  // Stress Fixes
-  run_script("PreRun");
-  run_commands("run 0");
+  populate(r,norm_mag,0.0);
+  run_script("PreRun");  // Stress Fixes
+  populate(r,norm_mag,T);
 
-  expansion(T);
-  rescale_cell();
-  populate(r,norm_mag);
-
-
+  // pafi fix
   params->parameters["Temperature"] = std::to_string(T);
   cmd = "fix hp all pafi __pafipath "+params->parameters["Temperature"]+" ";
   cmd += params->parameters["Friction"]+" ";
@@ -285,93 +284,90 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   cmd += params->parameters["OverDamped"]+" com 1\nrun 0";
   run_commands(cmd);
 
-
+  // time average
   refE = getEnergy();
-
   cmd = "reset_timestep 0\n";
   cmd += "fix ae all ave/time 1 "+params->parameters["ThermWindow"]+" ";
   cmd += params->parameters["ThermSteps"]+" v_pe\n";
   cmd += "run "+params->parameters["ThermSteps"];
   run_commands(cmd);
 
+  // pre temperature
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
   sampleT = (*lmp_ptr-refE)/natoms/1.5/BOLTZ;
   lammps_free(lmp_ptr);
-  results[0] = sampleT;
+  results["preT"] = sampleT;
+  run_commands("unfix ae\nrun 0");
 
-  cmd = "unfix ae\nrun 0";
-  run_commands(cmd);
-  //results[0] = sampleT;
-
-  // TODO: groupname for ave/atom
+  // time averages for sampling TODO: groupname for ave/atom
   std::string SampleSteps = params->parameters["SampleSteps"];
   cmd = "reset_timestep 0\n";
   cmd += "fix ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" v_pe\n";
   cmd += "fix ap all ave/atom 1 "+SampleSteps+" "+SampleSteps+" x y z\n";
-  cmd += "fix af all ave/time 1 "+SampleSteps+" "+SampleSteps+" f_hp[1] f_hp[2] f_hp[3] f_hp[4]\n";
+  cmd += "fix af all ave/time 1 "+SampleSteps+" "+SampleSteps;
+  cmd += " f_hp[1] f_hp[2] f_hp[3] f_hp[4]\n";
   cmd += "run "+SampleSteps;
   run_commands(cmd);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
   sampleT = (*lmp_ptr-refE)/natoms/1.5/BOLTZ;
   lammps_free(lmp_ptr);
-  results[1] = sampleT;
+  results["postT"] = sampleT;
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,0,0);
-  results[2] = *lmp_ptr * norm_mag;
+  results["aveF"] = *lmp_ptr * norm_mag;
   lammps_free(lmp_ptr);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,1,0);
-  results[3] = *lmp_ptr * norm_mag * norm_mag - results[2] * results[2];
+  results["stdF"] = *lmp_ptr * norm_mag * norm_mag;
+  results["stdF"] -= results["aveF"] * results["aveF"];
   lammps_free(lmp_ptr);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,2,0);
-  results[4] = *lmp_ptr;
+  results["aveP"] = *lmp_ptr;
   lammps_free(lmp_ptr);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,3,0);
-  results[5] = *lmp_ptr;
+  results["TdX"] = sqrt(*lmp_ptr);
   lammps_free(lmp_ptr);
 
-
+  // post minmization - max jump
   cmd = "min_style fire\n minimize 0 0 ";
   cmd += params->parameters["ThermSteps"]+" "+params->parameters["ThermSteps"];
   run_commands(cmd);
   gather("x",3,dev);
-  for(int i=0;i<3*natoms;i++) dev[i] -= pathway[i].deriv(0,r)*scale[i%3];
+  for(int i=0;i<3*natoms;i++) dev[i] -= path(i,r,0,scale[i%3]);
   pbc.wrap(dev,3*natoms);
-  double a_disp=0.0,max_disp = 0.0;
   for(int i=0;i<natoms;i++) {
     a_disp = 0.0;
     for(int j=0;j<3;j++) a_disp += dev[3*i+j]*dev[3*i+j];
     max_disp = std::max(a_disp,max_disp);
     for(int j=0;j<3;j++) dev[3*i+j] = 0.0;
   }
+  results["MaxJump"] = max_disp;
 
+  // deviation average
   run_commands("reset_timestep "+SampleSteps); // for fix calculation
   gather("f_ap",3,dev);
-  for(int i=0;i<3*natoms;i++) dev[i] = dev[i]/scale[i%3]-pathway[i].deriv(0,r);
+  for(int i=0;i<3*natoms;i++) dev[i] = dev[i]/scale[i%3]-path(i,r,0,1.0);
   pbc.wrap(dev,3*natoms);
 
-  dm=0.;
+  dm = 0.0;
   for(int i=0;i<3*natoms;i++) {
     dev[i] *= scale[i%3];
-    dm += dev[i] * dev[i];
+    dm = std::max(dm,sqrt(dev[i] * dev[i]));
   }
-  results[6] = dm;
+  results["MaxDev"] = dm;
 
-  results[7] = max_disp;
+  // reset
   run_commands("unfix ae\nunfix af\nunfix ap\nunfix hp");
 
   // Stress Fixes
   run_script("PostRun");
-  run_commands("run 0");
 
   // rescale back
-  for(int j=0;j<3;j++) scale[j] = 1.0/scale[j];
-  populate(r,norm_mag);
-  rescale_cell();
-  for(int j=0;j<3;j++) scale[j] = 1.0;
+  populate(r,norm_mag,0.0);
+
 };
 
 double LAMMPSSimulator::getEnergy() {

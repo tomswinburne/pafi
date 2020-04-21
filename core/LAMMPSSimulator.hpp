@@ -10,7 +10,7 @@
 class LAMMPSSimulator : public GeneralSimulator {
 
 public:
-  LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int rank);
+  LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t, int nr);
 
   /*
     Load xyz configuration from data file and put in vector
@@ -29,16 +29,17 @@ public:
   /*
     Fill configuration, path, tangent and tangent gradient. Return tangent norm
   */
-  void populate(double r, double &norm_mag);
+  void populate(double r, double &norm_mag, double T);
   /*
     Rescale simulation cell
   */
-  void rescale_cell();
+  void rescale_cell(double T);
   /*
     Main sample run. Results vector should have thermalization temperature,
     sample temperature <f>, <f^2>, <psi> and <x-u>.n
   */
-  void sample(double r, double T, double *results, double *dev);
+  void sample(double r, double T, std::map<std::string,double> &results,
+                                                                  double *dev);
 
   std::string header(double mass);
 

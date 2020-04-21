@@ -5,6 +5,7 @@
   <!-- Number of samples per plane per worker -->
   <nRepeats> 1 </nRepeats>
 
+
   <!-- LowTemperature to HighTemperature in TemperatureSteps steps -->
   <LowTemperature> 600 </LowTemperature>
   <HighTemperature> 1000 </HighTemperature>
@@ -51,6 +52,11 @@
   Check for shallow metastability on hyperplane
   -->
   <MaxJump> 0.1 </MaxJump>
+  <!-- Resample a batch if less than this proportion are "in-basin" -->
+  <ReSampleThresh> 0.8 </ReSampleThresh>
+  
+  <maxExtraRepeats> 1 </maxExtraRepeats>
+
   <Scripts>
     <Script name="Input">
       units metal
