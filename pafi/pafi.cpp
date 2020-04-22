@@ -26,12 +26,14 @@ int main(int narg, char **arg) {
   // which we omit for portability
   int *int_dump_suffix = new int[1];
   std::ofstream raw;
-  std::string params_file = params.dump_dir+"/params_"+std::to_string(int_dump_suffix[0]);
+  std::string params_file =
+    params.dump_dir+"/params_"+std::to_string(int_dump_suffix[0]);
 
   // try to write to a file with a unique suffix
   if(rank==0) {
     for (int_dump_suffix[0]=0; int_dump_suffix[0] < 100; int_dump_suffix[0]++) {
-      params_file = params.dump_dir+"/params_"+std::to_string(int_dump_suffix[0]);
+      params_file =
+        params.dump_dir+"/params_"+std::to_string(int_dump_suffix[0]);
       std::cout<<"Testing for existence of "<<params_file<<".... ";
       if(!file_exists(params_file)) {
         std::cout<<"it doesn't!, trying to open for writing.... ";
@@ -51,7 +53,7 @@ int main(int narg, char **arg) {
   if(int_dump_suffix[0]==100) {
     if(rank==0) {
       std::cout<<"\n\n\n*****************************\n\n\n";
-      std::cout<<"Could not write to output path / find directory! Exiting!"<<std::endl;
+      std::cout<<"Could not write to output path / find directory! Exiting!\n";
       std::cout<<"\n\n\n*****************************\n\n\n";
     }
     exit(-1);
@@ -73,17 +75,20 @@ int main(int narg, char **arg) {
   MPI_Comm_split(MPI_COMM_WORLD,instance,0,&instance_comm);
 
   int *seed = new int[nWorkers];
-  if(rank==0) for(int i=0;i<nWorkers;i++) seed[i]= 137*i + static_cast<int>(std::time(0))/1000;
+  if(rank==0) for(int i=0;i<nWorkers;i++)
+    seed[i]= 137*i + static_cast<int>(std::time(0))/1000;
   MPI_Bcast(seed,nWorkers,MPI_INT,0,MPI_COMM_WORLD);
   MPI_Barrier(MPI_COMM_WORLD);
   params.seed(seed[instance]);
 
-  if(rank==0) std::cout<<"\n\nInitializing "<<nWorkers<<" workers with "<<params.CoresPerWorker<<" cores per worker\n\n";
+  if(rank==0) std::cout<<"\n\nInitializing "<<nWorkers<<" workers "
+                      "with "<<params.CoresPerWorker<<" cores per worker\n\n";
 
   Simulator sim(instance_comm,params,instance,nRes);
 
   if(!sim.has_pafi) {
-    if(rank==0) std::cout<<"MD Driver Error (no USER-MISC package)! Exiting"<<std::endl;
+    if(rank==0)
+      std::cout<<"MD Error (no PAFI module (USER-MISC for LAMMPS))!"<<std::endl;
     exit(-1);
   }
   if(sim.error_count>0 && local_rank==0) std::cout<<sim.last_error()<<std::endl;
@@ -106,14 +111,33 @@ int main(int narg, char **arg) {
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
 
   const int vsize = 3 * sim.natoms;
-  const int jsize = nRepeats*nWorkers;
   const int rsize = nRes*nWorkers;
 
-  int total_valid_data, totalRepeats;
+  int total_valid_data, totalRepeats, total_invalid_data;
   double temp, dr, t_max_jump, p_jump;
-  std::string rstr,Tstr,dump_fn,fn;
+  std::string rstr,Tstr,dump_fn,fn,dump_suffix;
+  std::map<std::string,double> results;
 
-  if (params.nPlanes>1) dr = (params.stopr-params.startr)/(double)(params.nPlanes-1);
+  int *valid = new int[nWorkers];
+  double *local_res = new double[rsize];
+  double *local_dev = new double[vsize];
+  double *local_dev_sq = new double[vsize];
+  double *all_dev = NULL;
+  double *all_dev_sq = NULL;
+  double *all_res = NULL;
+  if (rank == 0) {
+    all_dev = new double[vsize];
+    all_dev_sq = new double[vsize];
+    all_res = new double[rsize];
+  }
+  std::vector<double> integr, dfer, dfere, psir;
+  std::vector<double> valid_res, invalid_res;
+  std::list<int> raw_dump_indicies = {2,3,4,7};// <f> std(f) <Psi> <Jump>
+
+
+
+  if (params.nPlanes>1)
+    dr = (params.stopr-params.startr)/(double)(params.nPlanes-1);
   else dr = 0.1;
 
 
@@ -121,8 +145,7 @@ int main(int narg, char **arg) {
 
     Tstr = std::to_string((int)(T));
 
-    std::string dump_suffix = "_"+Tstr+"K_"+std::to_string(int_dump_suffix[0]);
-
+    dump_suffix = "_"+Tstr+"K_"+std::to_string(int_dump_suffix[0]);
 
     if(rank==0) {
       fn = params.dump_dir + "/raw_ensemble_output"+dump_suffix;
@@ -130,22 +153,21 @@ int main(int narg, char **arg) {
       raw.open(fn.c_str(),std::ofstream::out);
       std::cout<<"\nStarting T="+Tstr+"K run\n\n";
     }
-    std::map<std::string,double> results;
-    double *local_res = new double[rsize];
-    double *local_dev = new double[vsize];
-    double *local_dev_sq = new double[vsize];
-    double *all_dev = NULL, *all_dev_sq = NULL;
-    double *all_res = NULL;
-    int *valid = new int[nWorkers];
-    std::vector<double> integr, dfer, dfere, psir;
-    std::vector<double> valid_res;
+
+    for(int i=0;i<nWorkers;i++) valid[i]=0;
+    for(int i=0;i<rsize;i++) local_res[i]=0.0;
+    for(int i=0;i<vsize;i++) local_dev[i] = 0.0;
+    for(int i=0;i<vsize;i++) local_dev_sq[i] = 0.0;
+    results.clear();
+    integr.clear();
+    dfer.clear();
+    dfere.clear();
+    psir.clear();
+    valid_res.clear();
+    invalid_res.clear();
 
     if (rank == 0) {
-      all_dev = new double[vsize];
-      all_dev_sq = new double[vsize];
-      all_res = new double[rsize];
       std::cout<<"<> == time averages,  av/err over ensemble"<<std::endl;
-      //std::cout<<std::setw(12)<<"Repeat of "<<nRepeats;
       std::cout<<std::setw(5)<<"r";
       std::cout<<std::setw(20)<<"av(<Tpre>)";
       std::cout<<std::setw(20)<<"av(<Tpost>)";
@@ -160,11 +182,10 @@ int main(int narg, char **arg) {
 
     for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr ) {
       valid_res.clear();
+      invalid_res.clear();
       rstr = std::to_string(r);
-
       for(int i=0;i<rsize;i++) local_res[i] = 0.0;
-      for(int i=0;i<vsize;i++) local_dev_sq[i] = 0.0;
-
+      for(int i=0;i<vsize;i++) local_dev[i] = 0.0;
 
       // store running average of local_dev in local_dev_sq
       total_valid_data=0;
@@ -174,9 +195,9 @@ int main(int narg, char **arg) {
 
         sim.sample(r, T, results, local_dev);
         totalRepeats++;
+
         if(local_rank == 0) {
           if(sim.error_count>0) std::cout<<sim.last_error()<<std::endl;
-
           local_res[instance*nRes + 0] = results["preT"];
           local_res[instance*nRes + 1] = results["postT"];
           local_res[instance*nRes + 2] = results["aveF"];
@@ -185,6 +206,7 @@ int main(int narg, char **arg) {
           local_res[instance*nRes + 5] = results["TdX"];
           local_res[instance*nRes + 6] = results["MaxDev"];
           local_res[instance*nRes + 7] = results["MaxJump"];
+          for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i];
         }
 
         MPI_Barrier(MPI_COMM_WORLD);
@@ -194,8 +216,11 @@ int main(int narg, char **arg) {
           for(int i=0;i<nWorkers;i++) {
             t_max_jump = std::max(t_max_jump,all_res[i*nRes+7]);
             valid[i] = int(all_res[i*nRes+7]<params.maxjump_thresh);
-            if(valid[i]) for(int j=0;j<nRes;j++)
-              valid_res.push_back(all_res[i*nRes+j]);
+            if(valid[i]) {
+              for(int j=0;j<nRes;j++) valid_res.push_back(all_res[i*nRes+j]);
+            } else {
+              for(int j=0;j<nRes;j++) invalid_res.push_back(all_res[i*nRes+j]);
+            }
           }
         }
 
@@ -210,8 +235,10 @@ int main(int narg, char **arg) {
         }
 
         // add all to total
-        MPI_Reduce(local_dev,all_dev,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
-        MPI_Reduce(local_dev_sq,all_dev_sq,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+        MPI_Reduce(local_dev,all_dev,vsize,
+            MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+        MPI_Reduce(local_dev_sq,all_dev_sq,vsize,
+            MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
         MPI_Barrier(MPI_COMM_WORLD);
 
         for(int i=0;i<nWorkers;i++) total_valid_data += valid[i];
@@ -220,7 +247,7 @@ int main(int narg, char **arg) {
         if(totalRepeats>=params.maxExtraRepeats+nRepeats) break;
 
         if(p_jump < 0.1 ) {
-          if(rank==0) std::cout<<"Reference path is too unstable for sampling.\n"
+          if(rank==0) std::cout<<"Reference path too unstable for sampling.\n"
                                 "Try a lower temperature. See README for tips";
           break;
         }
@@ -228,21 +255,26 @@ int main(int narg, char **arg) {
       }
       // collate
       if(rank==0) {
+        total_invalid_data = totalRepeats*nWorkers - total_valid_data;
+
         // deviation vectors
         if(total_valid_data>0) for(int i=0;i<vsize;i++) {
           all_dev[i]/=double(total_valid_data);
           all_dev_sq[i]/=double(total_valid_data);
         }
+
         dump_fn = params.dump_dir+"/dev_"+rstr+dump_suffix+".dat";
         sim.write_dev(dump_fn,r,all_dev,all_dev_sq);
 
         std::cout<<" "<<totalRepeats<<"/"<<nRepeats<<" ";
-        std::cout<<total_valid_data<<"/"<<nRepeats*nWorkers<<" "<<valid_res.size()/nWorkers<<std::endl;
+        std::cout<<total_valid_data<<"/"<<nRepeats*nWorkers<<" ";
+        std::cout<<valid_res.size()/nWorkers<<std::endl;
         // raw output
-        for(int i=0;i<total_valid_data;i++) raw<<valid_res[i*nRes+2]<<" "; // <f>
-        for(int i=0;i<total_valid_data;i++) raw<<valid_res[i*nRes+3]<<" "; // std(f)
-        for(int i=0;i<total_valid_data;i++) raw<<valid_res[i*nRes+3]<<" "; // <Psi>
-        for(int i=0;i<total_valid_data;i++) raw<<valid_res[i*nRes+7]<<" "; // Jump
+        raw<<total_valid_data<<" ";
+        for(auto j: raw_dump_indicies)
+          for(int i=0;i<total_valid_data;i++) raw<<valid_res[i*nRes+j]<<" ";
+        for(auto j: raw_dump_indicies)
+          for(int i=0;i<total_invalid_data;i++) raw<<invalid_res[i*nRes+j]<<" ";
         raw<<std::endl;
 
         double *final_res = new double[2*nRes];
@@ -256,11 +288,11 @@ int main(int narg, char **arg) {
           temp = valid_res[i*nRes+j]-final_res[j];
           final_res[j+nRes] += temp * temp;
         }
-        // under assumption that sample time is longer than sample autocorrelations,
-        // expected errors in time averages is ensemble average variance divided by nWorkers
+        // under assumption that sample time is longer than autocorrelations,
+        // expected variance in time average is ensemble variance / nWorkers
         // raw_output gives data to confirm this assumption (CLT with grouping)
         if(total_valid_data>0) for(int j=0;j<nRes;j++)
-          final_res[j+nRes] = final_res[j+nRes]/double(total_valid_data);
+          final_res[j+nRes] = sqrt(final_res[j+nRes])/double(total_valid_data);
 
         integr.push_back(r);
         dfer.push_back(final_res[2]); // <dF/dr>
@@ -273,7 +305,6 @@ int main(int narg, char **arg) {
         std::cout<<std::setw(20)<<final_res[2+nRes];//"err(<dF/dr>)"
         std::cout<<std::setw(20)<<final_res[5];//"av(|<X>-U).(dU/dr)|)"
         std::cout<<std::setw(20)<<final_res[4];//"av(Psi)"
-        //std::cout<<std::setw(20)<<final_res[4+nRes];//"std(Psi)"
         std::cout<<std::setw(20)<<t_max_jump;// max jump
         std::cout<<std::setw(20)<<p_jump;// ratio of jumps
         std::cout<<"\n";
@@ -295,8 +326,12 @@ int main(int narg, char **arg) {
       double dr = 1./(double)(30 * integr.size());
       double rtF=0.0;
 
-      fline[0]=params.startr; fline[1]=rtF; fline[2]=0.; fline[3] = psispl(params.startr);
+      fline[0]=params.startr;
+      fline[1]=rtF;
+      fline[2]=0.;
+      fline[3] = psispl(params.startr);
       fF.push_back(fline);
+
       for(double sr=params.startr+dr; sr<= params.stopr+dr*0.5; sr+=dr) {
         rtF -=  dr * dfspl(sr);
         fline[0] = sr;
@@ -309,8 +344,10 @@ int main(int narg, char **arg) {
       fn = params.dump_dir + "/free_energy_profile"+dump_suffix;
       out.open(fn.c_str(),std::ofstream::out);
       out<<"# r F(r) av(<dF/dr>) err(<dF/dr>) av(<Psi>)\n";
-      for(auto l: fF)
-        out<<l[0]<<" "<<l[1]+l[2]<<" "<<dfspl(l[0])<<" "<<dfespl(l[0])<<" "<<l[3]<<"\n";
+      for(auto l: fF) {
+        out<<l[0]<<" "<<l[1]+l[2]<<" ";
+        out<<dfspl(l[0])<<" "<<dfespl(l[0])<<" "<<l[3]<<"\n";
+      }
       out.close();
       std::cout<<"Integration complete\n\n";
     }
@@ -325,8 +362,6 @@ int main(int narg, char **arg) {
 
   // close down MPI
   MPI_Comm_free(&instance_comm);
-
-
 
   MPI_Finalize();
 

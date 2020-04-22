@@ -3,7 +3,7 @@
   <DumpFolder>./dumps</DumpFolder>
 
   <!-- Number of samples per plane per worker -->
-  <nRepeats> 1 </nRepeats>
+  <nRepeats> 2 </nRepeats>
 
 
   <!-- LowTemperature to HighTemperature in TemperatureSteps steps -->
@@ -21,7 +21,7 @@
   <nPlanes> 11 </nPlanes>
 
   <!-- We require nprocs % CoresPerWorker==0 -->
-  <CoresPerWorker> 1 </CoresPerWorker>
+  <CoresPerWorker> 2 </CoresPerWorker>
 
   <!--
     RELATIVE thermal expansion coefficients along X,Y,Z directions of simulation-
@@ -39,14 +39,15 @@
 
   <!-- fix hp parameters (LAMMPS units) -->
   <OverDamped> 1 </OverDamped>
-  <Friction> 0.01 </Friction>
+  <!-- Recommended 'units metal' value: 0.01 (0.1x typical LAMMPS value of 0.1) -->
+  <Friction> 0.01 </Friction> 
+  <!-- 0/1 Output LAMMPS logs -->
+  <LogLammps> 0 </LogLammps>
 
   <!-- for NEB planes -->
   <StartCoordinate> 0.0 </StartCoordinate>
   <StopCoordinate> 1.0 </StopCoordinate>
 
-  <!-- 0/1 Output LAMMPS logs -->
-  <LogLammps> 1 </LogLammps>
   <!-- Maximum Atomic Displacement between local in-plane minima
   before and after sampling run which can still be considered "in basin"
   Check for shallow metastability on hyperplane
@@ -54,7 +55,7 @@
   <MaxJump> 0.1 </MaxJump>
   <!-- Resample a batch if less than this proportion are "in-basin" -->
   <ReSampleThresh> 0.8 </ReSampleThresh>
-  
+  <!-- How many resample attempts --> 
   <maxExtraRepeats> 1 </maxExtraRepeats>
 
   <Scripts>
