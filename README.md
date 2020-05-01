@@ -13,6 +13,8 @@ v0.9 :copyright: TD Swinburne and M-C Marinica 2020 MIT License
 
 swinburne at cinam.univ-mrs.fr
 
+** this `newfix` branch has new features which may not be documented **
+
 
 Beta version of code used in [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503)
 > *Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems*   
@@ -26,9 +28,9 @@ This repository includes the [RapidXML](http://http://rapidxml.sourceforge.net) 
 
 
 ## Compile `LAMMPS` with `USER-MISC` package
-1. `PAFI` is in the process of integration into `LAMMPS`. In the meantime it is best to download or clone [this](https://github.com/tomswinburne/lammps/) fork or simply execute
+1. `PAFI` is in the process of integration into `LAMMPS`. In the meantime it is best to download or clone the `gatherscatter` branch of [this](https://github.com/tomswinburne/lammps/) fork or simply execute
 ```
-git clone https://github.com/tomswinburne/lammps.git
+git clone https://github.com/tomswinburne/lammps.git -b gatherscatter
 ```
 You could also run a diff to apply changes to an existing version of LAMMPS but this is not recommended
 

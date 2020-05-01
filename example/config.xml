@@ -3,16 +3,16 @@
   <DumpFolder>./dumps</DumpFolder>
 
   <!-- Number of samples per plane per worker -->
-  <nRepeats> 2 </nRepeats>
+  <nRepeats> 1 </nRepeats>
 
 
   <!-- LowTemperature to HighTemperature in TemperatureSteps steps -->
-  <LowTemperature> 600 </LowTemperature>
+  <LowTemperature> 100 </LowTemperature>
   <HighTemperature> 1000 </HighTemperature>
   <TemperatureSteps> 4 </TemperatureSteps>
 
   <!-- Data gathering steps -->
-  <SampleSteps> 500 </SampleSteps>
+  <SampleSteps> 100 </SampleSteps>
 
   <!-- We require ThermSteps > ThermWindow AND ThermSteps%ThermWindow==0 -->
   <ThermSteps> 200 </ThermSteps>

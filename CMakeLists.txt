@@ -1,4 +1,4 @@
-set(PREFIX /home/tomswinburne/.local) # example value
+set(PREFIX /home/tomswinburne/.altlocal) # example value
 set(CMAKE_INCLUDE_PATH ${PREFIX}/include) # location of copied lammps header directory (lammps/*.h)
 set(CMAKE_LIBRARY_PATH ${PREFIX}/lib) # location of liblammps_mpi.a
 set(CMAKE_CXX_COMPILER /usr/bin/mpicxx) # c++11 compatible compiler
@@ -14,7 +14,7 @@ link_directories(${CMAKE_LIBRARY_PATH})
 
 # NEWFIX : only enable if compiled with gatherscatter LAMMPS branch
 # VERBOSE : debugging output
-add_definitions(-std=c++11 -O3 -DLAMMPS_EXCEPTIONS ) #-DNEWFIX) #-DVERBOSE)
+add_definitions(-std=c++11 -O3 -DLAMMPS_EXCEPTIONS -DNEWFIX) #-DVERBOSE)
 
 file(GLOB src_files "core/*")
 
@@ -23,4 +23,3 @@ add_executable(pafi-lammps-path ${src_files} pafi/pafi-lammps-path.cpp pafi/pafi
 
 target_link_libraries(pafi lammps_mpi)
 target_link_libraries(pafi-lammps-path lammps_mpi)
-
