@@ -328,7 +328,7 @@ void LAMMPSSimulator::sample(double r, double T,
   lammps_free(lmp_ptr);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,3,0);
-  results["TdX"] = sqrt(*lmp_ptr);
+  results["TdX"] = *lmp_ptr;
   lammps_free(lmp_ptr);
 
   // post minmization - max jump
