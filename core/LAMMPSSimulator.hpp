@@ -46,8 +46,6 @@ public:
   void lammps_write_dev(std::string fn, double r, double *dev, double *dev_sq);
   void lammps_dump_path(std::string fn, double r);
 
-  double getVirial();
-
   double getEnergy();
   double getForceEnergy(double *f);
 

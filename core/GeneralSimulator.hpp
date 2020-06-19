@@ -30,6 +30,7 @@ public:
     return 0.0;
   };
 
+
   virtual double getForceEnergy(double *f){
     return 0.0;
   };
@@ -65,7 +66,7 @@ public:
   void expansion(double T,double *newscale);
 
   double scale[3];
-  double refE,refP;
+  double refE,refT,refP;
   int natoms, tag, nknots, nres;
   MinImage pbc;
   Parser *params;

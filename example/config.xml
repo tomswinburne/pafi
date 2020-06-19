@@ -42,7 +42,7 @@
   <!-- Recommended 'units metal' value: 0.01 (0.1x typical LAMMPS value of 0.1) -->
   <Friction> 0.01 </Friction> 
   <!-- 0/1 Output LAMMPS logs -->
-  <LogLammps> 0 </LogLammps>
+  <LogLammps> 1 </LogLammps>
 
   <!-- for NEB planes -->
   <StartCoordinate> 0.0 </StartCoordinate>

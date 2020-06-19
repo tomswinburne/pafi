@@ -23,7 +23,6 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   lammps_open(5,lmparg,instance_comm,(void **) &lmp);
   run_script("Input");
   natoms = *((int *) lammps_extract_global(lmp,(char *) "natoms"));
-
   has_pafi = (bool)lammps_config_has_package((char *)"USER-MISC");
 
   id = new int[natoms];
@@ -286,9 +285,17 @@ void LAMMPSSimulator::sample(double r, double T,
 
   // time average
   refE = getEnergy();
+  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"hp",0,1,4,0);
+  refP = *lmp_ptr;
+  lammps_free(lmp_ptr);
+
+  std::cout<<"B4: "<<refP<<std::endl;
+  std::cout<<"Volume: "<<pbc.volume<<std::endl;
   cmd = "reset_timestep 0\n";
   cmd += "fix ae all ave/time 1 "+params->parameters["ThermWindow"]+" ";
-  cmd += params->parameters["ThermSteps"]+" v_pe\n";
+  cmd += params->parameters["ThermSteps"]+" c_pe\n";
+  cmd += "fix at all ave/time 1 "+params->parameters["ThermWindow"]+" ";
+  cmd += params->parameters["ThermSteps"]+" f_hp[5]\n";
   cmd += "run "+params->parameters["ThermSteps"];
   run_commands(cmd);
 
@@ -297,12 +304,22 @@ void LAMMPSSimulator::sample(double r, double T,
   sampleT = (*lmp_ptr-refE)/natoms/1.5/BOLTZ;
   lammps_free(lmp_ptr);
   results["preT"] = sampleT;
+
+  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"at",0,0,0,0);
+  refT = ((*lmp_ptr) - refP) / natoms / BOLTZ / 3.0;
+  lammps_free(lmp_ptr);
+
+  std::cout<<"PreTT: "<<sampleT<<" "<<refT<<std::endl;
+
   run_commands("unfix ae\nrun 0");
+  run_commands("unfix at\nrun 0");
+
 
   // time averages for sampling TODO: groupname for ave/atom
   std::string SampleSteps = params->parameters["SampleSteps"];
   cmd = "reset_timestep 0\n";
-  cmd += "fix ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" v_pe\n";
+  cmd += "fix ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" c_pe\n";
+  cmd += "fix at all ave/time 1 "+SampleSteps+" "+SampleSteps+" f_hp[5]\n";
   cmd += "fix ap all ave/atom 1 "+SampleSteps+" "+SampleSteps+" x y z\n";
   cmd += "fix af all ave/time 1 "+SampleSteps+" "+SampleSteps;
   cmd += " f_hp[1] f_hp[2] f_hp[3] f_hp[4]\n";
@@ -313,6 +330,13 @@ void LAMMPSSimulator::sample(double r, double T,
   sampleT = (*lmp_ptr-refE)/natoms/1.5/BOLTZ;
   lammps_free(lmp_ptr);
   results["postT"] = sampleT;
+
+  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"at",0,0,0,0);
+  refT = ((*lmp_ptr) - refP) / natoms / BOLTZ / 3.0;
+  lammps_free(lmp_ptr);
+
+  std::cout<<"PostTT: "<<sampleT<<" "<<refT<<std::endl;
+
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,0,0);
   results["aveF"] = *lmp_ptr * norm_mag;
@@ -381,6 +405,7 @@ double LAMMPSSimulator::getEnergy() {
   double baseE = *lmpE;
   return baseE;
 };
+
 
 double LAMMPSSimulator::getForceEnergy(double *f) {
   run_commands("run 0");
