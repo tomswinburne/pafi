@@ -1,42 +1,26 @@
 #include "GeneralSimulator.hpp"
 
-void GeneralSimulator::write(std::string fn, double r) {
-  std::ofstream out;
-  out.open(fn.c_str(),std::ofstream::out);
-  double ncom[]={0.,0.,0.};
-  double c,nm=0.;
-
-  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) {
-    ncom[j] += pathway[3*i+j].deriv(1,r) / natoms;
-  }
-
-  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) {
-    c = pathway[3*i+j].deriv(1,r)-ncom[j];
-    nm += c * c;
-  }
-  nm = sqrt(nm);
-
-  for (int i=0;i<natoms;i++) {
-    out<<i<<" ";
-    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" "; // x y z
-    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" "; // path
-    for(int j=0;j<3;j++) out<<(pathway[3*i+j].deriv(1,r)-ncom[j])/nm<<" ";
-    for(int j=0;j<3;j++) out<<pathway[3*i+j].deriv(2,r)/nm/nm<<" ";
-    out<<std::endl;
-  }
-  out.close();
+GeneralSimulator::GeneralSimulator(MPI_Comm &instance_comm, Parser &p, int rank) {
+  position=0.0;
+  tag = rank;
+  comm = &instance_comm;
+  params = &p;
+  MPI_Comm_rank(*comm,&local_rank);
+  MPI_Comm_size(*comm,&local_size);
 };
 
 void GeneralSimulator::write_dev(std::string fn, double r, double *dev, double *dev_sq) {
+  int i,j;
   std::ofstream out;
   out.open(fn.c_str(),std::ofstream::out);
   out<<"# PAFI DUMP FILE. Reference path u(r) is a Nx3 vector.\n";
   out<<"# For i=0,1,2: u_i(r) , < x_i-u_i | r > , <(x_i-u_i)^2 | r >)\n";
-  for(int i=0;i<natoms;i++) {
+  fill_path(r,0,glo_data);
+  for(i=0;i<natoms;i++) {
     out<<i<<" ";
-    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" ";
-    for(int j=0;j<3;j++) out<<dev[3*i+j]<<" ";
-    for(int j=0;j<3;j++) out<<dev_sq[3*i+j]<<" ";
+    for(j=0;j<3;j++) out<<glo_data[3*i+j]<<" ";
+    for(j=0;j<3;j++) out<<dev[3*i+j]<<" ";
+    for(j=0;j<3;j++) out<<dev_sq[3*i+j]<<" ";
     out<<std::endl;
   }
   out.close();
@@ -68,51 +52,56 @@ void GeneralSimulator::expansion(double T,double *scale) {
 };
 
 void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
+  int i,j;
   int nknots = knot_list.size();
   // no way around it- have to store all the knots
-  std::vector<double> x(3*natoms,0.);
+
+
+  //std::vector<double> x(3*natoms,0.);
+
   std::vector<double> xs(nknots,0.), ys(nknots,0.), zs(nknots,0.);
-  std::vector<double> r(nknots,0.), rr(nknots,0.);
-  double *knots = new double[(const int)(3*natoms*nknots)];
+  std::vector<double> r(nknots,0.);
+
+  double *knots = new double[(const int)(3*nlocal*nknots)];
+  double *lr = new double[(const int)(nknots)];
+
   spline xspl,yspl,zspl;
   double dx;
 
   // run through knots, and make spline
-  load_config(knot_list[0],x);
-
-  for (int i=0;i<3*natoms;i++) knots[i] = x[i];
+  load_config(knot_list[0],glo_data);
+  for (i=0;i<3*nlocal;i++) loc_data[i] = glo_data[3*loc_id[i/3]+i%3];
+  for (i=0;i<3*nlocal;i++) knots[i] = loc_data[i];
 
   for (int knot=1; knot<nknots; knot++) {
-    load_config(knot_list[knot],x);
-    for(int i=0;i<3*natoms;i++) x[i]-=knots[i];
-    pbc.wrap(x);
-    for(int i=0;i<3*natoms;i++) \
-      knots[i+knot*3*natoms] = x[i]+knots[i];
+    load_config(knot_list[knot],glo_data);
+    for (i=0;i<3*nlocal;i++) loc_data[i] = glo_data[3*loc_id[i/3]+i%3];
+    for(i=0;i<3*nlocal;i++) loc_data[i]-=knots[i];
+    pbc.wrap(loc_data);
+    for(i=0;i<3*nlocal;i++) knots[i+knot*3*nlocal] = loc_data[i]+knots[i];
   }
 
   for(int knot=0;knot<nknots;knot++) {
-    r[knot] = 0.;
-    rr[knot] = 0.;
-    for(int i=0;i<3*natoms;i++) {
-      dx = knots[i+knot*3*natoms]-knots[i];
-      r[knot] += dx*dx;
-      dx = knots[i+knot*3*natoms]-knots[i+(nknots-1)*3*natoms];
-      rr[knot] += dx*dx;
+    lr[knot] = 0.;
+    for(i=0;i<3*nlocal;i++) {
+      dx = knots[i+knot*3*nlocal]-knots[i];
+      lr[knot] += dx*dx;
     }
   }
+  MPI_Barrier(*comm);
 
-  for(int knot=0;knot<nknots-1;knot++) r[knot] = sqrt(r[knot]/r[nknots-1]);
-  for(int knot=1;knot<nknots;knot++) rr[knot] = sqrt(rr[knot]/rr[0]);
-  rr[0] = 1.0;
-  r[nknots-1] = 1.0;
+  MPI_Allreduce(lr,&r[0],nknots,MPI_DOUBLE,MPI_SUM,*comm);
 
-  for(int knot=0;knot<nknots;knot++) r[knot] = 0.5*(r[knot] + 1.0 - rr[knot]);
+  for(int knot=0;knot<nknots;knot++) {
+    r[knot] = sqrt(r[knot]/r[nknots-1]);
+    //if(tag==0) std::cout<<local_rank<<" "<<knot<<" "<<r[knot]<<std::endl;
+  }
 
-  for(int i=0; i<natoms; i++) {
+  for(i=0; i<nlocal; i++) {
     for(int knot=0;knot<nknots;knot++) {
-      xs[knot] = knots[3*natoms*knot + 3*i + 0];
-      ys[knot] = knots[3*natoms*knot + 3*i + 1];
-      zs[knot] = knots[3*natoms*knot + 3*i + 2];
+      xs[knot] = knots[3*nlocal*knot + 3*i + 0];
+      ys[knot] = knots[3*nlocal*knot + 3*i + 1];
+      zs[knot] = knots[3*nlocal*knot + 3*i + 2];
     }
 
     xspl.set_points(r,xs);
@@ -126,9 +115,16 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
 
   }
   delete [] knots; // clear memory
+  delete [] lr;
+
 };
 
-void GeneralSimulator::evaluate(std::vector<double> &results) {
-  // Rescale, establish hp fix
-  getEnergy();
+void GeneralSimulator::fill_path(double r,int der, std::vector<double> &vec){
+  for(int i=0; i<3*natoms; i++) glo_data[i] = 0.0;
+  for(int i=0; i<3*natoms; i++) vec[i]=0.0;
+
+  for(int i=0; i<3*nlocal; i++) glo_data[3*loc_id[i/3]+i%3] = pathway[i].deriv(der,r);
+  MPI_Barrier(*comm);
+
+  MPI_Allreduce(&glo_data[0],&vec[0],3*natoms,MPI_DOUBLE,MPI_SUM,*comm);
 };

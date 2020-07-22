@@ -48,7 +48,7 @@ int main(int narg, char **arg) {
   if(int_dump_suffix[0]==100) {
     if(rank==0) {
       std::cout<<"\n\n\n*****************************\n\n\n";
-      std::cout<<"Could not write to output path / find directory! Exiting!"<<std::endl;
+      std::cout<<"Could not find/write to output path \""<<params.dump_dir<<"\" Exiting!"<<std::endl;
       std::cout<<"\n\n\n*****************************\n\n\n";
     }
     exit(-1);
@@ -81,15 +81,10 @@ int main(int narg, char **arg) {
   Simulator sim(instance_comm,params,rank);
 
   if (rank == 0) {
-    std::cout<<"Loaded input data of "<<sim.natoms<<" atoms\n";
+    std::cout<<"Loaded input data of "<<sim.getNatoms()<<" atoms\n";
     std::cout<<"Supercell Matrix:\n";
     auto cell = sim.getCellData();
-    for(int i=0;i<3;i++) {
-      std::cout<<"\t";
-      for(int j=0;j<3;j++) std::cout<<sim.pbc.cell[i][j]<<" ";
-      std::cout<<"\n";
-    }
-    std::cout<<"\n\n";
+    std::cout<<"\t"<<cell[0]<<" "<<cell[3]<<" "<<cell[4]<<"\n\t0 "<<cell[1]<<" "<<cell[5]<<"\n\t0 0 "<<cell[2]<<"\n\n\n";
   }
 
   sim.make_path(params.KnotList);
@@ -98,39 +93,29 @@ int main(int narg, char **arg) {
   if(instance==0) {
     double *t,*f;
     double dr,E,nm,fE,fs;
-    t = new double[3*sim.natoms];
-    f = new double[3*sim.natoms];
+    double scale[3] = {1.0,1.0,1.0};
 
     if (params.nPlanes>1) dr = (params.stopr-params.startr)/(double)(params.nPlanes-1);
     else dr = 0.1;
 
     if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
 
-    for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr ) {
+    for (double r = params.startr; r < params.stopr+0.5*dr; r += dr ) {
 
-      sim.populate(r,1.0,nm);
+      sim.populate(r,scale,nm);
 
-      std::string cmd = "run 0";
-      sim.run_commands(cmd);
-
-      E = sim.getForceEnergy(f);
-
-      fs=0.0;
-      for(int i=0; i<3*sim.natoms; i++) {
-        t[i] = sim.pathway[i].deriv(1,r);
-        fs += f[i]*f[i];
-      }
+      E = sim.getEnergy();
 
       if(r==params.startr) fE = E;
-      std::cout<<std::setprecision(15)<<r<<" "<<E-fE<<" "<<nm<<" "<<fs<<std::endl;
-
-      sim.write_dev("path_dpath/path_dpath_f_"+std::to_string(r),r,t,f);
+      if(rank==0) std::cout<<std::setprecision(15)<<r<<" "<<E-fE<<" "<<nm<<std::endl;
     }
   }
 
-
   // close down LAMMPS instances
   sim.close();
+
+  delete [] seed;
+  delete [] int_dump_suffix;
 
   // close down MPI
   MPI_Comm_free(&instance_comm);

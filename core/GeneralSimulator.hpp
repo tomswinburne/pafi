@@ -6,6 +6,7 @@
 #include <array>
 #include <string>
 #include <map>
+#include <mpi.h>
 
 #include "Constants.hpp"
 #include "Parser.hpp"
@@ -15,6 +16,19 @@
 class GeneralSimulator {
 
 public:
+  GeneralSimulator(MPI_Comm &instance_comm, Parser &p, int rank);
+  
+  void expansion(double T,double *scale);
+
+  void make_path(std::vector<std::string> knot_list);
+
+  void fill_path(double r,int der,std::vector<double> &vec);
+
+  int getNatoms(){
+    return natoms;
+  };
+
+  // LAMMPS DEPENDENT
 
   virtual void load_config(std::string file_string,std::vector<double> &x){};
 
@@ -40,24 +54,18 @@ public:
 
   virtual void sample(double r, double T, std::vector<double> &results){};
 
-  // LAMMPS INDEPENDENT
+  virtual void write_dev(std::string fn, double r, double *dev, double *dev_sq);
 
-  void write(std::string fn, double r);
-
-  void write_dev(std::string fn, double r, double *dev, double *dev_sq);
-
-  void expansion(double T,double *scale);
-
-  void make_path(std::vector<std::string> knot_list);
-
-  void evaluate(std::vector<double> &results);
-
-  double refE;
-  int natoms, tag, nknots;
+protected:
+  double refE, position;
+  double norm_com[3], norm_mag;
+  int natoms, tag, nknots, nlocal, local_rank, local_size;
   MinImage pbc;
   Parser *params;
   std::vector<spline> pathway;
-  bool s_flag;
+  std::vector<int> loc_id;
+  std::vector<double> loc_data, glo_data, t;
+  MPI_Comm *comm;
 private:
   /* nothing */
 };

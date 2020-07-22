@@ -48,7 +48,7 @@ int main(int narg, char **arg) {
   if(int_dump_suffix[0]==100) {
     if(rank==0) {
       std::cout<<"\n\n\n*****************************\n\n\n";
-      std::cout<<"Could not write to output path / find directory! Exiting!"<<std::endl;
+      std::cout<<"Could not find/write to output path \""<<params.dump_dir<<"\" Exiting!"<<std::endl;
       std::cout<<"\n\n\n*****************************\n\n\n";
     }
     exit(-1);
@@ -65,39 +65,31 @@ int main(int narg, char **arg) {
 	const int nRepeats = params.nRepeats;
 
 
-
+  // MPI comms
   MPI_Comm instance_comm;
   MPI_Comm_split(MPI_COMM_WORLD,instance,0,&instance_comm);
 
+  // Seeding
   int *seed = new int[nWorkers];
   if(rank==0) for(int i=0;i<nWorkers;i++) seed[i]= 137*i + static_cast<int>(std::time(0))/1000;
   MPI_Bcast(seed,nWorkers,MPI_INT,0,MPI_COMM_WORLD);
-  //if(local_rank==0) seed[0]=13*instance+static_cast<int>(std::time(0))/1000;
   MPI_Barrier(MPI_COMM_WORLD);
-  //MPI_Bcast(seed,1,MPI_INT,0,instance_comm);
   params.seed(seed[instance]);
-
-  if(rank==0) std::cout<<"\n\nSet up "<<nWorkers<<" workers with   "<<params.CoresPerWorker<<" cores per worker\n\n";
 
   Simulator sim(instance_comm,params,rank);
 
   if (rank == 0) {
-    std::cout<<"Loaded input data of "<<sim.natoms<<" atoms\n";
+    std::cout<<"\n\nSet up "<<nWorkers<<" workers with   "<<params.CoresPerWorker<<" cores per worker;\n";
+    std::cout<<"Loaded input data of "<<sim.getNatoms()<<" atoms\n";
     std::cout<<"Supercell Matrix:\n";
     auto cell = sim.getCellData();
-    for(int i=0;i<3;i++) {
-      std::cout<<"\t";
-      for(int j=0;j<3;j++) std::cout<<sim.pbc.cell[i][j]<<" ";
-      std::cout<<"\n";
-    }
-    std::cout<<"\n\n";
+    std::cout<<"\t"<<cell[0]<<" "<<cell[3]<<" "<<cell[4]<<"\n\t0 "<<cell[1]<<" "<<cell[5]<<"\n\t0 0 "<<cell[2]<<"\n\n\n";
   }
 
   sim.make_path(params.KnotList);
-
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
 
-  const int vsize = 3 * sim.natoms;
+  const int vsize = 3 * sim.getNatoms();
   const int rsize = nRes*nWorkers*nRepeats;
 
   double temp, dr;
@@ -106,13 +98,31 @@ int main(int narg, char **arg) {
   if (params.nPlanes>1) dr = (params.stopr-params.startr)/(double)(params.nPlanes-1);
   else dr = 0.1;
 
+  double *local_res = new double[rsize];
+  double *results = new double[nRes];
+  double *local_dev = new double[vsize];
+  double *local_dev_sq = new double[vsize];
+  double *all_dev = NULL, *all_dev_sq = NULL, *all_res = NULL, *final_res = NULL;
+  std::vector<double> integr, dfer, dfere, psir;
+  std::string dump_suffix;
+
+  //if(instance==0){
+    final_res = new double[2*nRes];
+    all_dev = new double[vsize];
+    all_dev_sq = new double[vsize];
+    all_res = new double[rsize];
+  //}
 
   for(double T = params.lowT; T <= params.highT;) {
 
+    integr.clear();
+    dfer.clear();
+    dfere.clear();
+    psir.clear();
+
     Tstr = std::to_string((int)(T));
 
-    std::string dump_suffix = "_"+Tstr+"K_"+std::to_string(int_dump_suffix[0]);
-
+    dump_suffix = "_"+Tstr+"K_"+std::to_string(int_dump_suffix[0]);
 
     if(rank==0) {
       fn = params.dump_dir + "/raw_ensemble_output"+dump_suffix;
@@ -120,18 +130,10 @@ int main(int narg, char **arg) {
       raw.open(fn.c_str(),std::ofstream::out);
       std::cout<<"\nStarting T="+Tstr+"K run\n\n";
     }
-    double *local_res = new double[rsize];
-    double *results = new double[nRes];
-    double *local_dev = new double[vsize];
-		double *local_dev_sq = new double[vsize];
-    double *all_dev = NULL, *all_dev_sq = NULL, *all_res = NULL;
-    std::vector<double> integr, dfer, dfere, psir;
+
 
     if (rank == 0) {
-      all_dev = new double[vsize];
-      all_dev_sq = new double[vsize];
-      all_res = new double[rsize];
-			std::cout<<std::setw(15)<<"";
+      std::cout<<std::setw(15)<<"";
       std::cout<<"bra-kets <> == time averages,  av/err== ensemble average/error"<<std::endl;
       std::cout<<std::setw(12)<<"Repeat of "<<nRepeats;
       std::cout<<std::setw(5)<<"r";
@@ -176,20 +178,21 @@ int main(int narg, char **arg) {
 
       MPI_Barrier(MPI_COMM_WORLD);
       MPI_Reduce(local_res,all_res,rsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
-
       MPI_Reduce(local_dev,all_dev,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
-      MPI_Barrier(MPI_COMM_WORLD);
-
       MPI_Reduce(local_dev_sq,all_dev_sq,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
-			MPI_Barrier(MPI_COMM_WORLD);
+      MPI_Allreduce(local_res,all_res,rsize,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+      MPI_Allreduce(local_dev,all_dev,vsize,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+      MPI_Allreduce(local_dev_sq,all_dev_sq,vsize,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
 
-      if (rank==0) {
 
-        double *final_res = new double[2*nRes];
+
+
+      if (instance==0) {
+
         dump_fn = params.dump_dir+"/dev_"+rstr+dump_suffix+".dat";
-
-
-        sim.write_dev(dump_fn,r,all_dev,all_dev_sq);
+        std::cout<<"TRYING WD: dev_fn"<<std::endl;
+        sim.write_dev(dump_fn,all_dev,all_dev_sq);
+        std::cout<<"DONE WD"<<std::endl;
 
 				// (instance*nRepeats+ir)*nRes  + i
 
@@ -274,6 +277,16 @@ int main(int narg, char **arg) {
 
   // close down LAMMPS instances
   sim.close();
+
+  delete [] local_res;
+  delete [] results;
+  delete [] local_dev;
+  delete [] local_dev_sq;
+  if(rank ==0) {
+    delete [] all_dev;
+    delete [] all_dev_sq;
+    delete [] all_res;
+  }
 
   // close down MPI
   MPI_Comm_free(&instance_comm);

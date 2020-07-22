@@ -1,40 +1,50 @@
 #include "LAMMPSSimulator.hpp"
 
-LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int rank) {
+LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int rank) : GeneralSimulator::GeneralSimulator(instance_comm,p,rank) {
+  int i;
   tag = rank;
   params = &p;
+  comm = &instance_comm;
 
   // set up LAMMPS
-  char str1[32];
+  std::string logfile = params->loglammps ? ("log.lammps."+std::to_string(tag)) : "none";
   char **lmparg = new char*[5];
   lmparg[0] = NULL; // required placeholder for program name
   lmparg[1] = (char *) "-screen";
   lmparg[2] = (char *) "none";
   lmparg[3] = (char *) "-log";
-  if(params->loglammps) {
-    sprintf(str1,"log.lammps.%d",rank);
-    lmparg[4] = str1;
-  } else lmparg[4] = (char *) "none";
+  lmparg[4] = (char *) logfile.c_str();
+  lmp = new LAMMPS_NS::LAMMPS(5,lmparg,*comm);
 
-  lammps_open(5,lmparg,instance_comm,(void **) &lmp);
   run_script("Input");
   natoms = *((int *) lammps_extract_global(lmp,(char *) "natoms"));
 
-  id = std::vector<int>(natoms,0);
-  lammps_gather_atoms(lmp,(char *) "id",0,1,&id[0]);
+  nlocal = static_cast<int> (lmp->atom->nlocal);
+  natoms = static_cast<int> (lmp->atom->natoms);
+
+  // for local splining info. Other ways obviously, but this could have less comm?
+
+
+
+  int *lid = (int *)lammps_extract_atom(lmp,(char *) "id");
+  for(i=0;i<nlocal;i++) loc_id.push_back(lid[i]-1);
+  for(i=0;i<3*nlocal;i++) loc_data.push_back(0.0);
+  for(i=0;i<3*natoms;i++) glo_data.push_back(0.0);
 
   // get cell info
   pbc.load(getCellData());
 
-  // Get type / image info
+  /*
   species = std::vector<int>(natoms,1);
   lammps_gather_atoms(lmp,(char *) "type",0,1,&species[0]);
-  s_flag=true;
-
-  image = std::vector<int>(natoms,1);
+  image = std::vector<int>(natoms,0);
   lammps_gather_atoms(lmp,(char *) "image",0,1,&image[0]);
-
-  // prepare for fix?
+  id = std::vector<int>(natoms,0);
+  lammps_gather_atoms(lmp,(char *) "id",0,1,&id[0]);
+  q = std::vector<double>(natoms,0.0);
+  lammps_gather_atoms(lmp,(char *) "q",0,1,&q[0]);
+  */
+  delete [] lmparg;
 
 };
 
@@ -73,31 +83,44 @@ void LAMMPSSimulator::run_commands(std::string strv) {
 /*
   Fill configuration, path, tangent and tangent gradient. Return tangent norm
 */
-void LAMMPSSimulator::populate(double r, double *scale, double &norm_mag) {
-  //std::cout<<scale[0]<<" "<<scale[1]<<" "<<scale[2]<<std::endl;
+void LAMMPSSimulator::populate(double r, double *scale, double &nm, bool justpos) {
+  int i,j;
+  position=r;
   std::vector<double> t(3*natoms,0.);
-  double ncom[]={0.,0.,0.};
-  norm_mag=0.;
+  for(j=0;j<3;j++) norm_com[j] = 0.0;
+  nm=0.;
 
-  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) t[3*i+j] = pathway[3*i+j].deriv(0,r) * scale[j];
+  GeneralSimulator::fill_path(r,0,t);
+  for(i=0;i<3*natoms;i++) t[i] *= scale[i%3];
   lammps_scatter_atoms(lmp,(char *)"x",1,3,&t[0]);
-  lammps_scatter_atoms(lmp,(char *)"path",1,3,&t[0]);
 
-  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) t[3*i+j] = pathway[3*i+j].deriv(1,r) * scale[j];
+  if(!justpos) {
+    lammps_scatter_atoms(lmp,(char *)"path",1,3,&t[0]);
 
-  // Center of mass projection and tangent length
-  for(int i=0;i<3*natoms;i++) ncom[i%3] += t[i]/(double)natoms;
-  for(int i=0;i<3*natoms;i++) t[i] -= ncom[i%3];
-  for(int i=0;i<3*natoms;i++) norm_mag += t[i]*t[i];
-  norm_mag = sqrt(norm_mag);
+    fill_path(r,1,t,scale);
 
-  for(int i=0;i<3*natoms;i++) t[i] /= norm_mag;
-  lammps_scatter_atoms(lmp,(char *)"norm",1,3,&t[0]);
+    // Center of mass projection and tangent length
+    for(i=0;i<3*natoms;i++) norm_com[i%3] += t[i]/(double)natoms;
+    for(i=0;i<3*natoms;i++) t[i] -= norm_com[i%3];
+    for(i=0;i<3*natoms;i++) nm += t[i]*t[i];
+    nm = sqrt(nm);
 
-  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) \
-    t[3*i+j] = pathway[3*i+j].deriv(2,r) * scale[j] / norm_mag / norm_mag;
-  lammps_scatter_atoms(lmp,(char *)"dnorm",1,3,&t[0]);
+    for(i=0;i<3*natoms;i++) t[i] /= nm;
+    lammps_scatter_atoms(lmp,(char *)"norm",1,3,&t[0]);
+
+
+    fill_path(r,2,t,scale);
+    for(i=0;i<3*natoms;i++) t[i] /= nm * nm;
+    lammps_scatter_atoms(lmp,(char *)"dnorm",1,3,&t[0]);
+
+  }
+
   lammps_command(lmp,(char *)"run 0");
+};
+
+void LAMMPSSimulator::fill_path(double r,int der,std::vector<double> &vec, double *scale) {
+  GeneralSimulator::fill_path(r,der,vec);
+  for(int i=0;i<vec.size();i++) vec[i] *= scale[i%3];
 };
 
 /*
@@ -118,20 +141,27 @@ void LAMMPSSimulator::rescale_cell(double *scale) {
   sample temperature <f>, <f^2>, <psi> and <x-u>.n
 */
 void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
+  position = r;
+  temperature = T;
+  int i,j;
   std::string cmd;
-  double norm_mag, sampleT, dm;
+  double sampleT, dm;
   double *lmp_ptr;
   double **lmp_dev_ptr;
+
   double scale[3] = {1.0,1.0,1.0};
 
-  populate(r,scale,norm_mag);
+  populate(r,scale,norm_mag,true);
+
+
   // Stress Fixes
   run_script("PreRun");
-  cmd = "run 0"; run_commands(cmd);
+  cmd = "run 0";
+  run_commands(cmd);
 
   expansion(T,scale);
-
   rescale_cell(scale);
+
   populate(r,scale,norm_mag);
 
 
@@ -185,7 +215,7 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   lammps_free(lmp_ptr);
 
   lammps_gather_peratom_fix(lmp,(char *)"ad",3,dev);
-  dm=0.; for(int i=0;i<3*natoms;i++) dm += dev[i] * dev[i];
+  dm=0.; for(i=0;i<3*natoms;i++) dm += dev[i] * dev[i];
   results[6] = dm;
 
   cmd = "unfix ae\nunfix af\nunfix ad\nunfix hp";
@@ -196,7 +226,8 @@ void LAMMPSSimulator::sample(double r, double T, double *results, double *dev) {
   cmd = "run 0"; run_commands(cmd);
 
   // rescale back
-  for(int j=0;j<3;j++) scale[j] = 1.0/scale[j];
+  for(j=0;j<3;j++) scale[j] = 1.0/scale[j];
+
   populate(r,scale,norm_mag);
   rescale_cell(scale);
 
@@ -231,8 +262,9 @@ double LAMMPSSimulator::getForceEnergy(double *f) {
 
 // Fill 9D array with Lx, Ly, Lz, xy, xz, yz, then periodicity in x, y, z
 std::array<double,9> LAMMPSSimulator::getCellData() {
+  int i;
   std::array<double,9> cell;
-  for(int i=0; i<9; i++) cell[i] = 0.;
+  for(i=0; i<9; i++) cell[i] = 0.;
   double *lmp_ptr;
   double *boxlo = (double *) lammps_extract_global(lmp,(char *) "boxlo");
   double *boxhi = (double *) lammps_extract_global(lmp,(char *) "boxhi");
@@ -240,7 +272,7 @@ std::array<double,9> LAMMPSSimulator::getCellData() {
 
   std::array<std::string,3> od;
   od[0]="xy"; od[1]="xz"; od[2]="yz";
-  for(int i=0; i<3; i++) {
+  for(i=0; i<3; i++) {
     cell[i] = boxhi[i]-boxlo[i];
     lmp_ptr = (double *) lammps_extract_global(lmp,(char *)od[i].c_str());
     cell[3+i] = *lmp_ptr;
@@ -250,62 +282,32 @@ std::array<double,9> LAMMPSSimulator::getCellData() {
 };
 
 void LAMMPSSimulator::close() {
-  lammps_close(lmp);
+  // close down LAMMPS
+  delete lmp;
 };
 
 
-std::string LAMMPSSimulator::header() {
-  std::string res="LAMMPS dump file\n\n";
-  res += std::to_string(natoms)+" atoms\n";
-  res += "1 atom types\n\n"; // TODO species
-  res += "0. "+std::to_string(pbc.cell[0][0])+" xlo xhi\n";
-  res += "0. "+std::to_string(pbc.cell[1][1])+" ylo yhi\n";
-  res += "0. "+std::to_string(pbc.cell[2][2])+" zlo zhi\n";
-  //res += std::to_string(pbc.cell[2][2])
-  res += "\nMasses\n\n 1 55.85\n Atoms\n\n";
-  return res;
-};
+void LAMMPSSimulator::write_dev(std::string fn, double *dev, double *dev_sq){
+  int i,j;
+  double scale[3];
+  expansion(temperature,scale);
+  std::cout<<"write_dev "<<local_rank<<" "<<position<<" "<<temperature<<" "<<scale[0]<<" "<<scale[1]<<" "<<scale[2]<<std::endl;
+  std::vector<double> t(3*natoms,0.);
+  fill_path(position,0,t,scale);
 
-void LAMMPSSimulator::lammps_path_write(std::string fn, double r) {
-  std::ofstream out;
-  out.open(fn.c_str(),std::ofstream::out);
-  out<<header();
+  if(local_rank==0) {
+    std::ofstream out;
+    out.open(fn.c_str(),std::ofstream::out);
 
-  double ncom[]={0.,0.,0.};
-  double c,nm=0.;
-
-  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) {
-    ncom[j] += pathway[3*i+j].deriv(1,r) / natoms;
+    out<<"# PAFI DUMP FILE. Reference path u(r) is a Nx3 vector.\n";
+    out<<"# For i=0,1,2: u_i(r) , < x_i-u_i | r > , <(x_i-u_i)^2 | r >)\n";
+    for(i=0;i<natoms;i++) {
+      out<<i<<" ";
+      for(j=0;j<3;j++) out<<t[3*i+j]<<" ";
+      for(j=0;j<3;j++) out<<dev[3*i+j]<<" ";
+      for(j=0;j<3;j++) out<<dev_sq[3*i+j]<<" ";
+      out<<std::endl;
+    }
+    out.close();
   }
-
-  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) {
-    c = pathway[3*i+j].deriv(1,r)-ncom[j];
-    nm += c * c;
-  }
-  nm = sqrt(nm);
-
-  for(int i=0;i<natoms;i++){
-    out<<i+1<<" 1 "; // TODO multispecies
-    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" "; // x y z
-    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" "; // path
-    for(int j=0;j<3;j++) out<<(pathway[3*i+j].deriv(1,r)-ncom[j])/nm<<" ";
-    for(int j=0;j<3;j++) out<<pathway[3*i+j].deriv(2,r)/nm/nm<<" ";
-    out<<std::endl;
-  }
-  out.close();
-};
-
-
-void LAMMPSSimulator::lammps_dev_write(std::string fn, double r, double *dev, double *dev_sq) {
-  std::ofstream out;
-  out.open(fn.c_str(),std::ofstream::out);
-  out<<header();
-  for(int i=0;i<natoms;i++){
-    out<<i+1<<" 1 "; // TODO multispecies
-    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" "; // x y z
-    for(int j=0;j<3;j++) out<<dev[3*i+j]<<" "; // <dev>
-    for(int j=0;j<3;j++) out<<sqrt(dev_sq[3*i+j]-dev[3*i+j]*dev[3*i+j])<<" ";
-    out<<std::endl;
-  }
-  out.close();
 };

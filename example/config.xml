@@ -20,7 +20,7 @@
   <nPlanes> 11 </nPlanes>
 
   <!-- We require nprocs % CoresPerWorker==0 -->
-  <CoresPerWorker> 1 </CoresPerWorker>
+  <CoresPerWorker> 2 </CoresPerWorker>
 
   <!--
     RELATIVE thermal expansion coefficients along X,Y,Z directions of simulation-
