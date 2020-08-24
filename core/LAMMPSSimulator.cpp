@@ -289,8 +289,6 @@ void LAMMPSSimulator::sample(double r, double T,
   refP = *lmp_ptr;
   lammps_free(lmp_ptr);
 
-  std::cout<<"B4: "<<refP<<std::endl;
-  std::cout<<"Volume: "<<pbc.volume<<std::endl;
   cmd = "reset_timestep 0\n";
   cmd += "fix ae all ave/time 1 "+params->parameters["ThermWindow"]+" ";
   cmd += params->parameters["ThermSteps"]+" c_pe\n";
@@ -309,7 +307,6 @@ void LAMMPSSimulator::sample(double r, double T,
   refT = ((*lmp_ptr) - refP) / natoms / BOLTZ / 3.0;
   lammps_free(lmp_ptr);
 
-  std::cout<<"PreTT: "<<sampleT<<" "<<refT<<std::endl;
 
   run_commands("unfix ae\nrun 0");
   run_commands("unfix at\nrun 0");
@@ -334,8 +331,6 @@ void LAMMPSSimulator::sample(double r, double T,
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"at",0,0,0,0);
   refT = ((*lmp_ptr) - refP) / natoms / BOLTZ / 3.0;
   lammps_free(lmp_ptr);
-
-  std::cout<<"PostTT: "<<sampleT<<" "<<refT<<std::endl;
 
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,0,0);
