@@ -15,8 +15,7 @@ link_directories(${CMAKE_LIBRARY_PATH})
 
 
 # VERBOSE : debugging output
-add_definitions(-std=c++11 -DVERBOSE -DLAMMPS_EXCEPTIONS)
-
+add_definitions(-std=c++11 -O3 -DVERBOSE -DLAMMPS_EXCEPTIONS)
 file(GLOB src_files "core/*")
 
 add_executable(pafi ${src_files} pafi/pafi.cpp pafi/pafi.hpp)
