@@ -16,7 +16,7 @@ link_directories(${CMAKE_LIBRARY_PATH})
 
 
 # VERBOSE : debugging output
-add_definitions(-std=c++11 -O3 -DLAMMPS_EXCEPTIONS -DNEWFIX) #-DVERBOSE)
+add_definitions(-std=c++11 -O3 -DLAMMPS_EXCEPTIONS) #-DVERBOSE)
 
 file(GLOB src_files "core/*")
 
