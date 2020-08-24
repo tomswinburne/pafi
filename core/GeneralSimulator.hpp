@@ -30,6 +30,7 @@ public:
     return 0.0;
   };
 
+
   virtual double getForceEnergy(double *f){
     return 0.0;
   };
@@ -42,11 +43,13 @@ public:
 
   virtual void close(){};
 
-  virtual void populate(double r){};
+  virtual void populate(double r, double T){};
 
-  virtual void rescale_cell(){};
+  virtual void sample(double r, double T,
+      std::map<std::string,double> &results){};
 
-  virtual void sample(double r, double T, std::vector<double> &results){};
+  virtual void rescale_cell(double T){};
+
 
   // LAMMPS INDEPENDENT
 
@@ -54,14 +57,17 @@ public:
 
   void write_dev(std::string fn, double r, double *dev, double *dev_sq);
 
-  void expansion(double T);
-
   void make_path(std::vector<std::string> knot_list);
 
+  double path(int i, double r, int d, double s);
+
   void evaluate(std::vector<double> &results);
-  double *scale;
-  double refE,refP;
-  int natoms, tag, nknots;
+
+  void expansion(double T,double *newscale);
+
+  double scale[3];
+  double refE,refT,refP;
+  int natoms, tag, nknots, nres;
   MinImage pbc;
   Parser *params;
   std::vector<spline> pathway;

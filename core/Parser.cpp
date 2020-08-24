@@ -62,6 +62,10 @@ Parser::Parser(std::string file) {
 
   parameters["MaxJump"] = \
       rtws(root_node->first_node("MaxJump")->value());
+  parameters["ReSampleThresh"] = \
+      rtws(root_node->first_node("ReSampleThresh")->value());
+  parameters["maxExtraRepeats"] = \
+    rtws(root_node->first_node("maxExtraRepeats")->value());
 
 
 	// Now we can convert to type
@@ -70,6 +74,7 @@ Parser::Parser(std::string file) {
   CoresPerWorker = std::stoi(parameters["CoresPerWorker"]);
 	nPlanes = std::stoi(parameters["nPlanes"]);
 	nRepeats = std::stoi(parameters["nRepeats"]);
+
 	//dump_dir = std::to_string(parameters["DumpFolder"]);
   dump_dir = parameters["DumpFolder"];
 	lowT = std::stod(parameters["LowTemperature"]);
@@ -80,7 +85,9 @@ Parser::Parser(std::string file) {
   stopr = std::stod(parameters["StopCoordinate"]);
   loglammps = bool(std::stoi(parameters["LogLammps"]));
   maxjump_thresh = std::stod(parameters["MaxJump"]);
-
+  redo_thresh = std::stod(parameters["ReSampleThresh"]);
+  maxExtraRepeats = std::stoi(parameters["maxExtraRepeats"]);
+  
   rapidxml::xml_node<> * scrs_n = root_node->first_node("Scripts");
 
   for (rapidxml::xml_node<> * scr_n = scrs_n->first_node("Script"); scr_n; scr_n = scr_n->next_sibling()) {

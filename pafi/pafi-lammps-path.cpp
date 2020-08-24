@@ -45,8 +45,7 @@ int main(int narg, char **arg) {
   MPI_Comm instance_comm;
   MPI_Comm_split(MPI_COMM_WORLD,0,0,&instance_comm);
 
-  Simulator sim(instance_comm,params,rank);
-
+  Simulator sim(instance_comm,params,instance,nRes);
 
   std::cout<<"Loaded input data of "<<sim.natoms<<" atoms\n";
   std::cout<<"Supercell Matrix:\n";
@@ -62,6 +61,7 @@ int main(int narg, char **arg) {
   int fileindex=1;
 
   double dr,E,nm,fE,fs;
+  double *f;
   f = new double[3*sim.natoms];
 
   if (params.nPlanes>1) dr = (params.stopr-params.startr)/(double)(params.nPlanes-1);
@@ -71,7 +71,7 @@ int main(int narg, char **arg) {
 
   for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr ) {
 
-    sim.populate(r,nm);
+    sim.populate(r,nm,0.0);
 
     std::string cmd = "run 0";
     sim.run_commands(cmd);
