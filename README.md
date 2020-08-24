@@ -28,11 +28,18 @@ This repository includes the [RapidXML](http://http://rapidxml.sourceforge.net) 
 
 
 ## Compile `LAMMPS` with `USER-MISC` package
-1. `PAFI` is in the process of integration into `LAMMPS`. In the meantime it is best to download or clone the `gatherscatter` branch of [this](https://github.com/tomswinburne/lammps/) fork or simply execute
+1. `PAFI` is in the process of integration into `LAMMPS`. In the meantime it is best to download or clone [this](https://github.com/tomswinburne/lammps/) fork or simply execute
 ```
-git clone https://github.com/tomswinburne/lammps.git -b gatherscatter
+git clone https://github.com/tomswinburne/lammps.git
 ```
-You could also run a diff to apply changes to an existing version of LAMMPS but this is not recommended
+You could alternatively copy the following files into your LAMMPS distribution:
+```
+  src/library.cpp # overwrite (adding new functions)
+  src/library.h # overwrite (adding new functions)
+  src/USER-MISC/fix_pafi.cpp # new file
+  src/USER-MISC/fix_pafi.h # new file
+```
+but this has no documentation so is not recommended
 
 2. Install `USER-MISC` and any packages you desire (e.g. replica for `NEB`)
 ```
