@@ -1,4 +1,5 @@
 # test data
+newbuild/*
 build/*
 build_noboost/*
 core_boost/*

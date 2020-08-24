@@ -1,10 +1,9 @@
 
 cmake_minimum_required(VERSION 3.5)
-set(PREFIX /home/tomswinburne/.local) # example value
+set(PREFIX /home/tomswinburne/.altlocal) # example value
 set(CMAKE_INCLUDE_PATH ${PREFIX}/include) # location of copied lammps header directory (lammps/*.h)
 set(CMAKE_LIBRARY_PATH ${PREFIX}/lib) # location of liblammps_mpi.a
 set(CMAKE_CXX_COMPILER /usr/bin/mpicxx) # c++11 compatible compiler
-set(CMAKE_CXX_COMPILER /usr/bin/mpicc) # c++11 compatible compiler
 
 project (pafi)
 
@@ -16,7 +15,7 @@ link_directories(${CMAKE_LIBRARY_PATH})
 
 
 # VERBOSE : debugging output
-add_definitions(-std=c++11 -O3 -DLAMMPS_EXCEPTIONS) #-DVERBOSE)
+add_definitions(-std=c++11 -DVERBOSE -DLAMMPS_EXCEPTIONS)
 
 file(GLOB src_files "core/*")
 

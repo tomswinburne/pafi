@@ -26,11 +26,11 @@ This repository includes the [RapidXML](http://http://rapidxml.sourceforge.net) 
 
 ## Compile `LAMMPS` with `USER-MISC` package
 1. `PAFI` is in the process of integration into `LAMMPS`. In the meantime it is best to download or clone [this](https://github.com/tomswinburne/lammps/) fork or simply execute
-```
+```bash
 git clone https://github.com/tomswinburne/lammps.git
 ```
 You could alternatively copy the following files into your LAMMPS distribution:
-```
+```bash
   src/library.cpp # overwrite (adding new functions)
   src/library.h # overwrite (adding new functions)
   src/USER-MISC/fix_pafi.cpp # new file
@@ -39,20 +39,29 @@ You could alternatively copy the following files into your LAMMPS distribution:
 but this has no documentation so is not recommended
 
 2. Install `USER-MISC` and any packages you desire (e.g. replica for `NEB`)
-```
+```bash
 cd src
 make yes-user-misc
 make yes-replica # for NEB calculation
 make yes-package_name # (i.e. manybody for EAM potentials etc)
 ```
-
-3. Compile as a static library (and optionally binary for initial NEB calculation) Consult [LAMMPS documentation](http://lammps.sandia.gov/doc/Section_start.html) for details
+3. In the appropriate Makefile add `-std=c++11` to `CCFLAGS` and `LINKFLAGS` and
+add `-DLAMMPS_EXCEPTIONS` to `LMP_INC` to allow `PAFI` to read `LAMMPS` error messages.
+This is very useful when running your own simulations. For `src/MAKE/Makefile.mpi` this reads
+ ```make
+CCFLAGS =	-g -O3 -std=c++11
+LINKFLAGS =	-g -O3 -std=c++11
+LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64  -DLAMMPS_EXCEPTIONS
 ```
+
+4. Compile as a static library (and optionally binary for initial NEB calculation) Consult [LAMMPS documentation](http://lammps.sandia.gov/doc/Section_start.html) for details
+```bash
    make mpi mode=lib # liblammps_mpi.a library for pafi
    make mpi # lmp_mpi binary for running initial NEB calculation if desired
 ```
+
 4. Copy library to your local lib/ and headers to local include/, at e.g. ${HOME}/.local
-```
+```bash
   export PREFIX=${HOME}/.local # example value
   cp liblammps_mpi.a ${PREFIX}/lib
   mkdir ${PREFIX}/include/lammps
