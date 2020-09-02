@@ -34,7 +34,7 @@ git clone https://github.com/lammps/lammps.git
 
 2. Install `USER-MISC` and any packages you desire (e.g. replica for `NEB`)
 ```bash
-cd src
+cd /path/to/lammps/src
 make yes-user-misc
 make yes-replica # for NEB calculation
 make yes-package # (e.g. manybody for EAM potentials etc)
@@ -49,7 +49,7 @@ LINKFLAGS =	-g -O3 -std=c++11
 LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64  -DLAMMPS_EXCEPTIONS
 ```
 
-4. Compile with app Consult [LAMMPS documentation](http://lammps.sandia.gov/doc/Section_start.html) for details
+4. Compile static library and binary Consult [LAMMPS documentation](http://lammps.sandia.gov/doc/Section_start.html) for details
 ```bash
    make mpi mode=lib # liblammps_mpi.a library for pafi
    make mpi # lmp_mpi binary for running initial NEB calculation if desired
@@ -63,11 +63,15 @@ LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64  -DLAMMPS_EXCEPTIONS
   cp *.h ${PREFIX}/include/lammps/
 ```
 
+
+
 ## Compile `PAFI`
 0. `PAFI` requires `cmake` to compile:
 - On a cluster, try `module load cmake`
 - On Linux, try `[apt/yum] install cmake`
 - Alternatively [download](https://cmake.org/download/) and install `cmake` manually
+*Technical point: `LAMMPS` can now be built using `cmake`, but this is causes
+complications with static linking, which is chosen here for simplicity.*
 
 1. Specify environment variables in CMakeLists.txt:
 ```
