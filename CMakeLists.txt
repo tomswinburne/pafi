@@ -1,9 +1,9 @@
 
 cmake_minimum_required(VERSION 3.5)
-set(PREFIX /home/tomswinburne/.altlocal) # example value
+set(PREFIX "$ENV{HOME}/.local") # example value
 set(CMAKE_INCLUDE_PATH ${PREFIX}/include) # location of copied lammps header directory (lammps/*.h)
 set(CMAKE_LIBRARY_PATH ${PREFIX}/lib) # location of liblammps_mpi.a
-set(CMAKE_CXX_COMPILER /usr/bin/mpicxx) # c++11 compatible compiler
+set(CMAKE_CXX_COMPILER /usr/bin/mpicxx) # example path to c++11 compatible compiler
 
 project (pafi)
 
