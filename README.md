@@ -75,13 +75,13 @@ LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64  -DLAMMPS_EXCEPTIONS
 [complications](https://lammps.sandia.gov/doc/Build_link.html) with static linking.*
 
 1. Specify environment variables in CMakeLists.txt:
-```
+```make
    set(PREFIX $ENV{PREFIX}) # or something else...
    set(CMAKE_CXX_COMPILER path/to/mpic++) # default: /usr/bin/env mpic++
 ```
 
 2. Make pafi build folder, run cmake and make
-```
+```bash
    export PREFIX=${HOME}/.local # if in different shell to LAMMPS compilation
    mkdir build
    cd build
@@ -106,7 +106,7 @@ write_data neb_knot_file.$u
 3. Configure the configuration xml file, as shown in the examples
 
 4. Run PAFI as e.g.
-```
+```bash
 mkdir -p dumps
 mpirun -np NPROCS ./pafi
 ```
@@ -135,12 +135,12 @@ where the first line ensures your dump folder (here the default value) actually 
 
 ## Manual use (no recommended)
 1. Compile the `pafi-lammps-path` binary
-```
+```bash
 cd build
 make pafi-lammps-path
 ```
 2. Configure the configuration xml file, to specify the path then run
-```
+```bash
 mkdir -p dumps
 mpirun -np 1 ./pafi-lammps-path
 ```
