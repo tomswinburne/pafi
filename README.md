@@ -37,7 +37,7 @@ git clone https://github.com/lammps/lammps.git
 cd src
 make yes-user-misc
 make yes-replica # for NEB calculation
-make yes-manybody # (i.e. manybody for EAM potentials etc)
+make yes-package # (e.g. manybody for EAM potentials etc)
 ```
 
 3. In the appropriate Makefile add `-std=c++11` to `CCFLAGS` and `LINKFLAGS` and
