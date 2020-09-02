@@ -25,26 +25,21 @@ This repository includes the [RapidXML](http://http://rapidxml.sourceforge.net) 
 
 
 ## Compile `LAMMPS` with `USER-MISC` package
-1. `PAFI` is in the process of integration into `LAMMPS`. In the meantime it is best to download or clone [this](https://github.com/tomswinburne/lammps/) fork or simply execute
+1. `PAFI` is now integrated into `LAMMPS` as part of the `USER-MISC` package.
+You can [download](https://lammps.sandia.gov/download.html) a tarball from the `LAMMPS`
+website or clone the public repository with
 ```bash
-git clone https://github.com/tomswinburne/lammps.git
+git clone https://github.com/lammps/lammps.git
 ```
-You could alternatively copy the following files into your LAMMPS distribution:
-```bash
-  src/library.cpp # overwrite (adding new functions)
-  src/library.h # overwrite (adding new functions)
-  src/USER-MISC/fix_pafi.cpp # new file
-  src/USER-MISC/fix_pafi.h # new file
-```
-but this has no documentation so is not recommended
 
 2. Install `USER-MISC` and any packages you desire (e.g. replica for `NEB`)
 ```bash
-cd src
+cd /path/to/lammps/src
 make yes-user-misc
 make yes-replica # for NEB calculation
-make yes-package_name # (i.e. manybody for EAM potentials etc)
+make yes-package # (e.g. manybody for EAM potentials etc)
 ```
+
 3. In the appropriate Makefile add `-std=c++11` to `CCFLAGS` and `LINKFLAGS` and
 add `-DLAMMPS_EXCEPTIONS` to `LMP_INC` to allow `PAFI` to read `LAMMPS` error messages.
 This is very useful when running your own simulations. For `src/MAKE/Makefile.mpi` this reads
@@ -54,7 +49,7 @@ LINKFLAGS =	-g -O3 -std=c++11
 LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64  -DLAMMPS_EXCEPTIONS
 ```
 
-4. Compile as a static library (and optionally binary for initial NEB calculation) Consult [LAMMPS documentation](http://lammps.sandia.gov/doc/Section_start.html) for details
+4. Compile static library and binary Consult [LAMMPS documentation](http://lammps.sandia.gov/doc/Section_start.html) for details
 ```bash
    make mpi mode=lib # liblammps_mpi.a library for pafi
    make mpi # lmp_mpi binary for running initial NEB calculation if desired
@@ -63,29 +58,36 @@ LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64  -DLAMMPS_EXCEPTIONS
 4. Copy library to your local lib/ and headers to local include/, at e.g. ${HOME}/.local
 ```bash
   export PREFIX=${HOME}/.local # example value
-  cp liblammps_mpi.a ${PREFIX}/lib
+  cp liblammps_mpi.a ${PREFIX}/lib/liblammps.a
   mkdir ${PREFIX}/include/lammps
   cp *.h ${PREFIX}/include/lammps/
 ```
 
-## Compile PAFI
-0. If required, download and install cmake from https://cmake.org/download/
 
-1. Specify environment variables in CMakeLists.txt:
-```
-   set(PREFIX your/PREFIX/value) # cmake doesn't see environment variables
+## Compile `PAFI`
+0. `PAFI` requires `cmake` to compile:
+- On a cluster, try `module load cmake`
+- On Linux, try `[apt/yum] install cmake`
+- Alternatively [download](https://cmake.org/download/) and install `cmake` manually
+
+*Technical point: `LAMMPS` can also be built with `cmake` . However, this is causes
+[complications](https://lammps.sandia.gov/doc/Build_link.html) with static linking.*
+
+1. Specify compiler in CMakeLists.txt:
+```make
    set(CMAKE_CXX_COMPILER path/to/mpic++)
 ```
 
 2. Make pafi build folder, run cmake and make
-```
+```bash
+   export PREFIX=${HOME}/.local # if in different shell to LAMMPS compilation
    mkdir build
    cd build
    cmake ..
-   make pafi
+   make pafi # or try make -j4 pafi for parallel make using 4 cores
 ```
 
-## Calculation of free energy barrier between states using PAFI++ (recommended)
+## Calculation of free energy barrier between states using `PAFI`
 
 0. Tarball in example folder has premade NEB calculation (SIA in EAM-Fe) for testing
 
@@ -102,7 +104,7 @@ write_data neb_knot_file.$u
 3. Configure the configuration xml file, as shown in the examples
 
 4. Run PAFI as e.g.
-```
+```bash
 mkdir -p dumps
 mpirun -np NPROCS ./pafi
 ```
@@ -129,14 +131,14 @@ where the first line ensures your dump folder (here the default value) actually 
 
 3. See `error_analysis.pdf' for an expanation of the error bars used in PAFI and `example/sample_plot.py' for a simple plotting example
 
-## Manual use (no recommended)
+## Manual use (not recommended)
 1. Compile the `pafi-lammps-path` binary
-```
+```bash
 cd build
 make pafi-lammps-path
 ```
 2. Configure the configuration xml file, to specify the path then run
-```
+```bash
 mkdir -p dumps
 mpirun -np 1 ./pafi-lammps-path
 ```
