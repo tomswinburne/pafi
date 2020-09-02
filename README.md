@@ -30,14 +30,16 @@ You can [download([https://lammps.sandia.gov/download.html) a tarball from the `
 website or clone the public repository with
 ```bash
 git clone https://github.com/lammps/lammps.git
+```
 
 2. Install `USER-MISC` and any packages you desire (e.g. replica for `NEB`)
 ```bash
 cd src
 make yes-user-misc
 make yes-replica # for NEB calculation
-make yes-package_name # (i.e. manybody for EAM potentials etc)
+make yes-manybody # (i.e. manybody for EAM potentials etc)
 ```
+
 3. In the appropriate Makefile add `-std=c++11` to `CCFLAGS` and `LINKFLAGS` and
 add `-DLAMMPS_EXCEPTIONS` to `LMP_INC` to allow `PAFI` to read `LAMMPS` error messages.
 This is very useful when running your own simulations. For `src/MAKE/Makefile.mpi` this reads
