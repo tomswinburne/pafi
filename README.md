@@ -89,7 +89,7 @@ LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64  -DLAMMPS_EXCEPTIONS
    make pafi # or try make -j4 pafi for parallel make using 4 cores
 ```
 
-## Calculation of free energy barrier between states using PAFI++ (recommended)
+## Calculation of free energy barrier between states using `PAFI`
 
 0. Tarball in example folder has premade NEB calculation (SIA in EAM-Fe) for testing
 
@@ -133,7 +133,7 @@ where the first line ensures your dump folder (here the default value) actually 
 
 3. See `error_analysis.pdf' for an expanation of the error bars used in PAFI and `example/sample_plot.py' for a simple plotting example
 
-## Manual use (no recommended)
+## Manual use (not recommended)
 1. Compile the `pafi-lammps-path` binary
 ```bash
 cd build
