@@ -70,8 +70,9 @@ LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64  -DLAMMPS_EXCEPTIONS
 - On a cluster, try `module load cmake`
 - On Linux, try `[apt/yum] install cmake`
 - Alternatively [download](https://cmake.org/download/) and install `cmake` manually
-*Technical point: `LAMMPS` can now be built using `cmake`, but this is causes
-complications with static linking, which is chosen here for simplicity.*
+
+*Technical point: `LAMMPS` can now be built using `cmake` . However, this is causes
+[complications](https://lammps.sandia.gov/doc/Build_link.html) with static linking.*
 
 1. Specify environment variables in CMakeLists.txt:
 ```
