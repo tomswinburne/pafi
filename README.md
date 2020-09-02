@@ -26,7 +26,7 @@ This repository includes the [RapidXML](http://http://rapidxml.sourceforge.net) 
 
 ## Compile `LAMMPS` with `USER-MISC` package
 1. `PAFI` is now integrated into `LAMMPS` as part of the `USER-MISC` package.
-You can [download([https://lammps.sandia.gov/download.html) a tarball from the `LAMMPS`
+You can [download](https://lammps.sandia.gov/download.html) a tarball from the `LAMMPS`
 website or clone the public repository with
 ```bash
 git clone https://github.com/lammps/lammps.git
