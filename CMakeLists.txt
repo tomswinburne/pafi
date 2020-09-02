@@ -14,14 +14,14 @@ include_directories(${CMAKE_INCLUDE_PATH})
 link_directories(${CMAKE_LIBRARY_PATH})
 
 
-# VERBOSE : debugging output
-add_definitions(-std=c++11 -O3 -DVERBOSE -DLAMMPS_EXCEPTIONS)
+add_definitions(-std=c++11 -O3 -DLAMMPS_EXCEPTIONS) # -DVERBOSE # include for debugging output
+
 file(GLOB src_files "core/*")
 
 add_executable(pafi ${src_files} pafi/pafi.cpp pafi/pafi.hpp)
 add_executable(pafi-lammps-path ${src_files} pafi/pafi-lammps-path.cpp pafi/pafi.hpp)
 
 
-target_link_libraries(pafi lammps)
+target_link_libraries(pafi lammps_mpi)
 
-target_link_libraries(pafi-lammps-path lammps)
+target_link_libraries(pafi-lammps-path lammps_mpi)
