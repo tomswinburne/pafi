@@ -74,10 +74,9 @@ LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64  -DLAMMPS_EXCEPTIONS
 *Technical point: `LAMMPS` can also be built with `cmake` . However, this is causes
 [complications](https://lammps.sandia.gov/doc/Build_link.html) with static linking.*
 
-1. Specify environment variables in CMakeLists.txt:
+1. Specify compiler in CMakeLists.txt:
 ```make
-   set(PREFIX $ENV{PREFIX}) # or something else...
-   set(CMAKE_CXX_COMPILER path/to/mpic++) # default: /usr/bin/env mpic++
+   set(CMAKE_CXX_COMPILER path/to/mpic++)
 ```
 
 2. Make pafi build folder, run cmake and make
