@@ -26,7 +26,7 @@ This repository includes the [RapidXML](http://http://rapidxml.sourceforge.net) 
 
 ## Compile `LAMMPS` with `USER-MISC` package
 1. `PAFI` is now integrated into `LAMMPS` as part of the `USER-MISC` package.
-You can (download)[https://lammps.sandia.gov/download.html] a tarball from the `LAMMPS`
+You can [download([https://lammps.sandia.gov/download.html) a tarball from the `LAMMPS`
 website or clone the public repository with
 ```bash
 git clone https://github.com/lammps/lammps.git
@@ -56,26 +56,30 @@ LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64  -DLAMMPS_EXCEPTIONS
 4. Copy library to your local lib/ and headers to local include/, at e.g. ${HOME}/.local
 ```bash
   export PREFIX=${HOME}/.local # example value
-  cp liblammps_mpi.a ${PREFIX}/lib
+  cp liblammps_mpi.a ${PREFIX}/lib/
   mkdir ${PREFIX}/include/lammps
   cp *.h ${PREFIX}/include/lammps/
 ```
 
-## Compile PAFI
-0. If required, download and install cmake from https://cmake.org/download/
+## Compile `PAFI`
+0. `PAFI` requires `cmake` to compile:
+- On a cluster, try `module load cmake`
+- On Linux, try `[apt/yum] install cmake`
+- Alternatively [download](https://cmake.org/download/) and install `cmake` manually
 
 1. Specify environment variables in CMakeLists.txt:
 ```
-   set(PREFIX your/PREFIX/value) # cmake doesn't see environment variables
-   set(CMAKE_CXX_COMPILER path/to/mpic++)
+   set(PREFIX $ENV{PREFIX}) # or something else...
+   set(CMAKE_CXX_COMPILER path/to/mpic++) # default: /usr/bin/env mpic++
 ```
 
 2. Make pafi build folder, run cmake and make
 ```
+   export PREFIX=${HOME}/.local # if in different shell to LAMMPS compilation
    mkdir build
    cd build
    cmake ..
-   make pafi
+   make pafi # or try make -j4 pafi for parallel make using 4 cores
 ```
 
 ## Calculation of free energy barrier between states using PAFI++ (recommended)
