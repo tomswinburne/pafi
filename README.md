@@ -25,18 +25,11 @@ This repository includes the [RapidXML](http://http://rapidxml.sourceforge.net) 
 
 
 ## Compile `LAMMPS` with `USER-MISC` package
-1. `PAFI` is in the process of integration into `LAMMPS`. In the meantime it is best to download or clone [this](https://github.com/tomswinburne/lammps/) fork or simply execute
+1. `PAFI` is now integrated into `LAMMPS` as part of the `USER-MISC` package.
+You can (download)[https://lammps.sandia.gov/download.html] a tarball from the `LAMMPS`
+website or clone the public repository with
 ```bash
-git clone https://github.com/tomswinburne/lammps.git
-```
-You could alternatively copy the following files into your LAMMPS distribution:
-```bash
-  src/library.cpp # overwrite (adding new functions)
-  src/library.h # overwrite (adding new functions)
-  src/USER-MISC/fix_pafi.cpp # new file
-  src/USER-MISC/fix_pafi.h # new file
-```
-but this has no documentation so is not recommended
+git clone https://github.com/lammps/lammps.git
 
 2. Install `USER-MISC` and any packages you desire (e.g. replica for `NEB`)
 ```bash
@@ -54,7 +47,7 @@ LINKFLAGS =	-g -O3 -std=c++11
 LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64  -DLAMMPS_EXCEPTIONS
 ```
 
-4. Compile as a static library (and optionally binary for initial NEB calculation) Consult [LAMMPS documentation](http://lammps.sandia.gov/doc/Section_start.html) for details
+4. Compile with app Consult [LAMMPS documentation](http://lammps.sandia.gov/doc/Section_start.html) for details
 ```bash
    make mpi mode=lib # liblammps_mpi.a library for pafi
    make mpi # lmp_mpi binary for running initial NEB calculation if desired
