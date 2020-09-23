@@ -40,9 +40,12 @@
   <!-- fix hp parameters (LAMMPS units) -->
   <OverDamped> 1 </OverDamped>
   <!-- Recommended 'units metal' value: 0.01 (0.1x typical LAMMPS value of 0.1) -->
-  <Friction> 0.01 </Friction> 
+  <Friction> 0.01 </Friction>
   <!-- 0/1 Output LAMMPS logs -->
   <LogLammps> 1 </LogLammps>
+
+  <!-- 0/1 Output min config -->
+  <postDump> 1 </postDump>
 
   <!-- for NEB planes -->
   <StartCoordinate> 0.0 </StartCoordinate>
@@ -55,7 +58,7 @@
   <MaxJump> 0.1 </MaxJump>
   <!-- Resample a batch if less than this proportion are "in-basin" -->
   <ReSampleThresh> 0.8 </ReSampleThresh>
-  <!-- How many resample attempts --> 
+  <!-- How many resample attempts -->
   <maxExtraRepeats> 1 </maxExtraRepeats>
 
   <Scripts>
