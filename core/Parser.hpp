@@ -41,7 +41,7 @@ std::vector<std::string> KnotList;
 double lowT,highT,Friction,startr,stopr,maxjump_thresh,redo_thresh;
 int CoresPerWorker, nPlanes, TSteps, nRepeats, maxExtraRepeats;
 std::string dump_dir;
-bool seeded,loglammps;
+bool seeded,loglammps,postDump;
 
 private:
   std::mt19937 rng;

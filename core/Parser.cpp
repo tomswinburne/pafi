@@ -67,6 +67,8 @@ Parser::Parser(std::string file) {
   parameters["maxExtraRepeats"] = \
     rtws(root_node->first_node("maxExtraRepeats")->value());
 
+  parameters["postDump"] = \
+    rtws(root_node->first_node("postDump")->value());
 
 	// Now we can convert to type
 	KnotList = Parse(root_node->first_node("KnotList")->value());
@@ -87,7 +89,8 @@ Parser::Parser(std::string file) {
   maxjump_thresh = std::stod(parameters["MaxJump"]);
   redo_thresh = std::stod(parameters["ReSampleThresh"]);
   maxExtraRepeats = std::stoi(parameters["maxExtraRepeats"]);
-  
+  postDump = bool(std::stoi(parameters["postDump"]));
+
   rapidxml::xml_node<> * scrs_n = root_node->first_node("Scripts");
 
   for (rapidxml::xml_node<> * scr_n = scrs_n->first_node("Script"); scr_n; scr_n = scr_n->next_sibling()) {

@@ -281,7 +281,9 @@ void LAMMPSSimulator::sample(double r, double T,
   cmd = "reset_timestep 0\n";
   cmd += "fix ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" c_pe\n";
   cmd += "fix at all ave/time 1 "+SampleSteps+" "+SampleSteps+" f_hp[5]\n";
-  cmd += "fix ap all ave/atom 1 "+SampleSteps+" "+SampleSteps+" x y z\n";
+  if(!params->postDump) {
+    cmd += "fix ap all ave/atom 1 "+SampleSteps+" "+SampleSteps+" x y z\n";
+  }
   cmd += "fix af all ave/time 1 "+SampleSteps+" "+SampleSteps;
   cmd += " f_hp[1] f_hp[2] f_hp[3] f_hp[4]\n";
   cmd += "run "+SampleSteps;
@@ -327,23 +329,26 @@ void LAMMPSSimulator::sample(double r, double T,
     max_disp = std::max(a_disp,max_disp);
     for(int j=0;j<3;j++) dev[3*i+j] = 0.0;
   }
-  results["MaxJump"] = max_disp;
+  results["MaxJump"] = sqrt(max_disp);
 
   // deviation average
   run_commands("reset_timestep "+SampleSteps); // for fix calculation
-  gather("f_ap",3,dev);
-  for(int i=0;i<3*natoms;i++) dev[i] = dev[i]/scale[i%3]-path(i,r,0,1.0);
-  pbc.wrap(dev,3*natoms);
-
-  dm = 0.0;
-  for(int i=0;i<3*natoms;i++) {
-    dev[i] *= scale[i%3];
-    dm = std::max(dm,sqrt(dev[i] * dev[i]));
-  }
-  results["MaxDev"] = dm;
+  if(!params->postDump) {
+    gather("f_ap",3,dev);
+    for(int i=0;i<3*natoms;i++) dev[i] = dev[i]/scale[i%3]-path(i,r,0,1.0);
+    pbc.wrap(dev,3*natoms);
+    dm = 0.0;
+    for(int i=0;i<3*natoms;i++) {
+      dev[i] *= scale[i%3];
+      dm = std::max(dm,sqrt(dev[i] * dev[i]));
+    }
+    results["MaxDev"] = dm;
+    run_commands("unfix ap");
+  } else results["MaxDev"] = sqrt(max_disp);
 
   // reset
-  run_commands("unfix ae\nunfix af\nunfix ap\nunfix hp");
+  run_commands("unfix ae\nunfix af\nunfix hp");
+
 
   // Stress Fixes
   run_script("PostRun");
