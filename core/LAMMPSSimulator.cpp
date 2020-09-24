@@ -352,7 +352,7 @@ void LAMMPSSimulator::sample(double r, double T,
     a_disp = 0.0;
     for(int j=0;j<3;j++) a_disp += dev[3*i+j]*dev[3*i+j];
     max_disp = std::max(a_disp,max_disp);
-    for(int j=0;j<3;j++) dev[3*i+j] = 0.0;
+    if(!params->postDump) for(int j=0;j<3;j++) dev[3*i+j] = 0.0;
   }
   results["MaxJump"] = sqrt(max_disp);
 
