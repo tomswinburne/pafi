@@ -7,6 +7,8 @@
 #include "lammps/lammps.h"
 #include "lammps/library.h"
 
+using namespace LAMMPS_NS;
+
 class LAMMPSSimulator : public GeneralSimulator {
 
 public:
@@ -71,7 +73,7 @@ public:
   int *species,*q, *image, *id;
 private:
   int local_rank;
-  void *lmp;
+  LAMMPS *lmp;
   bool made_fix,made_compute;
   std::string last_error_message, last_command;
 

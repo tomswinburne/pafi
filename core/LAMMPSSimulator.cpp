@@ -21,7 +21,9 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
     lmparg[4] = str1;
   } else lmparg[4] = (char *) "none";
 
-  lammps_open(5,lmparg,instance_comm,(void **) &lmp);
+  lmp = new LAMMPS(5,lmparg,instance_comm);
+
+  //lammps_open(5,lmparg,instance_comm,(void **) &lmp);
   run_script("Input");
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"Ran input script"<<std::endl;
@@ -366,7 +368,7 @@ void LAMMPSSimulator::sample(double r, double T,
   } else results["MaxDev"] = sqrt(max_disp);
 
   // reset
-  run_commands("unfix ae\nunfix af\nunfix hp");
+  run_commands("unfix ae\nunfix af\nunfix hp\nunfix at");
 
 
   // Stress Fixes
