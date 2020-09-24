@@ -1,6 +1,5 @@
 
 cmake_minimum_required(VERSION 3.5)
-
 set(PREFIX "$ENV{PREFIX}") # example value
 set(CMAKE_CXX_COMPILER /usr/bin/env mpic++) # example value
 set(CMAKE_INCLUDE_PATH ${PREFIX}/include) # location of copied lammps header directory (lammps/*.h)
@@ -13,7 +12,6 @@ include_directories(rapidxml)
 
 include_directories(${CMAKE_INCLUDE_PATH})
 link_directories(${CMAKE_LIBRARY_PATH})
-
 
 add_definitions(-std=c++11 -O3 -DLAMMPS_EXCEPTIONS) # -DVERBOSE # include for debugging output
 

@@ -6,6 +6,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   scale[0]=1.0; scale[1]=1.0; scale[2]=1.0;
   last_error_message="";
   tag = t;
+  MPI_Comm_rank(instance_comm,&local_rank);
   nres = nr;
   params = &p;
   // set up LAMMPS
@@ -20,13 +21,28 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
     lmparg[4] = str1;
   } else lmparg[4] = (char *) "none";
 
-  lammps_open(5,lmparg,instance_comm,(void **) &lmp);
+  lmp = new LAMMPS(5,lmparg,instance_comm);
+
+  //lammps_open(5,lmparg,instance_comm,(void **) &lmp);
   run_script("Input");
+  #ifdef VERBOSE
+  if(local_rank==0) std::cout<<"Ran input script"<<std::endl;
+  #endif
   natoms = *((int *) lammps_extract_global(lmp,(char *) "natoms"));
+  #ifdef VERBOSE
+  if(local_rank==0) std::cout<<"natoms: "<<natoms<<std::endl;
+  #endif
+
   has_pafi = (bool)lammps_config_has_package((char *)"USER-MISC");
+  #ifdef VERBOSE
+  if(local_rank==0) std::cout<<"has_pafi: "<<has_pafi<<std::endl;
+  #endif
 
   id = new int[natoms];
   gather("id",1,id);
+  #ifdef VERBOSE
+  if(local_rank==0) std::cout<<"gathered id"<<std::endl;
+  #endif
 
   // get cell info
   pbc.load(getCellData());
@@ -34,16 +50,21 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   // Get type / image info
   species = new int[natoms];
   gather("type",1,species);
+  #ifdef VERBOSE
+  if(local_rank==0) std::cout<<"gathered type"<<std::endl;
+  #endif
 
   s_flag=true;
 
   image = new int[natoms];
   gather("image",1,image);
+  #ifdef VERBOSE
+  if(local_rank==0) std::cout<<"gathered image"<<std::endl;
+  #endif
+
 
   made_fix=false;
   made_compute=false;
-
-
 
 };
 
@@ -75,7 +96,7 @@ void LAMMPSSimulator::run_script(std::string sn){
 void LAMMPSSimulator::run_commands(std::vector<std::string> strv) {
   for(auto s:strv) {
     #ifdef VERBOSE
-    std::cout<<s<<std::endl;
+    if(local_rank==0) std::cout<<s<<std::endl;
     #endif
     lammps_command((void *)lmp,(char *)s.c_str());
   }
@@ -162,7 +183,7 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
   // check for __pafipath fix and compute
   if (!made_fix) {
     #ifdef VERBOSE
-    std::cout<<"making __pafipath fix"<<std::endl;
+    if(local_rank==0) std::cout<<"making __pafipath fix"<<std::endl;
     #endif
     cmd = "fix __pafipath all property/atom ";
     cmd += "d_ux d_uy d_uz d_nx d_ny d_nz d_dnx d_dny d_dnz\nrun 0";
@@ -177,7 +198,7 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
 
   for(int j=0;j<3;j++) {
     #ifdef VERBOSE
-      std::cout<<"Scattering d_u"+xyz[j]<<std::endl;
+    if(local_rank==0) std::cout<<"Scattering d_u"+xyz[j]<<std::endl;
     #endif
     for(int i=0;i<natoms;i++)  lt[i] = pathway[3*i+j].deriv(0,r) * scale[j];
     scatter("d_u"+xyz[j],1,lt);
@@ -202,7 +223,7 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
 
   if(!made_compute) {
     #ifdef VERBOSE
-    std::cout<<"making __pafipath compute"<<std::endl;
+    if(local_rank==0) std::cout<<"making __pafipath compute"<<std::endl;
     #endif
     cmd = "compute __pafipath all property/atom ";
     cmd += "d_ux d_uy d_uz d_nx d_ny d_nz d_dnx d_dny d_dnz\nrun 0";
@@ -285,7 +306,9 @@ void LAMMPSSimulator::sample(double r, double T,
   cmd = "reset_timestep 0\n";
   cmd += "fix ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" c_pe\n";
   cmd += "fix at all ave/time 1 "+SampleSteps+" "+SampleSteps+" f_hp[5]\n";
-  cmd += "fix ap all ave/atom 1 "+SampleSteps+" "+SampleSteps+" x y z\n";
+  if(!params->postDump) {
+    cmd += "fix ap all ave/atom 1 "+SampleSteps+" "+SampleSteps+" x y z\n";
+  }
   cmd += "fix af all ave/time 1 "+SampleSteps+" "+SampleSteps;
   cmd += " f_hp[1] f_hp[2] f_hp[3] f_hp[4]\n";
   cmd += "run "+SampleSteps;
@@ -331,23 +354,25 @@ void LAMMPSSimulator::sample(double r, double T,
     max_disp = std::max(a_disp,max_disp);
     for(int j=0;j<3;j++) dev[3*i+j] = 0.0;
   }
-  results["MaxJump"] = max_disp;
+  results["MaxJump"] = sqrt(max_disp);
 
   // deviation average
   run_commands("reset_timestep "+SampleSteps); // for fix calculation
-  gather("f_ap",3,dev);
-  for(int i=0;i<3*natoms;i++) dev[i] = dev[i]/scale[i%3]-path(i,r,0,1.0);
-  pbc.wrap(dev,3*natoms);
-
-  dm = 0.0;
-  for(int i=0;i<3*natoms;i++) {
-    dev[i] *= scale[i%3];
-    dm = std::max(dm,sqrt(dev[i] * dev[i]));
-  }
-  results["MaxDev"] = dm;
+  if(!params->postDump) {
+    gather("f_ap",3,dev);
+    for(int i=0;i<3*natoms;i++) dev[i] = dev[i]/scale[i%3]-path(i,r,0,1.0);
+    pbc.wrap(dev,3*natoms);
+    dm = 0.0;
+    for(int i=0;i<3*natoms;i++) {
+      dev[i] *= scale[i%3];
+      dm = std::max(dm,sqrt(dev[i] * dev[i]));
+    }
+    results["MaxDev"] = dm;
+    run_commands("unfix ap");
+  } else results["MaxDev"] = sqrt(max_disp);
 
   // reset
-  run_commands("unfix ae\nunfix af\nunfix ap\nunfix hp\nunfix at");
+  run_commands("unfix ae\nunfix af\nunfix hp\nunfix at");
 
   // Stress Fixes
   run_script("PostRun");

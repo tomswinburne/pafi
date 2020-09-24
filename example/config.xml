@@ -45,6 +45,12 @@
   <!-- 0/1 Output LAMMPS logs -->
   <LogLammps> 0 </LogLammps>
 
+  <!-- 
+   0 : (Default) Output time-and-ensemble averaged in-plane deviation from reference pathway. Can indicate finite temperature path but will have sampling noise
+   1 : Output ensemble averaged in-plane deviation following in-plane minimization post-run. No noise but will lose some/all features of path
+  -->
+  <postDump> 0 </postDump>
+
   <!-- for NEB planes -->
   <StartCoordinate> 0.0 </StartCoordinate>
   <StopCoordinate> 1.0 </StopCoordinate>
@@ -56,7 +62,7 @@
   <MaxJump> 0.1 </MaxJump>
   <!-- Resample a batch if less than this proportion are "in-basin" -->
   <ReSampleThresh> 0.8 </ReSampleThresh>
-  <!-- How many resample attempts --> 
+  <!-- How many resample attempts -->
   <maxExtraRepeats> 1 </maxExtraRepeats>
 
   <Scripts>
