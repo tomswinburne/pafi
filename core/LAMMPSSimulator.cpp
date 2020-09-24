@@ -6,6 +6,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   scale[0]=1.0; scale[1]=1.0; scale[2]=1.0;
   last_error_message="";
   tag = t;
+  MPI_Comm_rank(instance_comm,&local_rank);
   nres = nr;
   params = &p;
   // set up LAMMPS
@@ -23,22 +24,22 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   lammps_open(5,lmparg,instance_comm,(void **) &lmp);
   run_script("Input");
   #ifdef VERBOSE
-  std::cout<<"Ran input script"<<std::endl;
+  if(local_rank==0) std::cout<<"Ran input script"<<std::endl;
   #endif
   natoms = *((int *) lammps_extract_global(lmp,(char *) "natoms"));
   #ifdef VERBOSE
-  std::cout<<"natoms: "<<natoms<<std::endl;
+  if(local_rank==0) std::cout<<"natoms: "<<natoms<<std::endl;
   #endif
 
   has_pafi = (bool)lammps_config_has_package((char *)"USER-MISC");
   #ifdef VERBOSE
-  std::cout<<"has_pafi: "<<has_pafi<<std::endl;
+  if(local_rank==0) std::cout<<"has_pafi: "<<has_pafi<<std::endl;
   #endif
 
   id = new int[natoms];
   gather("id",1,id);
   #ifdef VERBOSE
-  std::cout<<"gathered id"<<std::endl;
+  if(local_rank==0) std::cout<<"gathered id"<<std::endl;
   #endif
 
   // get cell info
@@ -48,7 +49,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   species = new int[natoms];
   gather("type",1,species);
   #ifdef VERBOSE
-  std::cout<<"gathered type"<<std::endl;
+  if(local_rank==0) std::cout<<"gathered type"<<std::endl;
   #endif
 
   s_flag=true;
@@ -56,7 +57,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   image = new int[natoms];
   gather("image",1,image);
   #ifdef VERBOSE
-  std::cout<<"gathered image"<<std::endl;
+  if(local_rank==0) std::cout<<"gathered image"<<std::endl;
   #endif
 
 
@@ -93,7 +94,7 @@ void LAMMPSSimulator::run_script(std::string sn){
 void LAMMPSSimulator::run_commands(std::vector<std::string> strv) {
   for(auto s:strv) {
     #ifdef VERBOSE
-    std::cout<<s<<std::endl;
+    if(local_rank==0) std::cout<<s<<std::endl;
     #endif
     lammps_command((void *)lmp,(char *)s.c_str());
   }
@@ -176,7 +177,7 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
   // check for __pafipath fix and compute
   if (!made_fix) {
     #ifdef VERBOSE
-    std::cout<<"making __pafipath fix"<<std::endl;
+    if(local_rank==0) std::cout<<"making __pafipath fix"<<std::endl;
     #endif
     cmd = "fix __pafipath all property/atom ";
     cmd += "d_ux d_uy d_uz d_nx d_ny d_nz d_dnx d_dny d_dnz\nrun 0";
@@ -191,7 +192,7 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
 
   for(int j=0;j<3;j++) {
     #ifdef VERBOSE
-      std::cout<<"Scattering d_u"+xyz[j]<<std::endl;
+    if(local_rank==0) std::cout<<"Scattering d_u"+xyz[j]<<std::endl;
     #endif
     for(int i=0;i<natoms;i++)  lt[i] = pathway[3*i+j].deriv(0,r) * scale[j];
     scatter("d_u"+xyz[j],1,lt);
@@ -216,7 +217,7 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
 
   if(!made_compute) {
     #ifdef VERBOSE
-    std::cout<<"making __pafipath compute"<<std::endl;
+    if(local_rank==0) std::cout<<"making __pafipath compute"<<std::endl;
     #endif
     cmd = "compute __pafipath all property/atom ";
     cmd += "d_ux d_uy d_uz d_nx d_ny d_nz d_dnx d_dny d_dnz\nrun 0";

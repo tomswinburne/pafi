@@ -70,6 +70,7 @@ public:
   // LAMMPS specific
   int *species,*q, *image, *id;
 private:
+  int local_rank;
   void *lmp;
   bool made_fix,made_compute;
   std::string last_error_message, last_command;
