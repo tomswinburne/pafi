@@ -87,7 +87,7 @@ Parser::Parser(std::string file) {
   maxjump_thresh = std::stod(parameters["MaxJump"]);
   redo_thresh = std::stod(parameters["ReSampleThresh"]);
   maxExtraRepeats = std::stoi(parameters["maxExtraRepeats"]);
-  
+
   rapidxml::xml_node<> * scrs_n = root_node->first_node("Scripts");
 
   for (rapidxml::xml_node<> * scr_n = scrs_n->first_node("Script"); scr_n; scr_n = scr_n->next_sibling()) {
@@ -153,7 +153,7 @@ std::string Parser::welcome_message(){
   str+="      | )          | )   ( |    | )          ___) (___\n";
   str+="      |/           |/     \\|    |/           \\_______/\n";
   str+="      Projected    Average      Force        Integrator\n";
-  str+="          (c) TD Swinburne and M-C Marinica 2018\n\n";
+  str+="          (c) TD Swinburne and M-C Marinica 2020\n\n";
 
 	str+="\nScripts:\n\n";
 	for(auto s: scripts) str+=s.first+" : "+s.second+"\n";
