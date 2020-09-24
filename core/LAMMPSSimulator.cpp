@@ -22,11 +22,24 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
 
   lammps_open(5,lmparg,instance_comm,(void **) &lmp);
   run_script("Input");
+  #ifdef VERBOSE
+  std::cout<<"Ran input script"<<std::endl;
+  #endif
   natoms = *((int *) lammps_extract_global(lmp,(char *) "natoms"));
+  #ifdef VERBOSE
+  std::cout<<"natoms: "<<natoms<<std::endl;
+  #endif
+
   has_pafi = (bool)lammps_config_has_package((char *)"USER-MISC");
+  #ifdef VERBOSE
+  std::cout<<"has_pafi: "<<has_pafi<<std::endl;
+  #endif
 
   id = new int[natoms];
   gather("id",1,id);
+  #ifdef VERBOSE
+  std::cout<<"gathered id"<<std::endl;
+  #endif
 
   // get cell info
   pbc.load(getCellData());
@@ -34,16 +47,21 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   // Get type / image info
   species = new int[natoms];
   gather("type",1,species);
+  #ifdef VERBOSE
+  std::cout<<"gathered type"<<std::endl;
+  #endif
 
   s_flag=true;
 
   image = new int[natoms];
   gather("image",1,image);
+  #ifdef VERBOSE
+  std::cout<<"gathered image"<<std::endl;
+  #endif
+
 
   made_fix=false;
   made_compute=false;
-
-
 
 };
 
