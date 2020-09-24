@@ -85,7 +85,7 @@ int main(int narg, char **arg) {
                       "with "<<params.CoresPerWorker<<" cores per worker\n\n";
 
   Simulator sim(instance_comm,params,instance,nRes);
-
+  
   if(!sim.has_pafi) {
     if(rank==0)
       std::cout<<"MD Error (no PAFI module (USER-MISC for LAMMPS))!"<<std::endl;
