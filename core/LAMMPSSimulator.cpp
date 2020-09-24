@@ -109,6 +109,10 @@ void LAMMPSSimulator::log_error(std::string lc) {
     char error_message[2048];
     int error_type = lammps_get_last_error_message(lmp,error_message,2048);
     last_error_message = error_message;
+    #ifdef VERBOSE
+    std::cout<<"ERROR: "<<error_message<<std::endl;
+    #endif
+
     last_command = lc+"\n";
   }
 };
@@ -369,7 +373,6 @@ void LAMMPSSimulator::sample(double r, double T,
 
   // reset
   run_commands("unfix ae\nunfix af\nunfix hp\nunfix at");
-
 
   // Stress Fixes
   run_script("PostRun");

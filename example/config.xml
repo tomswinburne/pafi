@@ -40,9 +40,10 @@
   <!-- fix hp parameters (LAMMPS units) -->
   <OverDamped> 1 </OverDamped>
   <!-- Recommended 'units metal' value: 0.01 (0.1x typical LAMMPS value of 0.1) -->
-  <Friction> 0.01 </Friction>
+  <Friction> 0.01 </Friction> 
+
   <!-- 0/1 Output LAMMPS logs -->
-  <LogLammps> 1 </LogLammps>
+  <LogLammps> 0 </LogLammps>
 
   <!-- 0/1 Output min config -->
   <postDump> 1 </postDump>
@@ -70,7 +71,6 @@
       read_data  md/image_1.dat
       pair_style    eam/fs
       pair_coeff * * md/Fe.eam.fs Fe
-      mass * 55.85
       run 0
       thermo 10
       run 0
