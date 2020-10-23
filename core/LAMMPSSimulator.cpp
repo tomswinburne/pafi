@@ -467,15 +467,23 @@ void LAMMPSSimulator::lammps_dump_path(std::string fn, double r) {
   }
   nm = sqrt(nm);
 
-  for(int i=0;i<natoms;i++){
+  for(int i=0;i<natoms;i++) {
     out<<i+1<<" 1 "; // TODO multispecies
     for(int j=0;j<3;j++) out<<pathway[3*i+j](r)*scale[j]<<" "; // x y z
+    out<<std::endl;
+  }
+
+  out<<"\nPafiPath\n"<<std::endl;
+
+  for(int i=0;i<natoms;i++) {
+    out<<i+1<<" "; // TODO multispecies
     for(int j=0;j<3;j++) out<<pathway[3*i+j](r)*scale[j]<<" "; // path
     for(int j=0;j<3;j++) out<<(pathway[3*i+j].deriv(1,r)*scale[j]-ncom[j])/nm<<" ";
     for(int j=0;j<3;j++) out<<pathway[3*i+j].deriv(2,r)*scale[j]/nm/nm<<" ";
     out<<std::endl;
   }
   out.close();
+  
 };
 
 void LAMMPSSimulator::lammps_write_dev(std::string fn, double r, double *dev, double *dev_sq) {
