@@ -41,6 +41,10 @@ Parser::Parser(std::string file) {
     rtws(root_node->first_node("SampleSteps")->value());
   parameters["ThermSteps"] = \
     rtws(root_node->first_node("ThermSteps")->value());
+  parameters["MinSteps"] = \
+    rtws(root_node->first_node("MinSteps")->value());
+  parameters["PreMin"] = \
+    rtws(root_node->first_node("PreMin")->value());
   parameters["ThermWindow"] = \
     rtws(root_node->first_node("ThermWindow")->value());
 	parameters["nRepeats"] = \
@@ -90,6 +94,7 @@ Parser::Parser(std::string file) {
   redo_thresh = std::stod(parameters["ReSampleThresh"]);
   maxExtraRepeats = std::stoi(parameters["maxExtraRepeats"]);
   postDump = bool(std::stoi(parameters["postDump"]));
+  preMin = bool(std::stoi(parameters["preMin"]));
 
   rapidxml::xml_node<> * scrs_n = root_node->first_node("Scripts");
 

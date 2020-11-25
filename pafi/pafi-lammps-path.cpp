@@ -71,7 +71,7 @@ int main(int narg, char **arg) {
 
   for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr ) {
 
-    sim.populate(r,nm,0.0);
+    sim.populate(r,nm,0.0,true);
 
     std::string cmd = "run 0";
     sim.run_commands(cmd);
