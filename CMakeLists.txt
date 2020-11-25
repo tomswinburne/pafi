@@ -13,7 +13,8 @@ include_directories(rapidxml)
 include_directories(${CMAKE_INCLUDE_PATH})
 link_directories(${CMAKE_LIBRARY_PATH})
 
-add_definitions(-std=c++11 -O3 -DLAMMPS_EXCEPTIONS) # -DVERBOSE # include for debugging output
+# include VERBOSE for debugging output
+add_definitions(-std=c++11 -O3 -DLAMMPS_EXCEPTIONS) # -DVERBOSE
 
 file(GLOB src_files "core/*")
 
