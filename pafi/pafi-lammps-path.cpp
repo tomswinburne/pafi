@@ -69,6 +69,8 @@ int main(int narg, char **arg) {
 
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
 
+  std::cout<<std::setprecision(15)<<"r index dE |tangent| |force|"<<std::endl;
+
   for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr ) {
 
     sim.populate(r,nm,0.0,true);
