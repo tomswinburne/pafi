@@ -75,16 +75,14 @@ int main(int narg, char **arg) {
 
     sim.populate(r,nm,0.0);
 
-    populate(r,norm_mag,0.0);
-    run_script("PreRun");  // Stress Fixes
-    populate(r,norm_mag,T);
+    sim.run_script("PreRun");  // Stress Fixes
 
     // pafi fix
     cmd = "run 0\n"; // to ensure the PreRun script is executed
     cmd += "run 0\nfix hp all pafi __pafipath 0.0 ";
     cmd += params.parameters["Friction"]+" ";
     cmd += params.seed_str()+" overdamped 1 com 1\n run 0";
-    run_commands(cmd);
+    sim.run_commands(cmd);
 
     if(params.preMin) {
       #ifdef VERBOSE
@@ -93,7 +91,7 @@ int main(int narg, char **arg) {
       #endif
       cmd = "min_style fire\n minimize 0 0.01 ";
       cmd += params.parameters["MinSteps"]+" "+params.parameters["MinSteps"];
-      run_commands(cmd);
+      sim.run_commands(cmd);
     }
 
     cmd = "run 0";
@@ -112,7 +110,7 @@ int main(int narg, char **arg) {
 
     cmd = "unfix hp";
     sim.run_commands(cmd);
-    run_script("PostRun");  // Stress Fixes
+    sim.run_script("PostRun");  // Stress Fixes
   }
 
 
