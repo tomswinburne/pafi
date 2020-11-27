@@ -268,8 +268,9 @@ void LAMMPSSimulator::sample(double r, double T,
   populate(r,norm_mag,T);
 
   // pafi fix
+  cmd = "run 0\n"; // to ensure the PreRun script is executed
   params->parameters["Temperature"] = std::to_string(T);
-  cmd = "fix hp all pafi __pafipath "+params->parameters["Temperature"]+" ";
+  cmd += "fix hp all pafi __pafipath "+params->parameters["Temperature"]+" ";
   cmd += params->parameters["Friction"]+" ";
   cmd += params->seed_str()+" overdamped ";
   cmd += params->parameters["OverDamped"]+" com 1\nrun 0";
