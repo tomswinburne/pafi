@@ -171,8 +171,7 @@ void LAMMPSSimulator::run_commands(std::string strv) {
 /*
   Fill configuration, path, tangent and tangent gradient. Return tangent norm
 */
-void LAMMPSSimulator::populate(double r, double &norm_mag, double T,
-  bool minimize=false) {
+void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
 
   rescale_cell(T); // updates scale vector
 
@@ -234,16 +233,6 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T,
     run_commands(cmd);
     made_compute=true;
   }
-
-  if(minimize) {
-    #ifdef VERBOSE
-    if(local_rank==0)
-      std::cout<<"LAMMPSSimulator.populate(): minimizing"<<std::endl;
-    #endif
-    cmd = "min_style fire\n minimize 0 0.01 ";
-    cmd += params->parameters["MinSteps"]+" "+params->parameters["MinSteps"];
-    run_commands(cmd);
-  }
 };
 
 /* Rescale simulation cell */
@@ -276,7 +265,7 @@ void LAMMPSSimulator::sample(double r, double T,
 
   populate(r,norm_mag,0.0);
   run_script("PreRun");  // Stress Fixes
-  populate(r,norm_mag,T,params->preMin);
+  populate(r,norm_mag,T);
 
   // pafi fix
   params->parameters["Temperature"] = std::to_string(T);
@@ -285,6 +274,16 @@ void LAMMPSSimulator::sample(double r, double T,
   cmd += params->seed_str()+" overdamped ";
   cmd += params->parameters["OverDamped"]+" com 1\nrun 0";
   run_commands(cmd);
+
+  if(params->preMin) {
+    #ifdef VERBOSE
+    if(local_rank==0)
+      std::cout<<"LAMMPSSimulator.populate(): minimizing"<<std::endl;
+    #endif
+    cmd = "min_style fire\n minimize 0 0.01 ";
+    cmd += params->parameters["MinSteps"]+" "+params->parameters["MinSteps"];
+    run_commands(cmd);
+  }
 
   // time average
   refE = getEnergy();

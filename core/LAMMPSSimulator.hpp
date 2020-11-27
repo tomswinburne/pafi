@@ -31,7 +31,7 @@ public:
   /*
     Fill configuration, path, tangent and tangent gradient. Return tangent norm
   */
-  void populate(double r, double &norm_mag, double T, bool minimize);
+  void populate(double r, double &norm_mag, double T);
   /*
     Rescale simulation cell
   */
