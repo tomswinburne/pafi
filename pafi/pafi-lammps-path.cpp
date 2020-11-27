@@ -82,8 +82,8 @@ int main(int narg, char **arg) {
     // pafi fix
     cmd = "run 0\n"; // to ensure the PreRun script is executed
     cmd += "run 0\nfix hp all pafi __pafipath 0.0 ";
-    cmd += params->parameters["Friction"]+" ";
-    cmd += params->seed_str()+" overdamped 1 com 1\n run 0";
+    cmd += params.parameters["Friction"]+" ";
+    cmd += params.seed_str()+" overdamped 1 com 1\n run 0";
     run_commands(cmd);
 
     if(params.preMin) {
