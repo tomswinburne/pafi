@@ -59,7 +59,7 @@ int main(int narg, char **arg) {
 
   sim.make_path(params.KnotList);
   int fileindex=1;
-
+  std::string cmd;
   double dr,E,nm,fE,fs;
   double *f;
   f = new double[3*sim.natoms];
@@ -73,9 +73,30 @@ int main(int narg, char **arg) {
 
   for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr ) {
 
-    sim.populate(r,nm,0.0,true);
+    sim.populate(r,nm,0.0);
 
-    std::string cmd = "run 0";
+    populate(r,norm_mag,0.0);
+    run_script("PreRun");  // Stress Fixes
+    populate(r,norm_mag,T);
+
+    // pafi fix
+    cmd = "run 0\n"; // to ensure the PreRun script is executed
+    cmd += "run 0\nfix hp all pafi __pafipath 0.0 ";
+    cmd += params->parameters["Friction"]+" ";
+    cmd += params->seed_str()+" overdamped 1 com 1\n run 0";
+    run_commands(cmd);
+
+    if(params.preMin) {
+      #ifdef VERBOSE
+      if(local_rank==0)
+        std::cout<<"LAMMPSSimulator.populate(): minimizing"<<std::endl;
+      #endif
+      cmd = "min_style fire\n minimize 0 0.01 ";
+      cmd += params.parameters["MinSteps"]+" "+params.parameters["MinSteps"];
+      run_commands(cmd);
+    }
+
+    cmd = "run 0";
     sim.run_commands(cmd);
 
     E = sim.getForceEnergy(f);
@@ -88,6 +109,10 @@ int main(int narg, char **arg) {
 
     sim.lammps_dump_path("dumps/pafipath."+std::to_string(fileindex)+".data",r);
     fileindex++;
+
+    cmd = "unfix hp";
+    sim.run_commands(cmd);
+    run_script("PostRun");  // Stress Fixes
   }
 
 
