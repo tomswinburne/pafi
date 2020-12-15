@@ -10,10 +10,10 @@ int main(int narg, char **arg) {
   Parser params("./config.xml");
   params.CoresPerWorker = nProcs;
 
-  if(nProcs>1) {
+  if(nProcs>params.CoresPerWorker) {
     if(rank==0) {
       std::cout<<"\n\n\n*****************************\n\n\n";
-      std::cout<<"pafi-lammps-path should only be run in serial!\n";
+      std::cout<<"pafi-lammps-path should only be run with a single worker!\n";
       std::cout<<"\n\n\n*****************************\n\n\n";
     }
     exit(-1);
@@ -46,30 +46,41 @@ int main(int narg, char **arg) {
   MPI_Comm_split(MPI_COMM_WORLD,0,0,&instance_comm);
 
   Simulator sim(instance_comm,params,instance,nRes);
-
-  std::cout<<"Loaded input data of "<<sim.natoms<<" atoms\n";
-  std::cout<<"Supercell Matrix:\n";
-  auto cell = sim.getCellData();
-  for(int i=0;i<3;i++) {
-    std::cout<<"\t";
-    for(int j=0;j<3;j++) std::cout<<sim.pbc.cell[i][j]<<" ";
-    std::cout<<"\n";
+  if(!sim.has_pafi) {
+    if(rank==0)
+      std::cout<<"PAFI Error: missing USER-MISC package in LAMMPS"<<std::endl;
+    exit(-1);
   }
-  std::cout<<"\n\n";
+  if(sim.error_count>0 && local_rank==0) std::cout<<sim.last_error()<<std::endl;
+
+  auto cell = sim.getCellData();
+
+  if(rank==0) {
+    std::cout<<"Loaded input data of "<<sim.natoms<<" atoms\nSupercell Matrix:\n";
+    for(int i=0;i<3;i++) {
+      std::cout<<"\t";
+      for(int j=0;j<3;j++) std::cout<<sim.pbc.cell[i][j]<<" ";
+      std::cout<<"\n";
+    }
+    std::cout<<"\n\n";
+  }
 
   sim.make_path(params.KnotList);
+
   int fileindex=1;
   std::string cmd;
   double dr,E,nm,fE,fs;
   double *f;
+
   f = new double[3*sim.natoms];
 
   if (params.nPlanes>1) dr = (params.stopr-params.startr)/(double)(params.nPlanes-1);
   else dr = 0.1;
 
-  if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
-
-  std::cout<<std::setprecision(15)<<"r index dE |tangent| |force|"<<std::endl;
+  if(rank==0) {
+    std::cout<<"\n\nPath Loaded\n\n";
+    std::cout<<std::setprecision(15)<<"r index dE |tangent| |force|"<<std::endl;
+  }
 
   for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr ) {
 
@@ -81,12 +92,12 @@ int main(int narg, char **arg) {
     cmd = "run 0\n"; // to ensure the PreRun script is executed
     cmd += "run 0\nfix hp all pafi __pafipath 0.0 ";
     cmd += params.parameters["Friction"]+" ";
-    cmd += params.seed_str()+" overdamped 1 com 1\n run 0";
+    cmd += params.seed_str()+" overdamped 1 com 0\n run 0";
     sim.run_commands(cmd);
 
     if(params.preMin) {
       #ifdef VERBOSE
-      if(local_rank==0)
+      if(rank==0)
         std::cout<<"LAMMPSSimulator.populate(): minimizing"<<std::endl;
       #endif
       cmd = "min_style fire\n minimize 0 0.01 ";
@@ -103,8 +114,8 @@ int main(int narg, char **arg) {
     for(int i=0; i<3*sim.natoms; i++) fs += f[i]*f[i];
 
     if(r==params.startr) fE = E;
-    std::cout<<std::setprecision(15)<<r<<" "<<fileindex<<" "<<E-fE<<" "<<nm<<" "<<sqrt(fs)<<std::endl;
-
+    if(rank==0)
+      std::cout<<std::setprecision(15)<<r<<" "<<fileindex<<" "<<E-fE<<" "<<nm<<" "<<sqrt(fs)<<std::endl;
     sim.lammps_dump_path("dumps/pafipath."+std::to_string(fileindex)+".data",r);
     fileindex++;
 

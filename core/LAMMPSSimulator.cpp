@@ -464,37 +464,41 @@ std::string LAMMPSSimulator::header(double mass=55.85) {
 };
 
 void LAMMPSSimulator::lammps_dump_path(std::string fn, double r) {
+
   std::ofstream out;
-  out.open(fn.c_str(),std::ofstream::out);
-  out<<header();
+  if(local_rank==0){
+    out.open(fn.c_str(),std::ofstream::out);
+    out<<header();
 
-  double ncom[]={0.,0.,0.};
-  double c,nm=0.;
+    double ncom[]={0.,0.,0.};
+    double c,nm=0.;
 
-  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) {
-    ncom[j] += pathway[3*i+j].deriv(1,r)*scale[j] / natoms;
+    for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) {
+      ncom[j] += pathway[3*i+j].deriv(1,r)*scale[j] / natoms;
+    }
+
+    for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) {
+      c = pathway[3*i+j].deriv(1,r)*scale[j]-ncom[j];
+      nm += c * c;
+    }
+    nm = sqrt(nm);
+
+    for(int i=0;i<natoms;i++) {
+      out<<i+1<<" 1 "; // TODO multispecies
+      for(int j=0;j<3;j++) out<<pathway[3*i+j](r)*scale[j]<<" "; // x y z
+      out<<std::endl;
+    }
+    out<<"\nPafiPath\n"<<std::endl;
+    for(int i=0;i<natoms;i++) {
+      out<<i+1<<" "; // TODO multispecies
+      for(int j=0;j<3;j++) out<<pathway[3*i+j](r)*scale[j]<<" "; // path
+      for(int j=0;j<3;j++) out<<(pathway[3*i+j].deriv(1,r)*scale[j]-ncom[j])/nm<<" ";
+      for(int j=0;j<3;j++) out<<pathway[3*i+j].deriv(2,r)*scale[j]/nm/nm<<" ";
+      out<<std::endl;
+    }
+    out.close();
   }
 
-  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) {
-    c = pathway[3*i+j].deriv(1,r)*scale[j]-ncom[j];
-    nm += c * c;
-  }
-  nm = sqrt(nm);
-
-  for(int i=0;i<natoms;i++) {
-    out<<i+1<<" 1 "; // TODO multispecies
-    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)*scale[j]<<" "; // x y z
-    out<<std::endl;
-  }
-  out<<"\nPafiPath\n"<<std::endl;
-  for(int i=0;i<natoms;i++) {
-    out<<i+1<<" "; // TODO multispecies
-    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)*scale[j]<<" "; // path
-    for(int j=0;j<3;j++) out<<(pathway[3*i+j].deriv(1,r)*scale[j]-ncom[j])/nm<<" ";
-    for(int j=0;j<3;j++) out<<pathway[3*i+j].deriv(2,r)*scale[j]/nm/nm<<" ";
-    out<<std::endl;
-  }
-  out.close();
 };
 
 void LAMMPSSimulator::lammps_write_dev(std::string fn, double r, double *dev, double *dev_sq) {

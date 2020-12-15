@@ -14,7 +14,7 @@ include_directories(${CMAKE_INCLUDE_PATH})
 link_directories(${CMAKE_LIBRARY_PATH})
 
 # include VERBOSE for debugging output
-add_definitions(-std=c++11 -O3 -DLAMMPS_EXCEPTIONS) # -DVERBOSE
+add_definitions(-std=c++11 -O3 -DLAMMPS_EXCEPTIONS -DLAMMPS_LIB_MPI)# -DVERBOSE)
 
 file(GLOB src_files "core/*")
 
