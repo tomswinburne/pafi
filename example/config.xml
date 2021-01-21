@@ -68,47 +68,6 @@
   <!-- How many resample attempts -->
   <maxExtraRepeats> 1 </maxExtraRepeats>
 
-  <Scripts>
-    <Script name="Input">
-      units metal
-      atom_style atomic
-      atom_modify map array sort 0 0.0
-      neigh_modify every 2 delay 10 check yes page 1000000 one 100000
-      read_data  md/image_1.dat
-      pair_style    eam/fs
-      pair_coeff * * md/Fe.eam.fs Fe
-      run 0
-      thermo 10
-      run 0
-    </Script>
-    <!-- fixes for applied stress / boundary planes etc -->
-    <!-- example for dislocation stress
-    <Script name="PreRun">
-	region couchetop block INF INF INF INF 158.4 INF units box
-	region couchebot block INF INF INF INF INF 6.5 units box
-	group couchetop region couchetop
-	group couchebot region couchebot
-	fix freezetop couchetop setforce NULL NULL 0.0
-	fix freezebot couchebot setforce NULL NULL 0.0
-    </Script>
-
-    <Script name="PostRun">
-	unfix freezetop
-	unfix freezebot
-	group couchetop delete
-	group couchebot delete
-	region couchetop delete
-	region couchebot delete
-    </Script>
-    -->
-    <Script name="PreRun">
-    </Script>
-
-    <!-- Turn them off each time -->
-    <Script name="PostRun">
-    </Script>
-  </Scripts>
-
   <KnotList>
     md/image_1.dat
     md/image_2.dat
@@ -122,3 +81,21 @@
   </KnotList>
 
 </PAFI>
+<Scripts>
+  <Input>
+    units metal
+    atom_style atomic
+    atom_modify map array sort 0 0.0
+    neigh_modify every 2 delay 10 check yes page 1000000 one 100000
+    read_data  md/image_1.dat
+    pair_style    eam/fs
+    pair_coeff * * md/Fe.eam.fs Fe
+    run 0
+    thermo 10
+    run 0
+  </Input>
+  <PreRun>
+  </PreRun>
+  <PostRun>
+  </PostRun>
+</Scripts>

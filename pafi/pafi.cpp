@@ -9,6 +9,14 @@ int main(int narg, char **arg) {
   // Load input file
   Parser params("./config.xml");
 
+  if(!params.xml_success) {
+    if(rank==0) {
+      std::cout<<"\n\n\n*****************************\n\n\n";
+      std::cout<<"Configuration file could not be read!\n";
+      std::cout<<"\n\n\n*****************************\n\n\n";
+    }
+    exit(-1);
+  }
 
   if(nProcs%params.CoresPerWorker!=0) {
     if(rank==0) {

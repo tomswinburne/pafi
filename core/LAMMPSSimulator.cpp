@@ -165,7 +165,7 @@ std::string LAMMPSSimulator::last_error(){
 };
 
 void LAMMPSSimulator::run_commands(std::string strv) {
-  run_commands(params->Parse(strv));
+  run_commands(params->split_lines(strv));
 };
 
 /*
