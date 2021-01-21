@@ -26,6 +26,6 @@ add_executable(pafi ${src_files} pafi/pafi.cpp pafi/pafi.hpp)
 add_executable(pafi-lammps-path ${src_files} pafi/pafi-lammps-path.cpp pafi/pafi.hpp)
 
 
-target_link_libraries(pafi lammps)
+target_link_libraries(pafi lammps_mpi)
 
-target_link_libraries(pafi-lammps-path lammps)
+target_link_libraries(pafi-lammps-path lammps_mpi)
