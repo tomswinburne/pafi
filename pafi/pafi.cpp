@@ -194,6 +194,8 @@ int main(int narg, char **arg) {
       while (total_valid_data<=int(params.redo_thresh*nWorkers*nRepeats)) {
 
         sim.sample(r, T, results, local_dev);
+        for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i];
+
         totalRepeats++;
 
         if(local_rank == 0) {
@@ -206,7 +208,6 @@ int main(int narg, char **arg) {
           local_res[instance*nRes + 5] = results["TdX"];
           local_res[instance*nRes + 6] = results["MaxDev"];
           local_res[instance*nRes + 7] = results["MaxJump"];
-          for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i];
         }
 
         MPI_Barrier(MPI_COMM_WORLD);
