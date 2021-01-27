@@ -26,22 +26,23 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   //lammps_open(5,lmparg,instance_comm,(void **) &lmp);
   run_script("Input");
   #ifdef VERBOSE
-  if(local_rank==0) std::cout<<"Ran input script"<<std::endl;
+  if(local_rank==0) std::cout<<"LAMMPSSimulator(): Ran input script"<<std::endl;
   #endif
   natoms = *((int *) lammps_extract_global(lmp,(char *) "natoms"));
   #ifdef VERBOSE
-  if(local_rank==0) std::cout<<"natoms: "<<natoms<<std::endl;
+  if(local_rank==0) std::cout<<"LAMMPSSimulator(): natoms: "<<natoms<<std::endl;
   #endif
 
   has_pafi = (bool)lammps_config_has_package((char *)"USER-MISC");
   #ifdef VERBOSE
-  if(local_rank==0) std::cout<<"has_pafi: "<<has_pafi<<std::endl;
+  if(local_rank==0)
+    std::cout<<"LAMMPSSimulator(): has_pafi: "<<has_pafi<<std::endl;
   #endif
 
   id = new int[natoms];
   gather("id",1,id);
   #ifdef VERBOSE
-  if(local_rank==0) std::cout<<"gathered id"<<std::endl;
+  if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered id"<<std::endl;
   #endif
 
   // get cell info
@@ -51,7 +52,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   species = new int[natoms];
   gather("type",1,species);
   #ifdef VERBOSE
-  if(local_rank==0) std::cout<<"gathered type"<<std::endl;
+  if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered type"<<std::endl;
   #endif
 
   s_flag=true;
@@ -59,7 +60,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   image = new int[natoms];
   gather("image",1,image);
   #ifdef VERBOSE
-  if(local_rank==0) std::cout<<"gathered image"<<std::endl;
+  if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered image"<<std::endl;
   #endif
 
 
@@ -94,6 +95,9 @@ void LAMMPSSimulator::run_script(std::string sn){
   Parse and run script from string with linebreaks
 */
 void LAMMPSSimulator::run_commands(std::vector<std::string> strv) {
+  #ifdef VERBOSE
+  if(local_rank==0) std::cout<<"LAMMPSSimulator.run_commands(): "<<std::endl;
+  #endif
   for(auto s:strv) {
     #ifdef VERBOSE
     if(local_rank==0) std::cout<<s<<std::endl;
@@ -109,10 +113,7 @@ void LAMMPSSimulator::log_error(std::string lc) {
     char error_message[2048];
     int error_type = lammps_get_last_error_message(lmp,error_message,2048);
     last_error_message = error_message;
-    #ifdef VERBOSE
-    std::cout<<"ERROR: "<<error_message<<std::endl;
-    #endif
-
+    std::cout<<"LAMMPSSimulator.log_error(): "<<error_message<<std::endl;
     last_command = lc+"\n";
   }
 };
@@ -164,7 +165,7 @@ std::string LAMMPSSimulator::last_error(){
 };
 
 void LAMMPSSimulator::run_commands(std::string strv) {
-  run_commands(params->Parse(strv));
+  run_commands(params->split_lines(strv));
 };
 
 /*
@@ -174,8 +175,6 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
 
   rescale_cell(T); // updates scale vector
 
-  //populate(r,norm_mag,0.0);
-
   double t[3*natoms],lt[natoms];
   std::string cmd;
   double ncom[]={0.,0.,0.};
@@ -183,7 +182,8 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
   // check for __pafipath fix and compute
   if (!made_fix) {
     #ifdef VERBOSE
-    if(local_rank==0) std::cout<<"making __pafipath fix"<<std::endl;
+    if(local_rank==0)
+      std::cout<<"LAMMPSSimulator.populate(): making __pafipath fix"<<std::endl;
     #endif
     cmd = "fix __pafipath all property/atom ";
     cmd += "d_ux d_uy d_uz d_nx d_ny d_nz d_dnx d_dny d_dnz\nrun 0";
@@ -198,7 +198,8 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
 
   for(int j=0;j<3;j++) {
     #ifdef VERBOSE
-    if(local_rank==0) std::cout<<"Scattering d_u"+xyz[j]<<std::endl;
+    if(local_rank==0)
+      std::cout<<"LAMMPSSimulator.populate(): Scattering d_u"+xyz[j]<<std::endl;
     #endif
     for(int i=0;i<natoms;i++)  lt[i] = pathway[3*i+j].deriv(0,r) * scale[j];
     scatter("d_u"+xyz[j],1,lt);
@@ -223,7 +224,9 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
 
   if(!made_compute) {
     #ifdef VERBOSE
-    if(local_rank==0) std::cout<<"making __pafipath compute"<<std::endl;
+    if(local_rank==0)
+      std::cout<<
+      "LAMMPSSimulator.populate(): making __pafipath compute"<<std::endl;
     #endif
     cmd = "compute __pafipath all property/atom ";
     cmd += "d_ux d_uy d_uz d_nx d_ny d_nz d_dnx d_dny d_dnz\nrun 0";
@@ -265,12 +268,23 @@ void LAMMPSSimulator::sample(double r, double T,
   populate(r,norm_mag,T);
 
   // pafi fix
+  cmd = "run 0\n"; // to ensure the PreRun script is executed
   params->parameters["Temperature"] = std::to_string(T);
-  cmd = "fix hp all pafi __pafipath "+params->parameters["Temperature"]+" ";
+  cmd += "fix hp all pafi __pafipath "+params->parameters["Temperature"]+" ";
   cmd += params->parameters["Friction"]+" ";
   cmd += params->seed_str()+" overdamped ";
   cmd += params->parameters["OverDamped"]+" com 1\nrun 0";
   run_commands(cmd);
+
+  if(params->preMin) {
+    #ifdef VERBOSE
+    if(local_rank==0)
+      std::cout<<"LAMMPSSimulator.populate(): minimizing"<<std::endl;
+    #endif
+    cmd = "min_style fire\n minimize 0 0.01 ";
+    cmd += params->parameters["MinSteps"]+" "+params->parameters["MinSteps"];
+    run_commands(cmd);
+  }
 
   // time average
   refE = getEnergy();
@@ -342,8 +356,8 @@ void LAMMPSSimulator::sample(double r, double T,
   lammps_free(lmp_ptr);
 
   // post minmization - max jump
-  cmd = "min_style fire\n minimize 0 0 ";
-  cmd += params->parameters["ThermSteps"]+" "+params->parameters["ThermSteps"];
+  cmd = "min_style fire\n minimize 0 0.01 ";
+  cmd += params->parameters["MinSteps"]+" "+params->parameters["MinSteps"];
   run_commands(cmd);
   gather("x",3,dev);
   for(int i=0;i<3*natoms;i++) dev[i] -= path(i,r,0,scale[i%3]);
@@ -352,7 +366,7 @@ void LAMMPSSimulator::sample(double r, double T,
     a_disp = 0.0;
     for(int j=0;j<3;j++) a_disp += dev[3*i+j]*dev[3*i+j];
     max_disp = std::max(a_disp,max_disp);
-    for(int j=0;j<3;j++) dev[3*i+j] = 0.0;
+    if(!params->postDump) for(int j=0;j<3;j++) dev[3*i+j] = 0.0;
   }
   results["MaxJump"] = sqrt(max_disp);
 
@@ -450,40 +464,40 @@ std::string LAMMPSSimulator::header(double mass=55.85) {
 };
 
 void LAMMPSSimulator::lammps_dump_path(std::string fn, double r) {
+
   std::ofstream out;
-  out.open(fn.c_str(),std::ofstream::out);
-  out<<header();
+  if(local_rank==0){
+    out.open(fn.c_str(),std::ofstream::out);
+    out<<header();
 
-  double ncom[]={0.,0.,0.};
-  double c,nm=0.;
+    double ncom[]={0.,0.,0.};
+    double c,nm=0.;
 
-  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) {
-    ncom[j] += pathway[3*i+j].deriv(1,r)*scale[j] / natoms;
+    for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) {
+      ncom[j] += pathway[3*i+j].deriv(1,r)*scale[j] / natoms;
+    }
+
+    for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) {
+      c = pathway[3*i+j].deriv(1,r)*scale[j]-ncom[j];
+      nm += c * c;
+    }
+    nm = sqrt(nm);
+
+    for(int i=0;i<natoms;i++) {
+      out<<i+1<<" 1 "; // TODO multispecies
+      for(int j=0;j<3;j++) out<<pathway[3*i+j](r)*scale[j]<<" "; // x y z
+      out<<std::endl;
+    }
+    out<<"\nPafiPath\n"<<std::endl;
+    for(int i=0;i<natoms;i++) {
+      out<<i+1<<" "; // TODO multispecies
+      for(int j=0;j<3;j++) out<<pathway[3*i+j](r)*scale[j]<<" "; // path
+      for(int j=0;j<3;j++) out<<(pathway[3*i+j].deriv(1,r)*scale[j]-ncom[j])/nm<<" ";
+      for(int j=0;j<3;j++) out<<pathway[3*i+j].deriv(2,r)*scale[j]/nm/nm<<" ";
+      out<<std::endl;
+    }
+    out.close();
   }
-
-  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) {
-    c = pathway[3*i+j].deriv(1,r)*scale[j]-ncom[j];
-    nm += c * c;
-  }
-  nm = sqrt(nm);
-
-  for(int i=0;i<natoms;i++) {
-    out<<i+1<<" 1 "; // TODO multispecies
-    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)*scale[j]<<" "; // x y z
-    out<<std::endl;
-  }
-
-  out<<"\nPafiPath\n"<<std::endl;
-
-  for(int i=0;i<natoms;i++) {
-    out<<i+1<<" "; // TODO multispecies
-    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)*scale[j]<<" "; // path
-    for(int j=0;j<3;j++) out<<(pathway[3*i+j].deriv(1,r)*scale[j]-ncom[j])/nm<<" ";
-    for(int j=0;j<3;j++) out<<pathway[3*i+j].deriv(2,r)*scale[j]/nm/nm<<" ";
-    out<<std::endl;
-  }
-  out.close();
-  
 };
 
 void LAMMPSSimulator::lammps_write_dev(std::string fn, double r, double *dev, double *dev_sq) {

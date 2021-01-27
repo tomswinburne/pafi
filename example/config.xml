@@ -7,18 +7,21 @@
 
 
   <!-- LowTemperature to HighTemperature in TemperatureSteps steps -->
-  <LowTemperature> 100 </LowTemperature>
-  <HighTemperature> 1000 </HighTemperature>
+  <LowTemperature> 200 </LowTemperature>
+  <HighTemperature> 800 </HighTemperature>
   <TemperatureSteps> 4 </TemperatureSteps>
 
   <!-- Data gathering steps -->
-  <SampleSteps> 100 </SampleSteps>
+  <SampleSteps> 1000 </SampleSteps>
 
-  <!-- We require ThermSteps > ThermWindow AND ThermSteps%ThermWindow==0 -->
-  <ThermSteps> 200 </ThermSteps>
-  <ThermWindow> 100 </ThermWindow>
+  <!-- Steps for thermalization.  Require ThermSteps%ThermWindow==0 -->
+  <ThermSteps> 2000 </ThermSteps>
 
-  <nPlanes> 11 </nPlanes>
+  <!-- Averaging window for temperature determination. -->
+  <ThermWindow> 1000 </ThermWindow>
+
+  <!-- Max steps for optional in-plane minimizations (see below) -->
+  <MinSteps> 2000 </MinSteps>
 
   <!-- We require nprocs % CoresPerWorker==0 -->
   <CoresPerWorker> 1 </CoresPerWorker>
@@ -37,23 +40,38 @@
   <QuadraticThermalExpansionZ>0.0</QuadraticThermalExpansionZ>
 
 
-  <!-- fix hp parameters (LAMMPS units) -->
+  <!-- perform overdamped/Brownian or Langevin dynamics on hyperplane -->
   <OverDamped> 1 </OverDamped>
-  <!-- Recommended 'units metal' value: 0.01 (0.1x typical LAMMPS value of 0.1) -->
-  <Friction> 0.01 </Friction> 
 
-  <!-- 0/1 Output LAMMPS logs -->
+  <!--
+  Friction parameter as used by MD engine (here LAMMPS : 1/strength)
+  Typical 'units metal' value : 0.1 == 100 time steps decay time
+  If OverDamped=1, we set a strong friction i.e. < 0.1, e.g. 0.05
+  -->
+  <Friction> 0.05 </Friction>
+
+  <!-- 0/1 Output LAMMPS logfiles for error checking purposes -->
   <LogLammps> 0 </LogLammps>
 
-  <!-- 
+  <!--
    0 : (Default) Output time-and-ensemble averaged in-plane deviation from reference pathway. Can indicate finite temperature path but will have sampling noise
    1 : Output ensemble averaged in-plane deviation following in-plane minimization post-run. No noise but will lose some/all features of path
   -->
-  <postDump> 0 </postDump>
+  <PostDump> 0 </PostDump>
 
-  <!-- for NEB planes -->
+  <!--
+  Perform an in-plane minimization before thermalization/sampling.
+  If pathway is a well-converged NEB/MEP this should not produce any change
+  -->
+  <PreMin> 0 </PreMin>
+
+  <!-- If only a subsection of the loaded 0->1 pathway is to be sampled -->
   <StartCoordinate> 0.0 </StartCoordinate>
   <StopCoordinate> 1.0 </StopCoordinate>
+
+  <!-- Sampling points from StartCoordinate -> StopCoordinate inclusive -->
+  <nPlanes> 11 </nPlanes>
+
 
   <!-- Maximum Atomic Displacement between local in-plane minima
   before and after sampling run which can still be considered "in basin"
@@ -64,49 +82,11 @@
   <ReSampleThresh> 0.8 </ReSampleThresh>
   <!-- How many resample attempts -->
   <maxExtraRepeats> 1 </maxExtraRepeats>
-
-  <Scripts>
-    <Script name="Input">
-      units metal
-      atom_style atomic
-      atom_modify map array sort 0 0.0
-      neigh_modify every 2 delay 10 check yes page 1000000 one 100000
-      read_data  md/image_1.dat
-      pair_style    eam/fs
-      pair_coeff * * md/Fe.eam.fs Fe
-      run 0
-      thermo 10
-      run 0
-    </Script>
-    <!-- fixes for applied stress / boundary planes etc -->
-    <!-- example for dislocation stress
-    <Script name="PreRun">
-	region couchetop block INF INF INF INF 158.4 INF units box
-	region couchebot block INF INF INF INF INF 6.5 units box
-	group couchetop region couchetop
-	group couchebot region couchebot
-	fix freezetop couchetop setforce NULL NULL 0.0
-	fix freezebot couchebot setforce NULL NULL 0.0
-    </Script>
-
-    <Script name="PostRun">
-	unfix freezetop
-	unfix freezebot
-	group couchetop delete
-	group couchebot delete
-	region couchetop delete
-	region couchebot delete
-    </Script>
-    -->
-    <Script name="PreRun">
-    </Script>
-
-    <!-- Turn them off each time -->
-    <Script name="PostRun">
-    </Script>
-  </Scripts>
-
-  <KnotList>
+  <!--
+  Sequential list of pathway configurations, produced
+  from e.g. a NEB configuration.
+  -->
+  <PathwayConfigurations>
     md/image_1.dat
     md/image_2.dat
     md/image_3.dat
@@ -116,6 +96,29 @@
     md/image_7.dat
     md/image_8.dat
     md/image_9.dat
-  </KnotList>
+  </PathwayConfigurations>
 
 </PAFI>
+<Scripts>
+  <!-- LAMMPS script to read in the first pathway
+      configuration and load the potential
+  -->
+  <Input>
+    units metal
+    atom_style atomic
+    atom_modify map array sort 0 0.0
+    neigh_modify every 2 delay 10 check yes page 1000000 one 100000
+    read_data  md/image_1.dat
+    pair_style    eam/fs
+    pair_coeff * * md/Fe.eam.fs Fe
+    run 0
+    thermo 10
+    run 0
+  </Input>
+  <!-- Apply any fixes e.g. external stresses before thermalization/sampling -->
+  <PreRun>
+  </PreRun>
+  <!-- Turn off these same fixes after each sampling run -->
+  <PostRun>
+  </PostRun>
+</Scripts>

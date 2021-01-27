@@ -3,6 +3,38 @@
 // Loads config file, lammps scripts etc
 
 Parser::Parser(std::string file) {
+  xml_success = false;
+
+  // Default Values
+  parameters["CoresPerWorker"]="1";
+  parameters["LowTemperature"] = "100";
+  parameters["HighTemperature"] = "1000";
+  parameters["TemperatureSteps"] = "10";
+  parameters["LinearThermalExpansionX"] = "0.0";
+  parameters["LinearThermalExpansionY"] = "0.0";
+  parameters["LinearThermalExpansionZ"] = "0.0";
+  parameters["QuadraticThermalExpansionX"] = "0.0";
+  parameters["QuadraticThermalExpansionY"] = "0.0";
+  parameters["QuadraticThermalExpansionZ"] = "0.0";
+  parameters["SampleSteps"] = "1000";
+  parameters["ThermSteps"] = "1000";
+  parameters["ThermWindow"] = "500";
+  parameters["nRepeats"] = "1";
+  parameters["nPlanes"] = "10";
+  parameters["DumpFolder"] = "./dumps";
+  parameters["OverDamped"] = "1";
+  parameters["Friction"] = "0.1";
+  parameters["StartCoordinate"] = "0.0";
+  parameters["StopCoordinate"] = "1.0";
+  parameters["LogLammps"] = "0";
+  parameters["MaxJump"] = "0.1";
+  parameters["ReSampleThresh"] = "0.5";
+  parameters["maxExtraRepeats"] = "1";
+  parameters["PostDump"] = "0";
+  parameters["PreMin"] = "1";
+
+
+
   seeded = false;
   // Read the xml file into a vector
 	std::ifstream xmlfile(file);
@@ -11,68 +43,45 @@ Parser::Parser(std::string file) {
 
   // Parse the buffer using the xml file parsing library into xml_doc
 	xml_doc.parse<0>(&buffer[0]);
-	root_node = xml_doc.first_node("PAFI");
 
-  parameters["CoresPerWorker"]=\
-    rtws(root_node->first_node("CoresPerWorker")->value());
-  parameters["LowTemperature"] = \
-    rtws(root_node->first_node("LowTemperature")->value());
-  parameters["HighTemperature"] = \
-    rtws(root_node->first_node("HighTemperature")->value());
-  parameters["TemperatureSteps"] = \
-    rtws(root_node->first_node("TemperatureSteps")->value());
+	root_node = xml_doc.first_node();
 
-  parameters["LinearThermalExpansionX"] = \
-    rtws(root_node->first_node("LinearThermalExpansionX")->value());
-  parameters["QuadraticThermalExpansionX"] = \
-    rtws(root_node->first_node("QuadraticThermalExpansionX")->value());
+  bool found_pafi = false, found_scripts = false;
 
-  parameters["LinearThermalExpansionY"] = \
-    rtws(root_node->first_node("LinearThermalExpansionY")->value());
-  parameters["QuadraticThermalExpansionY"] = \
-    rtws(root_node->first_node("QuadraticThermalExpansionY")->value());
+  while (root_node) {
 
-  parameters["LinearThermalExpansionZ"] = \
-    rtws(root_node->first_node("LinearThermalExpansionZ")->value());
-  parameters["QuadraticThermalExpansionZ"] = \
-    rtws(root_node->first_node("QuadraticThermalExpansionZ")->value());
+    if(rtws(root_node->name())=="PAFI") {
+      found_pafi = true;
+      child_node = root_node->first_node();
+      while (child_node) {
+        if(rtws(child_node->name())=="PathwayConfigurations") {
+          PathwayConfigurations = split_lines(child_node->value());
+        } else {
+          parameters[rtws(child_node->name())] = rtws(child_node->value());
+        }
+        child_node = child_node->next_sibling();
+      }
+    } else if(rtws(root_node->name())=="Scripts") {
+      found_scripts = true;
+      child_node = root_node->first_node();
+      while (child_node) {
+        scripts[rtws(child_node->name())] = child_node->value();
+        child_node = child_node->next_sibling();
+      }
+    }
+    root_node = root_node->next_sibling();
+  }
+  if(!found_pafi) {
+    std::cout<<"XML file incomplete! Provide PAFI parameters!"<<std::endl;
+    return;
+  }
 
-  parameters["SampleSteps"] = \
-    rtws(root_node->first_node("SampleSteps")->value());
-  parameters["ThermSteps"] = \
-    rtws(root_node->first_node("ThermSteps")->value());
-  parameters["ThermWindow"] = \
-    rtws(root_node->first_node("ThermWindow")->value());
-	parameters["nRepeats"] = \
-    rtws(root_node->first_node("nRepeats")->value());
-  parameters["nPlanes"] = \
-    rtws(root_node->first_node("nPlanes")->value());
-  parameters["DumpFolder"] = \
-    rtws(root_node->first_node("DumpFolder")->value());
-  parameters["OverDamped"] = \
-    rtws(root_node->first_node("OverDamped")->value());
-  parameters["Friction"] = \
-    rtws(root_node->first_node("Friction")->value());
-  parameters["StartCoordinate"] = \
-    rtws(root_node->first_node("StartCoordinate")->value());
-  parameters["StopCoordinate"] = \
-    rtws(root_node->first_node("StopCoordinate")->value());
-  parameters["LogLammps"] = \
-    rtws(root_node->first_node("LogLammps")->value());
-
-  parameters["MaxJump"] = \
-      rtws(root_node->first_node("MaxJump")->value());
-  parameters["ReSampleThresh"] = \
-      rtws(root_node->first_node("ReSampleThresh")->value());
-  parameters["maxExtraRepeats"] = \
-    rtws(root_node->first_node("maxExtraRepeats")->value());
-
-  parameters["postDump"] = \
-    rtws(root_node->first_node("postDump")->value());
+  if(!found_scripts) {
+    std::cout<<"XML file incomplete! Provide MD scripts!"<<std::endl;
+    return;
+  }
 
 	// Now we can convert to type
-	KnotList = Parse(root_node->first_node("KnotList")->value());
-
   CoresPerWorker = std::stoi(parameters["CoresPerWorker"]);
 	nPlanes = std::stoi(parameters["nPlanes"]);
 	nRepeats = std::stoi(parameters["nRepeats"]);
@@ -89,15 +98,10 @@ Parser::Parser(std::string file) {
   maxjump_thresh = std::stod(parameters["MaxJump"]);
   redo_thresh = std::stod(parameters["ReSampleThresh"]);
   maxExtraRepeats = std::stoi(parameters["maxExtraRepeats"]);
-  postDump = bool(std::stoi(parameters["postDump"]));
+  postDump = bool(std::stoi(parameters["PostDump"]));
+  preMin = bool(std::stoi(parameters["PreMin"]));
 
-  rapidxml::xml_node<> * scrs_n = root_node->first_node("Scripts");
-
-  for (rapidxml::xml_node<> * scr_n = scrs_n->first_node("Script"); scr_n; scr_n = scr_n->next_sibling()) {
-    std::string key = scr_n->first_attribute("name")->value();
-    scripts[key] = scr_n->value();
-  }
-
+  xml_success = true;
 };
 
 // remove leading and trailing whitespaces - avoids RapidXML parsing bug
@@ -115,7 +119,7 @@ void Parser::seed(int random_seed) {
 	seeded=true;
 };
 
-std::vector<std::string> Parser::Parse(std::string r) {
+std::vector<std::string> Parser::split_lines(std::string r) {
   std::vector< std::string > sc;
   std::istringstream input;
   input.str(r);
@@ -139,7 +143,7 @@ std::string Parser::seed_str() {
 
 std::vector<std::string> Parser::Script(std::string sn) {
 	//parameters["Temperature"] = std::to_string(T);
-	return Parse(scripts[sn]);
+	return split_lines(scripts[sn]);
 };
 
 // Pointless :)
@@ -162,7 +166,7 @@ std::string Parser::welcome_message(){
 	for(auto s: scripts) str+=s.first+" : "+s.second+"\n";
 
 	str+="\nParameters:\n\n";
-  for(auto s: parameters) if(s.first!="KnotList") str+=s.first+" : "+s.second+"\n";
+  for(auto s: parameters) if(s.first!="PathwayConfigurations") str+=s.first+" : "+s.second+"\n";
 	str+="\n\n";
 
   return str;

@@ -9,6 +9,14 @@ int main(int narg, char **arg) {
   // Load input file
   Parser params("./config.xml");
 
+  if(!params.xml_success) {
+    if(rank==0) {
+      std::cout<<"\n\n\n*****************************\n\n\n";
+      std::cout<<"Configuration file could not be read!\n";
+      std::cout<<"\n\n\n*****************************\n\n\n";
+    }
+    exit(-1);
+  }
 
   if(nProcs%params.CoresPerWorker!=0) {
     if(rank==0) {
@@ -85,10 +93,10 @@ int main(int narg, char **arg) {
                       "with "<<params.CoresPerWorker<<" cores per worker\n\n";
 
   Simulator sim(instance_comm,params,instance,nRes);
-  
+
   if(!sim.has_pafi) {
     if(rank==0)
-      std::cout<<"MD Error (no PAFI module (USER-MISC for LAMMPS))!"<<std::endl;
+      std::cout<<"PAFI Error: missing USER-MISC package in LAMMPS"<<std::endl;
     exit(-1);
   }
   if(sim.error_count>0 && local_rank==0) std::cout<<sim.last_error()<<std::endl;
@@ -105,7 +113,7 @@ int main(int narg, char **arg) {
     std::cout<<"\n\n";
   }
 
-  sim.make_path(params.KnotList);
+  sim.make_path(params.PathwayConfigurations);
   if(sim.error_count>0 && local_rank==0) std::cout<<sim.last_error()<<std::endl;
 
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
@@ -230,7 +238,7 @@ int main(int narg, char **arg) {
         MPI_Barrier(MPI_COMM_WORLD);
 
         // nullify invalid batches
-        if(valid[instance]==0) for(int i=0;i<vsize;i++) {
+        if(valid[instance]==0 && !params.postDump) for(int i=0;i<vsize;i++) {
           local_dev[i]=0.0;
           local_dev_sq[i]=0.0;
         }
@@ -259,7 +267,10 @@ int main(int narg, char **arg) {
         total_invalid_data = totalRepeats*nWorkers - total_valid_data;
 
         // deviation vectors
-        if(total_valid_data>0) for(int i=0;i<vsize;i++) {
+        if(params.postDump) for(int i=0;i<vsize;i++) {
+          all_dev[i]/=double(totalRepeats*nWorkers);
+          all_dev_sq[i]/=double(totalRepeats*nWorkers);
+        } else if(total_valid_data>0) for(int i=0;i<vsize;i++) {
           all_dev[i]/=double(total_valid_data);
           all_dev_sq[i]/=double(total_valid_data);
         }
