@@ -113,7 +113,7 @@ int main(int narg, char **arg) {
     std::cout<<"\n\n";
   }
 
-  sim.make_path(params.KnotList);
+  sim.make_path(params.PathwayConfigurations);
   if(sim.error_count>0 && local_rank==0) std::cout<<sim.last_error()<<std::endl;
 
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";

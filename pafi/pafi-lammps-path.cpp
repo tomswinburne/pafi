@@ -65,7 +65,7 @@ int main(int narg, char **arg) {
     std::cout<<"\n\n";
   }
 
-  sim.make_path(params.KnotList);
+  sim.make_path(params.PathwayConfigurations);
 
   int fileindex=1;
   std::string cmd;

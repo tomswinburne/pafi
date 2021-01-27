@@ -38,7 +38,7 @@ rapidxml::xml_node<> * child_node;
 std::map<std::string,std::string> parameters;
 std::map<std::string,std::string> scripts;
 
-std::vector<std::string> KnotList;
+std::vector<std::string> PathwayConfigurations;
 double lowT,highT,Friction,startr,stopr,maxjump_thresh,redo_thresh;
 int CoresPerWorker, nPlanes, TSteps, nRepeats, maxExtraRepeats;
 std::string dump_dir;

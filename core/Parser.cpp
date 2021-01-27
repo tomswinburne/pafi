@@ -54,8 +54,8 @@ Parser::Parser(std::string file) {
       found_pafi = true;
       child_node = root_node->first_node();
       while (child_node) {
-        if(rtws(child_node->name())=="KnotList") {
-          KnotList = split_lines(child_node->value());
+        if(rtws(child_node->name())=="PathwayConfigurations") {
+          PathwayConfigurations = split_lines(child_node->value());
         } else {
           parameters[rtws(child_node->name())] = rtws(child_node->value());
         }
@@ -166,7 +166,7 @@ std::string Parser::welcome_message(){
 	for(auto s: scripts) str+=s.first+" : "+s.second+"\n";
 
 	str+="\nParameters:\n\n";
-  for(auto s: parameters) if(s.first!="KnotList") str+=s.first+" : "+s.second+"\n";
+  for(auto s: parameters) if(s.first!="PathwayConfigurations") str+=s.first+" : "+s.second+"\n";
 	str+="\n\n";
 
   return str;
