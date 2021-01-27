@@ -498,7 +498,6 @@ void LAMMPSSimulator::lammps_dump_path(std::string fn, double r) {
     }
     out.close();
   }
-
 };
 
 void LAMMPSSimulator::lammps_write_dev(std::string fn, double r, double *dev, double *dev_sq) {
