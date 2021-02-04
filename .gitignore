@@ -1,12 +1,5 @@
 # test data
-newbuild/*
 build/*
-build_noboost/*
-core_boost/*
-lammps/*
-rosa_tests/*
-run/*
-tex/*
 
 # dev data
 example/*
@@ -45,3 +38,5 @@ notes.py
 */*.exe
 */*.out
 */*.app
+
+.DS_Store
