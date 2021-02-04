@@ -48,6 +48,8 @@ Parser::Parser(std::string file) {
 
   bool found_pafi = false, found_scripts = false;
 
+  PathwayConfigurations.clear();
+
   while (root_node) {
 
     if(rtws(root_node->name())=="PAFI") {
@@ -80,6 +82,13 @@ Parser::Parser(std::string file) {
     std::cout<<"XML file incomplete! Provide MD scripts!"<<std::endl;
     return;
   }
+
+  if(PathwayConfigurations.size()<2) {
+    std::cout<<"XML file incomplete! Provide PathwayConfigurations (e.g. list of NEB knots )!"<<std::endl;
+    return;
+  }
+
+
 
 	// Now we can convert to type
   CoresPerWorker = std::stoi(parameters["CoresPerWorker"]);
