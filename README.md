@@ -60,7 +60,7 @@ LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64  -DLAMMPS_EXCEPTIONS
 4. Copy library to your local lib/ and headers to local include/, at e.g. ${HOME}/.local
 ```bash
   export PREFIX=${HOME}/.local # example value
-  cp liblammps_mpi.a ${PREFIX}/lib/liblammps.a
+  cp liblammps_mpi.a ${PREFIX}/lib/liblammps_mpi.a
   mkdir ${PREFIX}/include/lammps
   cp *.h ${PREFIX}/include/lammps/
 ```
