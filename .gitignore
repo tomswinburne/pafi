@@ -1,18 +1,12 @@
 # test data
-newbuild/*
 build/*
-build_noboost/*
-core_boost/*
-lammps/*
-rosa_tests/*
 run/*
-tex/*
-
 # dev data
 example/*
 !example/Fe*
 !example/config.xml
 !example/sample_plot.py
+!example/alt_sample_plot.py
 
 lib/*
 notes.py
