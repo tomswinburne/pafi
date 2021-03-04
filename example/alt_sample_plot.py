@@ -92,7 +92,7 @@ for ii,i_f in enumerate(T.argsort()):
         axs[0].plot(rFFe[:,0],rFFe[:,1],'C%d%s' % (ii,['o--','-'][j]),label='%dK%s' % (T[i_f],[""," (Splined)"][j]))
         axs[0].fill_between(rFFe[:,0],rFFe[:,1]-rFFe[:,2],rFFe[:,1]+rFFe[:,2],facecolor='0.8')
 
-        barrier = rFFe[:,1].max()-rFFe[:,1].min()
+        barrier = rFFe[:,1].max()-rFFe[:np.argmax(rFFe[:,1]),1].min()
         error_barrier = rFFe[:,2][rFFe[:,1].argmax()]+rFFe[:,2][rFFe[:,1].argmin()]
         _bar += [barrier]+[error_barrier]
     bar += [_bar]
