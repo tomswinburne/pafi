@@ -18,8 +18,33 @@ import matplotlib.pyplot as plt
 from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 
+# read in file line-by-line, returning ave and std for data with max displacement <= disp_thresh
+def raw_parser(file_name,disp_thresh = 0.4):
+    try:
+        f = open(file_name,'r')
+    except IOError:
+        print("raw data file %s not found" % file_name)
+        return np.zeros((1,3))
+
+    r_dFave_dFstd = []
+    r = 0.0
+    for line in f.readlines():
+        if line[0] != "#":
+            fields = np.loadtxt(io.StringIO(line.strip()))
+            n_data = (fields.size-1)//4
+            n_valid = (fields[-n_data:] < disp_thresh).sum()
+            if n_valid>0:
+                r_dFave_dFstd += [[r,fields[1:n_valid+1].mean(),fields[1:n_valid+1].std()/np.sqrt(n_valid)]]
+            r += 1.0 # always increment even if n_valid==0
+    r_dFave_dFstd = np.r_[r_dFave_dFstd]
+    r_dFave_dFstd[:,0]/=r_dFave_dFstd[-1][0] # r : 0 -> 1
+
+    return r_dFave_dFstd
+
+
+
 # file list- here we take epoch 5
-fl = glob.glob("data/raw_ensemble_output_*_5");
+fl = glob.glob("data/50/raw_ensemble_output_*_5");
 
 # temperatures
 T = np.r_[[int(f.split("_")[-2][:-1]) for f in fl]];
@@ -36,20 +61,7 @@ fig,axs = plt.subplots(1,2,figsize=(8,4),dpi=144,sharey=True);
 
 bar = []
 for ii,i_f in enumerate(T.argsort()):
-    d = np.loadtxt(fl[i_f])
-    # nWorkers
-    n = int((d.shape[1]-1)/4)
-
-    r_array = np.linspace(0.,1.,d.shape[0])
-
-    # load raw data
-    rdFdFe = []
-    for i in range(d.shape[0]):
-        # how many max_jumps below threshold?
-        n_valid = (d[i][-n:] < disp_thresh).sum()
-        if n_valid>0:
-            rdFdFe += [[r_array[i],d[i][1:n_valid+1].mean(),d[i][1:n_valid+1].std()/np.sqrt(n_valid)]]
-    rdFdFe = np.r_[rdFdFe]
+    rdFdFe = raw_parser(fl[i_f])
 
 
     spl_rdFdFe = np.zeros((nReSpl*rdFdFe.shape[0],rdFdFe.shape[1]))
