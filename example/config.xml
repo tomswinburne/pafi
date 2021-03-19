@@ -1,7 +1,4 @@
 <PAFI>
-  <!-- If == 0 ignore NPlanes, Start Coordinate and StopCoordinate; sample only at provided pathway configurations -->
-  <Rediscretize>0</Rediscretize>
-
   <!-- omit trailing forward slash -->
   <DumpFolder>./dumps</DumpFolder>
 
@@ -68,12 +65,20 @@
   -->
   <PreMin> 0 </PreMin>
 
-  <!-- If only a subsection of the loaded 0->1 pathway is to be sampled -->
+  <!-- If == 0 ignore NPlanes, Start Coordinate and StopCoordinate; sample only at provided pathway configurations -->
+  <Rediscretize>1</Rediscretize>
+  
+  <!-- If Rediscretize==1, sample on nPlanes equally spaced
+  planes in [StartCoordinate,StopCoordinate], a subset of [0,1] -->
+  <nPlanes> 11 </nPlanes>
   <StartCoordinate> 0.0 </StartCoordinate>
   <StopCoordinate> 1.0 </StopCoordinate>
 
-  <!-- Sampling points from StartCoordinate -> StopCoordinate inclusive -->
-  <nPlanes> 11 </nPlanes>
+
+
+  <!-- If==0, turn off cubic spline interpolation. NOT recommended -->
+  <SplinePath>1</SplinePath>
+
 
 
   <!-- Maximum Atomic Displacement between local in-plane minima
