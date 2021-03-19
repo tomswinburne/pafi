@@ -1,4 +1,7 @@
 <PAFI>
+  <!-- If == 0 ignore NPlanes, Start Coordinate and StopCoordinate; sample only at provided pathway configurations -->
+  <Rediscretize>0</Rediscretize>
+
   <!-- omit trailing forward slash -->
   <DumpFolder>./dumps</DumpFolder>
 

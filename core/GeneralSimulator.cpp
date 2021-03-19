@@ -67,6 +67,7 @@ void GeneralSimulator::expansion(double T, double *newscale) {
 };
 
 void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
+  pathway_r.clear();
   int nknots = knot_list.size();
   // no way around it- have to store all the knots
   std::vector<double> xs(nknots,0.), ys(nknots,0.), zs(nknots,0.);
@@ -105,7 +106,11 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
   rr[0] = 1.0;
   r[nknots-1] = 1.0;
 
-  for(int knot=0;knot<nknots;knot++) r[knot] = 0.5*(r[knot] + 1.0 - rr[knot]);
+  for(int knot=0;knot<nknots;knot++) {
+    pathway_r.push_back(0.5*(r[knot] + 1.0 - rr[knot]));
+    r[knot] = 0.5*(r[knot] + 1.0 - rr[knot]);
+  }
+
 
   for(int i=0; i<natoms; i++) {
     for(int knot=0;knot<nknots;knot++) {
@@ -114,13 +119,14 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
       zs[knot] = knots[3*natoms*knot + 3*i + 2];
     }
 
-    xspl.set_points(r,xs);
+
+    xspl.set_points(r,xs,params->spline_path);
     pathway.push_back(xspl);
 
-    yspl.set_points(r,ys);
+    yspl.set_points(r,ys,params->spline_path);
     pathway.push_back(yspl);
 
-    zspl.set_points(r,zs);
+    zspl.set_points(r,zs,params->spline_path);
     pathway.push_back(zspl);
 
   }
@@ -128,7 +134,11 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
 };
 
 double GeneralSimulator::path(int i, double r, int d, double s) {
-  return pathway[i].deriv(d,r) * s;
+  if(params->spline_path or d==0) return pathway[i].deriv(d,r) * s;
+  double dr = 1.0 / pathway_r.size();
+  double val = pathway[i].deriv(0,r);
+  if(d==1) return (pathway[i].deriv(0,r+dr)-val) * s/dr;
+  else return (pathway[i].deriv(0,r+dr)+pathway[i].deriv(0,r-dr)-2*val) * s/dr/dr;
 };
 
 void GeneralSimulator::evaluate(std::vector<double> &results) {

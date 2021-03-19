@@ -2,7 +2,7 @@
 
 // Loads config file, lammps scripts etc
 
-Parser::Parser(std::string file) {
+Parser::Parser(std::string file, bool test) {
   xml_success = false;
 
   // Default Values
@@ -32,7 +32,8 @@ Parser::Parser(std::string file) {
   parameters["maxExtraRepeats"] = "1";
   parameters["PostDump"] = "0";
   parameters["PreMin"] = "1";
-
+  parameters["SplinePath"] = "1";
+  parameters["MatchPlanes"] = "0";
 
 
   seeded = false;
@@ -81,7 +82,14 @@ Parser::Parser(std::string file) {
     return;
   }
 
-	// Now we can convert to type
+  xml_success = true;
+
+  if(!test) set_parameters();
+
+};
+
+void Parser::set_parameters() {
+  // Now we can convert to type
   CoresPerWorker = std::stoi(parameters["CoresPerWorker"]);
 	nPlanes = std::stoi(parameters["nPlanes"]);
 	nRepeats = std::stoi(parameters["nRepeats"]);
@@ -100,8 +108,32 @@ Parser::Parser(std::string file) {
   maxExtraRepeats = std::stoi(parameters["maxExtraRepeats"]);
   postDump = bool(std::stoi(parameters["PostDump"]));
   preMin = bool(std::stoi(parameters["PreMin"]));
+  spline_path = bool(std::stoi(parameters["SplinePath"]));
+  match_planes = !bool(std::stoi(parameters["Rediscretize"]));
+};
 
-  xml_success = true;
+void Parser::overwrite_xml(int nProcs) {
+  // Default Values
+  parameters["CoresPerWorker"]=std::to_string(nProcs);
+  parameters["LowTemperature"] = "0";
+  parameters["HighTemperature"] = "0";
+  parameters["TemperatureSteps"] = "1";
+  parameters["SampleSteps"] = "1";
+  parameters["ThermSteps"] = "1";
+  parameters["ThermWindow"] = "1";
+  parameters["nRepeats"] = "1";
+  //parameters["nPlanes"] = "10";
+  parameters["DumpFolder"] = "./dumps";
+  parameters["OverDamped"] = "1";
+  parameters["Friction"] = "0.1";
+  parameters["StartCoordinate"] = "0.0";
+  parameters["StopCoordinate"] = "1.0";
+  parameters["LogLammps"] = "0";
+  parameters["MaxJump"] = "0.1";
+  parameters["ReSampleThresh"] = "0.5";
+  parameters["maxExtraRepeats"] = "1";
+  parameters["PostDump"] = "1";
+  parameters["PreMin"] = "1";
 };
 
 // remove leading and trailing whitespaces - avoids RapidXML parsing bug
@@ -114,7 +146,8 @@ std::string Parser::rtws(std::string s) {
 	return s.substr(bws,s.length()-ews-bws);
 };
 
-void Parser::seed(int random_seed) {
+void Parser::seed(unsigned _random_seed) {
+  random_seed = _random_seed;
   rng.seed(random_seed);
 	seeded=true;
 };
@@ -130,14 +163,19 @@ std::vector<std::string> Parser::split_lines(std::string r) {
 	return sc;
 };
 
-std::string Parser::seed_str() {
+std::string Parser::seed_str(bool reseed) {
   if(!seeded) {
 		std::cout<<"NOT SEEDED!!!\n";
 		rng.seed(0);
+    random_seed=0;
 		seeded=true;
 	}
-  std::uniform_int_distribution<unsigned> d(1,1000000);
-  unsigned r=d(rng);
+  unsigned r = random_seed;
+  // give exactly the same seed each time unless reseed=True
+  if(reseed) {
+    std::uniform_int_distribution<unsigned> d(1,1000000);
+    r=d(rng);
+  }
   return std::to_string(r);
 };
 

@@ -71,7 +71,8 @@ public:
   MinImage pbc;
   Parser *params;
   std::vector<spline> pathway;
-  bool s_flag,has_pafi;
+  std::vector<double> pathway_r;
+  bool s_flag,has_pafi,spline_path;
 private:
   /* nothing */
 };

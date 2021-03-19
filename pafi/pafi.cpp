@@ -7,7 +7,7 @@ int main(int narg, char **arg) {
   MPI_Comm_size(MPI_COMM_WORLD,&nProcs);
 
   // Load input file
-  Parser params("./config.xml");
+  Parser params("./config.xml",false);
 
   if(!params.xml_success) {
     if(rank==0) {
@@ -335,7 +335,7 @@ int main(int narg, char **arg) {
 
       std::vector<std::array<double,4>> fF;
       std::array<double,4> fline;
-      double dr = 1./(double)(30 * integr.size());
+      double dr = 1./(double)(2 * integr.size());
       double rtF=0.0;
 
       fline[0]=params.startr;
@@ -357,7 +357,7 @@ int main(int narg, char **arg) {
       out.open(fn.c_str(),std::ofstream::out);
       out<<"# r F(r) av(<dF/dr>) err(<dF/dr>) av(<Psi>)\n";
       for(auto l: fF) {
-        out<<l[0]<<" "<<l[1]+l[2]<<" ";
+        out<<l[0]<<" "<<l[1]<<" ";
         out<<dfspl(l[0])<<" "<<dfespl(l[0])<<" "<<l[3]<<"\n";
       }
       out.close();
