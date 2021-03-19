@@ -1,3 +1,7 @@
+# Mac OSX indexing
+.DS_Store
+*/.DS_Store
+
 # test data
 build/*
 run/*
