@@ -18,6 +18,11 @@ import matplotlib.pyplot as plt
 from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 
+
+discretization_error_estimate = 0.015 # estimate in eV, divided by 2
+
+
+
 # read in file line-by-line, returning ave and std for data with max displacement <= disp_thresh
 def raw_parser(file_name,disp_thresh = 0.4):
     try:
@@ -41,67 +46,75 @@ def raw_parser(file_name,disp_thresh = 0.4):
 
     return r_dFave_dFstd
 
+# splined rediscretization
+def remesh(data,density = 10):
+    spl_data = np.zeros((density*data.shape[0],data.shape[1]))
+    r_data = np.linspace(0.,1.,data.shape[0])
+    r_spl_data = np.linspace(0.,1.,spl_data.shape[0])
+    spl_data[:,0] = r_spl_data#interp1d(r_data, data[:,0],kind='linear')(r_spl_data)
+    spl_data[:,1] = interp1d(data[:,0], data[:,1],kind='linear')(spl_data[:,0])
+    spl_data[:,2] = interp1d(data[:,0], data[:,2],kind='linear')(spl_data[:,0])
+    return spl_data
+
+def integrate(data):
+    idata = np.zeros(data.shape)
+    idata[:,0] = data[:,0]
+    idata[1:,1] = -cumtrapz(data[:,1],data[:,0])
+    idata[1:,2] = cumtrapz(data[:,2],data[:,0]) +  discretization_error_estimate
+    run_min =  np.minimum.accumulate(idata[:,1])
+    run_min_shift =  np.minimum.accumulate(np.append(idata[1:,1],idata[-1][1]))
+    if (run_min == run_min_shift).sum()>0:
+        idata = idata[run_min == run_min_shift,:]
+    idata[:,1]-=idata[0][1]
+    return idata, idata[:,1].max(), idata[0][2] + idata[idata[:,1].argmax()][2]
+
 
 
 # file list- here we take epoch 5
-fl = glob.glob("data/50/raw_ensemble_output_*_5");
-
+fl = glob.glob("50/dumps/raw*");
+print(fl)
 # temperatures
 T = np.r_[[int(f.split("_")[-2][:-1]) for f in fl]];
-
-disp_thresh = 0.4 # new max jump threshold
-
-nReSpl = 10 # resplining density
-
-discretization_error_estimate = 0.015 # estimate in eV, divided by 2
 
 
 fig,axs = plt.subplots(1,2,figsize=(8,4),dpi=144,sharey=True);
 
-
 bar = []
 for ii,i_f in enumerate(T.argsort()):
-    rdFdFe = raw_parser(fl[i_f])
-
-
-    spl_rdFdFe = np.zeros((nReSpl*rdFdFe.shape[0],rdFdFe.shape[1]))
-    spl_rdFdFe[:,0] = np.linspace(0.,1.,spl_rdFdFe.shape[0])
-    spl_rdFdFe[:,1] = interp1d(rdFdFe[:,0], rdFdFe[:,1],kind='linear')(spl_rdFdFe[:,0])
-    spl_rdFdFe[:,2] = interp1d(rdFdFe[:,0], rdFdFe[:,2],kind='linear')(spl_rdFdFe[:,0])
-
     _bar = [T[i_f]]
-    for j,_rdFdFe in enumerate([rdFdFe,spl_rdFdFe]):
-        rFFe = np.zeros(_rdFdFe.shape)
-        rFFe[:,0] = np.linspace(0.,1.,_rdFdFe.shape[0])
-        rFFe[1:,1] = -cumtrapz(_rdFdFe[:,1],_rdFdFe[:,0])
-        rFFe[1:,2] = cumtrapz(_rdFdFe[:,2],_rdFdFe[:,0]) +  discretization_error_estimate
+    r_dFave_dFstd = raw_parser(fl[i_f])
+    r_Fave_Fstd,barrier,error = integrate(r_dFave_dFstd)
 
-        # integrate from minimum (important for barrier under stress)
-        first_argmin = 0
-        while rFFe[first_argmin][1] == rFFe[:first_argmin+1,1].min():
-            first_argmin+=1
-        first_argmin-=1
-        rFFe = rFFe[first_argmin:,:]
+    _bar += [barrier]+[error]
+    r_dFave_dFstd_remesh = remesh(r_dFave_dFstd)
+    r_Fave_Fstd_remesh,barrier,error = integrate(r_dFave_dFstd_remesh)
+    _bar += [barrier]+[error]
 
-        rFFe[:,0] -= rFFe[0][0]
-        rFFe[:,1] -= rFFe[:,1][0]
+    axs[0].plot(r_Fave_Fstd[:,0],
+                r_Fave_Fstd[:,1],
+                'C%d%s' % (ii,'o--'),label='%dK' % T[i_f])
 
+    axs[0].fill_between(r_Fave_Fstd[:,0],
+            r_Fave_Fstd[:,1]-r_Fave_Fstd[:,2],
+            r_Fave_Fstd[:,1]+r_Fave_Fstd[:,2],
+            facecolor='0.8')
 
+    axs[0].plot(r_Fave_Fstd_remesh[:,0],
+                r_Fave_Fstd_remesh[:,1],
+                'C%d%s' % (ii,'-'),label='%dK (Splined)' % T[i_f])
 
+    axs[0].fill_between(r_Fave_Fstd_remesh[:,0],
+            r_Fave_Fstd_remesh[:,1]-r_Fave_Fstd_remesh[:,2],
+            r_Fave_Fstd_remesh[:,1]+r_Fave_Fstd_remesh[:,2],
+            facecolor='0.8')
 
-        axs[0].plot(rFFe[:,0],rFFe[:,1],'C%d%s' % (ii,['o--','-'][j]),label='%dK%s' % (T[i_f],[""," (Splined)"][j]))
-        axs[0].fill_between(rFFe[:,0],rFFe[:,1]-rFFe[:,2],rFFe[:,1]+rFFe[:,2],facecolor='0.8')
-
-        barrier = rFFe[:,1].max()-rFFe[:,1].min()
-        error_barrier = rFFe[:,2][rFFe[:,1].argmax()]+rFFe[:,2][rFFe[:,1].argmin()]
-        _bar += [barrier]+[error_barrier]
     bar += [_bar]
 bar = np.r_[bar]
+print(bar.shape)
 
 p = np.polyfit(bar[:3,0],bar[:3,1],1)
 
 kb = 8.617e-5
-b = 2.8552 * np.sqrt(.75)
 
 axs[1].plot(bar[:,0],bar[:,1],'o-',label='Raw Data')
 axs[1].plot(bar[:,0],bar[:,3],'o--',label='Splined Data')
@@ -109,7 +122,6 @@ axs[1].plot(bar[:,0],bar[:,3],'o--',label='Splined Data')
 axs[1].plot(bar[:,0],p[1]+p[0]*bar[:,0],'k--',label=r'$\Delta U_0=%2.3geV,\Delta S_0=%2.3g{\rm k_B}$' % (p[1],-p[0]/kb))
 axs[1].fill_between(bar[:,0],bar[:,1]-bar[:,2],bar[:,1]+bar[:,2],facecolor='0.8')
 axs[1].fill_between(bar[:,0],bar[:,3]-bar[:,4],bar[:,3]+bar[:,4],facecolor='0.8')
-
 
 
 axs[1].set_ylim(ymin=-discretization_error_estimate)
