@@ -97,7 +97,7 @@ public:
     // optional, but if called it has to come be before set_points()
     void set_boundary(bd_type left, double left_value,
                       bd_type right, double right_value,
-                      bool force_linear_extrapolation=false);
+                      bool force_linear_extrapolation=true);
     void set_points(const std::vector<double>& x,
                     const std::vector<double>& y, bool cubic_spline=true);
     double operator() (double x) const;
