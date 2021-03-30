@@ -34,6 +34,8 @@ Parser::Parser(std::string file, bool test) {
   parameters["PreMin"] = "1";
   parameters["SplinePath"] = "1";
   parameters["MatchPlanes"] = "0";
+  parameters["GlobalSeed"] = "137";
+  parameters["FreshSeed"] = "1";
 
 
   seeded = false;
@@ -110,6 +112,8 @@ void Parser::set_parameters() {
   preMin = bool(std::stoi(parameters["PreMin"]));
   spline_path = bool(std::stoi(parameters["SplinePath"]));
   match_planes = !bool(std::stoi(parameters["Rediscretize"]));
+  globalSeed = std::stoi(parameters["GlobalSeed"]);
+  reseed = bool(std::stoi(parameters["FreshSeed"]));
 };
 
 void Parser::overwrite_xml(int nProcs) {
@@ -134,6 +138,7 @@ void Parser::overwrite_xml(int nProcs) {
   parameters["maxExtraRepeats"] = "1";
   parameters["PostDump"] = "1";
   parameters["PreMin"] = "1";
+
 };
 
 // remove leading and trailing whitespaces - avoids RapidXML parsing bug
@@ -146,8 +151,8 @@ std::string Parser::rtws(std::string s) {
 	return s.substr(bws,s.length()-ews-bws);
 };
 
-void Parser::seed(unsigned _random_seed) {
-  random_seed = _random_seed;
+void Parser::seed(unsigned worker_instance) {
+  random_seed = (worker_instance+1)*globalSeed;
   rng.seed(random_seed);
 	seeded=true;
 };
@@ -163,7 +168,7 @@ std::vector<std::string> Parser::split_lines(std::string r) {
 	return sc;
 };
 
-std::string Parser::seed_str(bool reseed) {
+std::string Parser::seed_str() {
   if(!seeded) {
 		std::cout<<"NOT SEEDED!!!\n";
 		rng.seed(0);
@@ -208,4 +213,33 @@ std::string Parser::welcome_message(){
 	str+="\n\n";
 
   return str;
+};
+
+/*
+Check for dump files. Ugly implementation for portability across filesystems
+*/
+bool Parser::file_exists(const std::string& name) {
+    FILE *file = fopen(name.c_str(), "r");
+    if (file!=NULL) {
+        fclose(file);
+        return true;
+    } else {
+        return false;
+    }
+};
+
+void Parser::find_dump_file(std::ofstream &raw, int &suffix){
+  std::string params_file;
+  for (suffix=0; suffix < 100; suffix++) {
+    params_file = dump_dir+"/params_"+std::to_string(suffix);
+    if(!file_exists(params_file)) {
+      raw.open(params_file.c_str(),std::ofstream::out);
+      if(raw.is_open()) {
+        raw<<welcome_message();
+        raw.close();
+        break;
+      }
+    }
+  }
+  if(suffix==100) suffix=-1;
 };

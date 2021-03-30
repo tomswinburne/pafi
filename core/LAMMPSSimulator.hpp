@@ -12,7 +12,7 @@ using namespace LAMMPS_NS;
 class LAMMPSSimulator : public GeneralSimulator {
 
 public:
-  LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t, int nr);
+  LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t);
 
   /*
     Load xyz configuration from data file and put in vector

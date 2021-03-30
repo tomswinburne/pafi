@@ -66,15 +66,14 @@ public:
 
   double scale[3];
   double refE,refT,refP;
-  int natoms, tag, nknots, nres;
+  int natoms, tag, nknots;
   MinImage pbc;
   Parser *params;
   std::vector<spline> pathway;
-  std::vector<double> pathway_r;
+  std::vector<double> pathway_r, sample_r;
   bool s_flag,has_pafi,spline_path;
 private:
   /* nothing */
 };
-
 
 #endif

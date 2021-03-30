@@ -1,4 +1,15 @@
 <PAFI>
+  <!-- Global random number seed used to set worker seeds.
+  If all parameters are left unchanged, simulation results should be
+  identical up to MD integration error for the same GlobalSeed
+  -->
+  <GlobalSeed>137</GlobalSeed>
+
+  <!--If FreshSeed==1, a new seed is set for each sampling run.
+    With FreshSeed==0, a worker uses the same seed for all planes.
+    This may reduce error in stochastic gradients... -->
+  <FreshSeed>1</FreshSeed>
+
   <!-- omit trailing forward slash -->
   <DumpFolder>./dumps</DumpFolder>
 
@@ -10,7 +21,7 @@
   <TemperatureSteps> 4 </TemperatureSteps>
 
   <!-- We require nprocs % CoresPerWorker==0 -->
-  <CoresPerWorker> 1 </CoresPerWorker>
+  <CoresPerWorker> 4 </CoresPerWorker>
 
   <!-- Number of samples per plane per worker -->
   <nRepeats> 1 </nRepeats>

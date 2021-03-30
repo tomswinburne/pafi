@@ -1,6 +1,5 @@
 #include <iostream>
 #include <sstream>
-#include <iostream>
 #include <iomanip>
 
 #include <mpi.h>
@@ -13,7 +12,6 @@
 #include <map>
 #include <list>
 #include <cmath>
-#include <ctime>
 
 
 
@@ -21,7 +19,6 @@
 #include "Constants.hpp"
 #include "Parser.hpp"
 #include "Spline.hpp"
-#include "File.hpp"
 
 #include "LAMMPSSimulator.hpp"
 typedef LAMMPSSimulator Simulator;

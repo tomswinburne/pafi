@@ -1,13 +1,11 @@
 #include "LAMMPSSimulator.hpp"
 
-LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
-                                  int t, int nr) {
+LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t) {
   error_count = 0;
   scale[0]=1.0; scale[1]=1.0; scale[2]=1.0;
   last_error_message="";
   tag = t;
   MPI_Comm_rank(instance_comm,&local_rank);
-  nres = nr;
   params = &p;
   // set up LAMMPS
   char str1[32];
@@ -63,6 +61,10 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered image"<<std::endl;
   #endif
 
+  if(!has_pafi and local_rank==0) {
+    std::cout<<"PAFI Error: missing USER-MISC package in LAMMPS"<<std::endl;
+    if(error_count>0) std::cout<<last_error()<<std::endl;
+  }
 
   made_fix=false;
   made_compute=false;
@@ -80,6 +82,8 @@ void LAMMPSSimulator::load_config(std::string file_string, double *x) {
   cmd += " add merge";
   run_commands(cmd);
   gather("x",3,x);
+
+  if(error_count>0 && local_rank==0) std::cout<<last_error()<<std::endl;
 };
 
 /*

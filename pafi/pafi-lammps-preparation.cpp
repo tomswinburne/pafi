@@ -10,16 +10,6 @@ int main(int narg, char **arg) {
   Parser params("./config.xml",false);
   params.CoresPerWorker = nProcs;
 
-  if(nProcs>params.CoresPerWorker) {
-    if(rank==0) {
-      std::cout<<"\n\n\n*****************************\n\n\n";
-      std::cout<<"pafi-lammps-path should only be run with a single worker!\n";
-      std::cout<<"\n\n\n*****************************\n\n\n";
-    }
-    exit(-1);
-  }
-
-
 
   // Find fresh dump folder name - no nice solution here as
   // directory creation requires platform dependent features
@@ -50,7 +40,7 @@ int main(int narg, char **arg) {
   MPI_Comm instance_comm;
   MPI_Comm_split(MPI_COMM_WORLD,0,0,&instance_comm);
 
-  Simulator sim(instance_comm,params,instance,nRes);
+  Simulator sim(instance_comm,params,instance);
   if(!sim.has_pafi) {
     if(rank==0)
       std::cout<<"PAFI Error: missing USER-MISC package in LAMMPS"<<std::endl;
@@ -175,6 +165,8 @@ int main(int narg, char **arg) {
     } else std::cout<<"\n\tERROR > 5meV, PROBABLY TOO HIGH! ";
     std::cout<<"CONSIDER MORE NEB IMAGES AND/OR INCREASING nPlanes IN config.xml\n\n\n"<<std::endl;;
   }
+
+  MPI_Comm_free(&instance_comm);
 
   MPI_Finalize();
 

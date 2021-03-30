@@ -131,6 +131,18 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
 
   }
   delete [] knots; // clear memory
+
+  sample_r.clear();
+  double dr = 0.1;
+  if (params->nPlanes>1)
+    dr = (params->stopr-params->startr)/(double)(params->nPlanes-1);
+
+  if(params->spline_path and not params->match_planes) {
+    for (double r = params->startr; r <= params->stopr+0.5*dr; r += dr )
+      sample_r.push_back(r);
+  } else {
+    for(auto r: pathway_r) if(r>=0.0 && r<=1.0) sample_r.push_back(r);
+  }
 };
 
 double GeneralSimulator::path(int i, double r, int d, double s) {

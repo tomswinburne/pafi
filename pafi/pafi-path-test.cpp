@@ -1,6 +1,7 @@
 #include "pafi.hpp"
 
 int main(int narg, char **arg) {
+
   MPI_Init(&narg,&arg);
   int rank, nProcs;
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
@@ -21,39 +22,14 @@ int main(int narg, char **arg) {
   params.overwrite_xml(nProcs);
   params.set_parameters();
 
-
-  // Find fresh dump folder name - no nice solution here as
-  // directory creation requires platform dependent features
-  // which we omit for portability
-  int *int_dump_suffix = new int[1];
+  // check for dump folder
   std::ofstream raw;
-  std::string params_file =
-    params.dump_dir+"/params_"+std::to_string(int_dump_suffix[0]);
-
-  // try to write to a file with a unique suffix
-  if(rank==0) {
-    for (int_dump_suffix[0]=0; int_dump_suffix[0] < 100; int_dump_suffix[0]++) {
-      params_file =
-        params.dump_dir+"/params_"+std::to_string(int_dump_suffix[0]);
-      std::cout<<"Testing for existence of "<<params_file<<".... ";
-      if(!file_exists(params_file)) {
-        std::cout<<"it doesn't!, trying to open for writing.... ";
-        raw.open(params_file.c_str(),std::ofstream::out);
-        if(raw.is_open()) {
-          std::cout<<" done!\n";
-          raw<<params.welcome_message();
-          raw.close();
-          break;
-        } else std::cout<<"cannot!\n";
-      } else std::cout<<"it exists!\n";
-    }
-  }
-
-  // Broadcast parameters
-  MPI_Bcast(int_dump_suffix,1,MPI_INT,0,MPI_COMM_WORLD);
+  int dump_index=-1;
+  if(rank==0) params.find_dump_file(raw,dump_index);
+  MPI_Bcast(&dump_index,1,MPI_INT,0,MPI_COMM_WORLD);
   MPI_Barrier(MPI_COMM_WORLD);
 
-  if(int_dump_suffix[0]==100) {
+  if(dump_index<0) {
     if(rank==0) {
       std::cout<<"\n\n\n*****************************\n\n\n";
       std::cout<<"Could not write to output path / find directory! Exiting!\n";
@@ -69,67 +45,31 @@ int main(int narg, char **arg) {
     std::cout<<"\n\n\n*****************************\n\n\n";
   }
 
-
   MPI_Barrier(MPI_COMM_WORLD);
 
-  const int nWorkers = nProcs / params.CoresPerWorker;
-  const int instance = rank / params.CoresPerWorker;
-  const int local_rank = rank % params.CoresPerWorker;
+  const int nWorkers = 1;
+  const int instance = 0;
+  const int local_rank = rank;
+  const int nRepeats = 1;
   const int nRes = 8; // TODO remove this
-  const int nRepeats = params.nRepeats;
 
-
-  // Worker communicators
+  params.seed(0);
+  params.seed(123);
   MPI_Comm instance_comm;
-  MPI_Comm_split(MPI_COMM_WORLD,instance,0,&instance_comm);
+  MPI_Comm_split(MPI_COMM_WORLD,0,0,&instance_comm);
 
-
-
-  int *seed = new int[nWorkers];
-  if(rank==0) for(int i=0;i<nWorkers;i++)
-    seed[i]= 137*i + static_cast<int>(std::time(0))/1000;
-  MPI_Bcast(seed,nWorkers,MPI_INT,0,MPI_COMM_WORLD);
-  MPI_Barrier(MPI_COMM_WORLD);
-
-  params.seed(seed[instance]);
-
-  if(rank==0) std::cout<<"\n\nInitializing "<<nWorkers<<" workers "
-                      "with "<<params.CoresPerWorker<<" cores per worker\n\n";
-
-
-  Simulator sim(instance_comm,params,instance,nRes);
-
-  if(!sim.has_pafi) {
-    if(rank==0)
-      std::cout<<"PAFI Error: missing USER-MISC package in LAMMPS"<<std::endl;
-    exit(-1);
-  }
-  if(sim.error_count>0 && local_rank==0) std::cout<<sim.last_error()<<std::endl;
-
-  if (rank == 0) {
-    std::cout<<"Loaded input data of "<<sim.natoms<<" atoms\n";
-    std::cout<<"Supercell Matrix:\n";
-    auto cell = sim.getCellData();
-    for(int i=0;i<3;i++) {
-      std::cout<<"\t";
-      for(int j=0;j<3;j++) std::cout<<sim.pbc.cell[i][j]<<" ";
-      std::cout<<"\n";
-    }
-    std::cout<<"\n\n";
-  }
+  Simulator sim(instance_comm,params,0);
+  if(!sim.has_pafi) exit(-1);
 
   sim.make_path(params.PathwayConfigurations);
-  if(sim.error_count>0 && local_rank==0) std::cout<<sim.last_error()<<std::endl;
 
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
 
+
+  // Declare all variables
+
   const int vsize = 3 * sim.natoms;
   const int rsize = nRes*nWorkers;
-
-  int total_valid_data, totalRepeats, total_invalid_data;
-  double temp, dr, t_max_jump, p_jump, E_init, E_max=0.0;
-  std::string rstr,Tstr,dump_fn,fn,dump_suffix;
-  std::map<std::string,double> results;
 
   int *valid = new int[nWorkers];
   double *local_res = new double[rsize];
@@ -138,11 +78,18 @@ int main(int narg, char **arg) {
   double *all_dev = NULL;
   double *all_dev_sq = NULL;
   double *all_res = NULL;
+
   if (rank == 0) {
     all_dev = new double[vsize];
     all_dev_sq = new double[vsize];
     all_res = new double[rsize];
   }
+
+  int total_valid_data, totalRepeats, total_invalid_data;
+  double temp, dr, t_max_jump, p_jump, E_init, E_max=0.0;
+  std::string rstr,Tstr,dump_fn,fn,dump_suffix;
+  std::map<std::string,double> results;
+
   std::vector<double> integr, dfer, dfere, psir, maxjumpr;
   std::vector<double> valid_res, invalid_res;
   // TODO : replace
@@ -158,7 +105,7 @@ int main(int narg, char **arg) {
 
   Tstr = std::to_string((int)(T));
 
-  dump_suffix = "_"+Tstr+"K_"+std::to_string(int_dump_suffix[0]);
+  dump_suffix = "_"+Tstr+"K_"+std::to_string(dump_index);
 
   if(rank==0) {
     fn = params.dump_dir + "/raw_ensemble_output"+dump_suffix;
@@ -194,14 +141,7 @@ int main(int narg, char **arg) {
     std::cout<<"\n";
   }
 
-  std::vector<double> sample_r;
-  if(params.spline_path and not params.match_planes) {
-    for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr )
-      sample_r.push_back(r);
-  } else for(auto r: sim.pathway_r)
-    if(r>=params.startr-0.02 && r<=params.stopr+0.02) sample_r.push_back(r);
-
-  for(auto r: sample_r) {
+  for(auto r: sim.sample_r) {
     valid_res.clear();
     invalid_res.clear();
     rstr = std::to_string(r);
@@ -217,7 +157,7 @@ int main(int narg, char **arg) {
       sim.sample(r, T, results, local_dev);
 
 
-      if(r==sample_r[0]) E_init = results["refE"];
+      if(r==sim.sample_r[0]) E_init = results["refE"];
 
       E_max = std::max(results["refE"]-E_init,E_max);
       for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i];
@@ -350,9 +290,9 @@ int main(int narg, char **arg) {
 
     dFspl.set_points(integr,dfer);
     double dF_dense_int = 0.0,F_bar_dense=0.0,E_bar_dense=E_max;
-    double int_dr = (sample_r[sample_r.size()-1]-sample_r[0])/30.;
+    double int_dr = (sim.sample_r[sim.sample_r.size()-1]-sim.sample_r[0])/30.;
 
-    for (double r = sample_r[0]; r <= sample_r[sample_r.size()-1]; r += int_dr) {
+    for (double r = sim.sample_r[0]; r <= sim.sample_r[sim.sample_r.size()-1]; r += int_dr) {
       dF_dense_int -= dFspl(r)/2.0 * int_dr;
       F_bar_dense = std::max(F_bar_dense,dF_dense_int);
       dF_dense_int -= dFspl(r)/2.0 * int_dr;
@@ -417,8 +357,10 @@ int main(int narg, char **arg) {
       std::cout<<"\n\tError > 5meV, probably too high! FAIL\n";
     }
     if(std::fabs(F_bar_dense-E_bar_dense)>=0.001) {
-      std::cout<<"\t\nTo reduce this error: ";
-      std::cout<<""\n\t\t More NEB images and/or increasing nPlanes in config.xml\n\n"<<std::endl;
+      std::cout<<"\t\tTo reduce this error: ";
+      std::cout<<"\n\t\t More NEB images and/or increasing nPlanes in config.xml\n\n"<<std::endl;
+      std::cout<<"\n\t\t Try Rediscretize==0/1 to change how images are interpolated\n\n"<<std::endl;
+
     }
 
     if(warning) std::cout<<"\nPathway checks failed / warnings generated! See above\n"<<std::endl;
@@ -429,7 +371,6 @@ int main(int narg, char **arg) {
   // close down LAMMPS instances
   sim.close();
 
-  // close down MPI
   MPI_Comm_free(&instance_comm);
 
   MPI_Finalize();
