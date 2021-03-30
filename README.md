@@ -11,24 +11,20 @@
 # Evaluate free energy barriers beyond the harmonic approximation
 
 ## "Dropping the H in HTST"
-
 v0.9 :copyright: TD Swinburne and M-C Marinica 2020 MIT License
-
 swinburne at cinam.univ-mrs.fr
 
-Beta version of code used in [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503)
-> *Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems*   
-> T.D. Swinburne and M.-C. Marinica, Physical Review Letters 120 (13), 135503, 2018
-
-Please cite the above when publishing results using PAFI
-
-This repository includes the [RapidXML](http://http://rapidxml.sourceforge.net) library for input parsing
 
 ## [Installation Instructions](INSTALL.md)
 
 ## [Getting Started](TUTORIAL.md)
 
-## Notes on reference pathway
+Beta version of code used in [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503)
+> *Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems*   
+> T.D. Swinburne and M.-C. Marinica, Physical Review Letters 120 (13), 135503, 2018
+Please cite the above when publishing results using PAFI
+
+## General Tips
 
 - See the [tutorial](TUTORIAL.md) for information on the `pafi-path-test` routine
 
@@ -49,7 +45,13 @@ This repository includes the [RapidXML](http://http://rapidxml.sourceforge.net) 
 
 - Each PAFI worker runs at the same speed as LAMMPS. Increasing `CoresPerWorker` will typically decrease execution time but also reduce `nWorkers` and increase error, as we have less samples.
 
-- If you are core-limited, the `nRepeats` option forces workers to perform multiple independent sampling runs on each plane. With all other parameters fixed, `nRepeats=3, NPROCS=32` is equivalent to `nRepeats=1, NPROCS=96`
+- If you are core-limited, the `nRepeats` option forces workers to perform multiple independent sampling runs on each plane. For example, with all other parameters fixed, running on 32 cores with `nRepeats=3` is equivalent to running on 3*32=96 cores with  `nRepeats=1`, but the latter will finish in a third of the time.
+
+
+## External Libraries
+- [LAMMPS](https://lammps.sandia.gov) MD code
+- [RapidXML](https://rapidxml.sourceforge.net) for reading `xml` files
+- This nice [library](https://github.com/ttk592/spline) for spline interpolation
 
 ## TODO
 1. Restart files from pathway deviations
