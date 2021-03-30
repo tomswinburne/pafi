@@ -2,8 +2,6 @@
   <!-- omit trailing forward slash -->
   <DumpFolder>./dumps</DumpFolder>
 
-  <!-- Number of samples per plane per worker -->
-  <nRepeats> 1 </nRepeats>
 
 
   <!-- LowTemperature to HighTemperature in TemperatureSteps steps -->
@@ -11,20 +9,20 @@
   <HighTemperature> 800 </HighTemperature>
   <TemperatureSteps> 4 </TemperatureSteps>
 
+  <!-- We require nprocs % CoresPerWorker==0 -->
+  <CoresPerWorker> 1 </CoresPerWorker>
+
+  <!-- Number of samples per plane per worker -->
+  <nRepeats> 1 </nRepeats>
+
   <!-- Data gathering steps -->
-  <SampleSteps> 1000 </SampleSteps>
+  <SampleSteps> 2000 </SampleSteps>
 
-  <!-- Steps for thermalization.  Require ThermSteps%ThermWindow==0 -->
-  <ThermSteps> 2000 </ThermSteps>
-
-  <!-- Averaging window for temperature determination. -->
-  <ThermWindow> 1000 </ThermWindow>
+  <!-- Steps for thermalization -->
+  <ThermSteps> 1000 </ThermSteps>
 
   <!-- Max steps for optional in-plane minimizations (see below) -->
   <MinSteps> 2000 </MinSteps>
-
-  <!-- We require nprocs % CoresPerWorker==0 -->
-  <CoresPerWorker> 1 </CoresPerWorker>
 
   <!--
     RELATIVE thermal expansion coefficients along X,Y,Z directions of simulation-
@@ -63,11 +61,13 @@
   Perform an in-plane minimization before thermalization/sampling.
   If pathway is a well-converged NEB/MEP this should not produce any change
   -->
-  <PreMin> 0 </PreMin>
+  <PreMin> 1 </PreMin>
 
-  <!-- If == 0 ignore NPlanes, Start Coordinate and StopCoordinate; sample only at provided pathway configurations -->
+
+  <!-- If == 0 ignore NPlanes, Start Coordinate and StopCoordinate;
+  sample only at provided pathway configurations. Test feature -->
   <Rediscretize>1</Rediscretize>
-  
+
   <!-- If Rediscretize==1, sample on nPlanes equally spaced
   planes in [StartCoordinate,StopCoordinate], a subset of [0,1] -->
   <nPlanes> 11 </nPlanes>
@@ -85,14 +85,18 @@
   before and after sampling run which can still be considered "in basin"
   Check for shallow metastability on hyperplane
   -->
-  <MaxJump> 0.1 </MaxJump>
+  <MaxJump> 0.4 </MaxJump>
+
   <!-- Resample a batch if less than this proportion are "in-basin" -->
   <ReSampleThresh> 0.8 </ReSampleThresh>
+
   <!-- How many resample attempts -->
   <maxExtraRepeats> 1 </maxExtraRepeats>
+
   <!--
-  Sequential list of pathway configurations, produced
-  from e.g. a NEB configuration.
+  Sequential list of pathway configurations,
+  produced from e.g. a NEB configuration.
+  Loaded via LAMMPS read_data (see Scripts/Input below)
   -->
   <PathwayConfigurations>
     md/image_1.dat
@@ -123,9 +127,11 @@
     thermo 10
     run 0
   </Input>
+
   <!-- Apply any fixes e.g. external stresses before thermalization/sampling -->
   <PreRun>
   </PreRun>
+
   <!-- Turn off these same fixes after each sampling run -->
   <PostRun>
   </PostRun>

@@ -93,8 +93,8 @@ void Parser::set_parameters() {
   CoresPerWorker = std::stoi(parameters["CoresPerWorker"]);
 	nPlanes = std::stoi(parameters["nPlanes"]);
 	nRepeats = std::stoi(parameters["nRepeats"]);
-
-	//dump_dir = std::to_string(parameters["DumpFolder"]);
+  int therm_window = std::max(1,std::stoi(parameters["ThermSteps"])/2);
+  parameters["ThermWindow"] = std::to_string(therm_window);
   dump_dir = parameters["DumpFolder"];
 	lowT = std::stod(parameters["LowTemperature"]);
 	highT = std::stod(parameters["HighTemperature"]);

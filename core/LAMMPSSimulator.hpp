@@ -50,6 +50,7 @@ public:
 
   double getEnergy();
   double getForceEnergy(double *f);
+  double get_fix(std::string fixid,int type,int index);
 
   // Fill 9D array with Lx, Ly, Lz, xy, xz, yz, then periodicity in x, y, z
   std::array<double,9> getCellData();

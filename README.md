@@ -9,148 +9,49 @@
         Projected    Average      Force        Integrator
 
 # DEV VERSION
-
-# Evaluate free energy barriers beyond the harmonic approximation
-## "Dropping the H in HTST"
-
-
-
+# MD evaluation of free energy barriers beyond HTST
 v0.9 :copyright: TD Swinburne and M-C Marinica 2020 MIT License
 
 swinburne at cinam.univ-mrs.fr
 
-Beta version of code used in [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503)
+Using PAFI? Please cite [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503)
 > *Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems*   
 > T.D. Swinburne and M.-C. Marinica, Physical Review Letters 120 (13), 135503, 2018
+Please cite the above when publishing results using PAFI
 
-Please cite the above when publishing results using `PAFI`
+## [Installation Instructions](INSTALL.md)
 
-This repository includes the [RapidXML](http://http://rapidxml.sourceforge.net) library for input parsing
+## [Getting Started Tutorial](TUTORIAL.md)
 
-# Installation
+## General Tips
 
+- See the [tutorial](TUTORIAL.md) for information on the `pafi-path-test` routine
 
-## Compile `LAMMPS` with `USER-MISC` package
-1. `PAFI` is now integrated into `LAMMPS` as part of the `USER-MISC` package.
-You can [download](https://lammps.sandia.gov/download.html) a tarball from the `LAMMPS`
-website or clone the public repository with
-```bash
-git clone https://github.com/lammps/lammps.git
-```
+- In general, we want a reference pathway with dense discretisation where energy gradients are large
 
-2. Install `USER-MISC` and any packages you desire (e.g. replica for `NEB`)
-```bash
-cd /path/to/lammps/src
-make yes-user-misc
-make yes-replica # for NEB calculation
-make yes-package # (e.g. manybody for EAM potentials etc)
-```
+- The current non-smoothed spline implementation can oscillate between very similar image configurations, as a result, there should be non-negligible displacement between images
 
-3. In the appropriate Makefile add `-std=c++11` to `CCFLAGS` and `LINKFLAGS` and
-add `-DLAMMPS_EXCEPTIONS` to `LMP_INC` to allow `PAFI` to read `LAMMPS` error messages.
-This is very useful when running your own simulations. For `src/MAKE/Makefile.mpi` this reads
- ```make
-CCFLAGS =	-g -O3 -std=c++11
-LINKFLAGS =	-g -O3 -std=c++11
-LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64  -DLAMMPS_EXCEPTIONS
-```
-
-4. Compile static library and binary Consult [LAMMPS documentation](http://lammps.sandia.gov/doc/Section_start.html) for details
-```bash
-   make mpi mode=lib # liblammps_mpi.a library for pafi
-   make mpi # lmp_mpi binary for running initial NEB calculation if desired
-```
-
-4. Copy library to your local lib/ and headers to local include/, at e.g. ${HOME}/.local
-```bash
-  export PREFIX=${HOME}/.local # example value
-  cp liblammps_mpi.a ${PREFIX}/lib/liblammps_mpi.a
-  mkdir ${PREFIX}/include/lammps
-  cp *.h ${PREFIX}/include/lammps/
-```
-
-
-## Compile `PAFI`
-0. `PAFI` requires `cmake` to compile:
-- On a cluster, try `module load cmake`
-- On Linux, try `[apt/yum] install cmake`
-- Alternatively [download](https://cmake.org/download/) and install `cmake` manually
-
-*Technical point: `LAMMPS` can also be built with `cmake` . However, this is causes
-[complications](https://lammps.sandia.gov/doc/Build_link.html) with static linking.*
-
-1. Specify compiler in CMakeLists.txt:
-```make
-   set(CMAKE_CXX_COMPILER path/to/mpic++)
-```
-
-2. Make pafi build folder, run cmake and make
-```bash
-   export PREFIX=${HOME}/.local # if in different shell to LAMMPS compilation
-   mkdir build
-   cd build
-   cmake ..
-   make pafi # or try make -j4 pafi for parallel make using 4 cores
-```
-
-## Calculation of free energy barrier between states using `PAFI`
-
-0. Tarball in example folder has premade NEB calculation (SIA in EAM-Fe) for testing
-
-1. First set up a LAMMPS neb calculation as described [here](http://lammps.sandia.gov/doc/neb.html)
-
-2. In the LAMMPS script, use the "write_data" command to dump all the NEB knots, i.e.
-```
-variable u uloop N_NEB_IMAGES
-
-neb etol ftol N1 N2 Nevery file-style arg keyword
-
-write_data neb_knot_file.$u
-```
-3. Configure the configuration xml file, as shown in the examples
-
-4. Run PAFI as e.g.
-```bash
-mkdir -p dumps
-mpirun -np NPROCS ./pafi
-```
-where the first line ensures your dump folder (here the default value) actually exists
+- If your path isn't loading, try setting `LogLammps=1` in `config.xml` to check for bugs in `log.lammps`
 
 ## Notes on choosing parameters
-- The `CoresPerWorker` option in `config.xml` should be set as low as possible- whilst `LAMMPS` has excellent parallel scaling, ensemble averages have *perfect* parallel scaling.
 
-- If you can add more cores, in general it is best to add more workers to reduce the ensemble average error
+- If `SampleSteps` is too large workers will make thermally activated "jumps" to nearby paths in the hyperplane. This will return a warning message `Reference path too unstable for sampling.`
+ and increase error. If this happens, decrease `SampleSteps` and increase `nRepeats`
 
-- More cores should only be used if the statistical error across the ensemble is already acceptably small and you wish to speed up the data aquisition. As a guide, when using an `EAM` potential with `LAMMPS`, linear scaling requires more than 5000-10000 atoms / core.
+- When running on `NPROCS` cores, we require `NPROCS%CoresPerWorker==0`, so we have an integer number of workers
 
-- The `nRepeats` option forces each worker to perform multiple independent sampling runs on each plane. This is useful if you are core-limited but can push to longer times
+- The total number of force calls *per worker* is `nPlanes * (ThermSteps+SampleSteps) * nRepeats`, spatially parallelised by LAMMPS across `CoresPerWorker` cores for each worker.
 
-- The total number of sampling runs (independent data points) per plane is thus `nRepeats * NPROCS / CoresPerWorker`
+- Each PAFI worker runs at the same speed as LAMMPS. Increasing `CoresPerWorker` will typically decrease execution time but also reduce `nWorkers` and increase error, as we have less samples.
 
-- The total number of force calls per core over a whole run is `(ThermSteps+SampleSteps) * nRepeats * nPlanes * NPROCS / CoresPerWorker`. `PAFI` runs at essentially the same speed as normal molecular dynamics.
+- If you are core-limited, the `nRepeats` option forces workers to perform multiple independent sampling runs on each plane. For example, with all other parameters fixed, running on 32 cores with `nRepeats=3` is equivalent to running on 3*32=96 cores with  `nRepeats=1`, but the latter will finish in a third of the time.
 
-## Output
 
-1. PAFI will try to write to the directory as specified in "DumpFolder" in config.xml. Each dump file has a suffix `_T_n`, where `T` is the temperature and `n` is the smallest integer that does not overwrite previous files.
+## External Libraries
+- [LAMMPS](https://lammps.sandia.gov) MD code
+- [RapidXML](https://rapidxml.sourceforge.net) for reading `xml` files
+- This nice [library](https://github.com/ttk592/spline) for spline interpolation
 
-2. For each temperaturer there will be a files `dev_r_T_n.dat` with the ensemble average and variance pathway deviation from each hyperplane and a file `free_energy_profile_T_` that has the integrated FEP.
-
-3. See `error_analysis.pdf' for an expanation of the error bars used in PAFI and `example/sample_plot.py' for a simple plotting example
-
-## Manual use (not recommended)
-1. Compile the `pafi-lammps-path` binary
-```bash
-cd build
-make pafi-lammps-path
-```
-2. Configure the configuration xml file, to specify the path then run
-```bash
-mkdir -p dumps
-mpirun -np 1 ./pafi-lammps-path
-```
-
-3. This will make a set of files `dumps/pafipath.*.data` which can be run using the `PAFI` example script in the `examples/USER/misc/pafi` directory of the `LAMMPS` repository
-
-## Coming Soon
+## TODO
 1. Restart files from pathway deviations
 2. Smoothed spline interpolation for more general reference pathways

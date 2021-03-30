@@ -45,8 +45,7 @@ public:
 
   virtual void populate(double r, double T){};
 
-  virtual void sample(double r, double T,
-      std::map<std::string,double> &results){};
+  virtual void sample(double r, double T, std::map<std::string,double> &results){};
 
   virtual void rescale_cell(double T){};
 

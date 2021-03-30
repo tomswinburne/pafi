@@ -48,6 +48,8 @@ int main(int narg, char **arg) {
       } else std::cout<<"it exists!\n";
     }
   }
+
+  // Broadcast parameters
   MPI_Bcast(int_dump_suffix,1,MPI_INT,0,MPI_COMM_WORLD);
   MPI_Barrier(MPI_COMM_WORLD);
 
@@ -77,19 +79,23 @@ int main(int narg, char **arg) {
   const int nRepeats = params.nRepeats;
 
 
-
+  // Worker communicators
   MPI_Comm instance_comm;
   MPI_Comm_split(MPI_COMM_WORLD,instance,0,&instance_comm);
+
+
 
   int *seed = new int[nWorkers];
   if(rank==0) for(int i=0;i<nWorkers;i++)
     seed[i]= 137*i + static_cast<int>(std::time(0))/1000;
   MPI_Bcast(seed,nWorkers,MPI_INT,0,MPI_COMM_WORLD);
   MPI_Barrier(MPI_COMM_WORLD);
+
   params.seed(seed[instance]);
 
   if(rank==0) std::cout<<"\n\nInitializing "<<nWorkers<<" workers "
                       "with "<<params.CoresPerWorker<<" cores per worker\n\n";
+
 
   Simulator sim(instance_comm,params,instance,nRes);
 
@@ -121,7 +127,7 @@ int main(int narg, char **arg) {
   const int rsize = nRes*nWorkers;
 
   int total_valid_data, totalRepeats, total_invalid_data;
-  double temp, dr, t_max_jump, p_jump;
+  double temp, dr, t_max_jump, p_jump, E_init, E_max=0.0;
   std::string rstr,Tstr,dump_fn,fn,dump_suffix;
   std::map<std::string,double> results;
 
@@ -195,7 +201,7 @@ int main(int narg, char **arg) {
   } else for(auto r: sim.pathway_r)
     if(r>=params.startr-0.02 && r<=params.stopr+0.02) sample_r.push_back(r);
 
-for(auto r: sample_r) {
+  for(auto r: sample_r) {
     valid_res.clear();
     invalid_res.clear();
     rstr = std::to_string(r);
@@ -209,6 +215,11 @@ for(auto r: sample_r) {
     while (total_valid_data<=int(params.redo_thresh*nWorkers*nRepeats)) {
 
       sim.sample(r, T, results, local_dev);
+
+
+      if(r==sample_r[0]) E_init = results["refE"];
+
+      E_max = std::max(results["refE"]-E_init,E_max);
       for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i];
 
       totalRepeats++;
@@ -267,7 +278,6 @@ for(auto r: sample_r) {
           std::cout<<"Reference path too unstable for sampling!"<<std::endl;
         break;
       }
-      if(rank==0) std::cout<<"#"<<std::flush;
     }
     // collate
     if(rank==0) {
@@ -282,12 +292,9 @@ for(auto r: sample_r) {
         all_dev_sq[i]/=double(total_valid_data);
       }
 
-      dump_fn = params.dump_dir+"/dev_"+rstr+dump_suffix+".dat";
-      sim.write_dev(dump_fn,r,all_dev,all_dev_sq);
+      //dump_fn = params.dump_dir+"/dev_"+rstr+dump_suffix+".dat";
+      //sim.write_dev(dump_fn,r,all_dev,all_dev_sq);
 
-      std::cout<<" "<<totalRepeats<<"/"<<nRepeats<<" ";
-      std::cout<<total_valid_data<<"/"<<nRepeats*nWorkers<<" ";
-      std::cout<<valid_res.size()/nWorkers<<std::endl;
       // raw output
       raw<<total_valid_data<<" ";
       for(auto j: raw_dump_indicies)
@@ -338,6 +345,20 @@ for(auto r: sample_r) {
 
     std::cout<<"Absolute Forces and differences between knots: \n";
 
+
+    spline dFspl;
+
+    dFspl.set_points(integr,dfer);
+    double dF_dense_int = 0.0,F_bar_dense=0.0,E_bar_dense=E_max;
+    double int_dr = (sample_r[sample_r.size()-1]-sample_r[0])/30.;
+
+    for (double r = sample_r[0]; r <= sample_r[sample_r.size()-1]; r += int_dr) {
+      dF_dense_int -= dFspl(r)/2.0 * int_dr;
+      F_bar_dense = std::max(F_bar_dense,dF_dense_int);
+      dF_dense_int -= dFspl(r)/2.0 * int_dr;
+    }
+
+
     double _dF,_ddF,ddF[2] = {0.,0.},F=0.;
     bool warning=false;
     int i=0;
@@ -381,8 +402,28 @@ for(auto r: sample_r) {
     std::cout<<"\n\t\t   Max | X_postmin - X | = "<<maxjumpr[i];
     std::cout<<"\n -------- \n";
     std::cout<<"\n\n\tAverage, Std in d|dF|:"<<ddF[0]<<" , "<<sqrt(ddF[1])<<std::endl;
+
+
+
+    std::cout<<"\n\n--------------- Integration checks at zero temperature -----\n";
+    std::cout<<"\n\tEnergy Barrier: "<<std::setprecision(5)<<E_bar_dense;
+    std::cout<<" eV, Force Integration Barrier: "<<std::setprecision(5)<<F_bar_dense<<" eV";
+    std::cout<<"\n\n\tAbsolute error of: "<<std::setprecision(5)<<std::fabs(F_bar_dense-E_bar_dense)*1000.<<" meV ";
+    std::cout<<" ("<<std::setprecision(5)<<(F_bar_dense/E_bar_dense-1.0)*100.<<"%)"<<std::endl;
+    if(std::fabs(F_bar_dense-E_bar_dense)<=0.005) {
+      std::cout<<"\n\tError < 5meV - within likely potential accuracy, OK for sampling!\n";
+    } else {
+      warning=true;
+      std::cout<<"\n\tError > 5meV, probably too high! FAIL\n";
+    }
+    if(std::fabs(F_bar_dense-E_bar_dense)>=0.001) {
+      std::cout<<"\t\nTo reduce this error: ";
+      std::cout<<""\n\t\t More NEB images and/or increasing nPlanes in config.xml\n\n"<<std::endl;
+    }
+
     if(warning) std::cout<<"\nPathway checks failed / warnings generated! See above\n"<<std::endl;
     else std::cout<<"\nPathway checks passed!\n"<<std::endl;
+
   }
 
   // close down LAMMPS instances

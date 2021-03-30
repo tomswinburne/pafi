@@ -288,6 +288,8 @@ void LAMMPSSimulator::sample(double r, double T,
 
   // time average
   refE = getEnergy();
+  results["refE"] = refE;
+
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"hp",0,1,4,0);
   refP = *lmp_ptr;
   lammps_free(lmp_ptr);
@@ -421,6 +423,12 @@ double LAMMPSSimulator::getForceEnergy(double *f) {
   double baseE = *lmpE;
   return baseE;
 };
+
+double LAMMPSSimulator::get_fix(std::string fixid,int type, int index) {
+  double * lmp_val = (double *) lammps_extract_fix(lmp,(char *)fixid.c_str(),0,type,index,0);
+  double val = *lmp_val;
+  return val;
+}
 
 // Fill 9D array with Lx, Ly, Lz, xy, xz, yz, then periodicity in x, y, z
 std::array<double,9> LAMMPSSimulator::getCellData() {
