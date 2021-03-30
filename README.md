@@ -8,10 +8,9 @@
         |/           |/     \|    |/           \_______/
         Projected    Average      Force        Integrator
 
-# Evaluate free energy barriers beyond the harmonic approximation
-
-## "Dropping the H in HTST"
+# Free energy barriers beyond HTST
 v0.9 :copyright: TD Swinburne and M-C Marinica 2020 MIT License
+
 swinburne at cinam.univ-mrs.fr
 
 
