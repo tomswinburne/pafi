@@ -133,6 +133,7 @@ int main(int narg, char **arg) {
   double *all_dev = NULL;
   double *all_dev_sq = NULL;
   double *all_res = NULL;
+
   if (rank == 0) {
     all_dev = new double[vsize];
     all_dev_sq = new double[vsize];
@@ -147,6 +148,13 @@ int main(int narg, char **arg) {
   if (params.nPlanes>1)
     dr = (params.stopr-params.startr)/(double)(params.nPlanes-1);
   else dr = 0.1;
+
+  std::vector<double> sample_r;
+  if(params.spline_path and not params.match_planes) {
+    for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr )
+      sample_r.push_back(r);
+  } else for(auto r: sim.pathway_r) if(r>=0.0 && r<=1.0) sample_r.push_back(r);
+
 
 
   for(double T = params.lowT; T <= params.highT;) {
@@ -188,7 +196,9 @@ int main(int narg, char **arg) {
       std::cout<<"\n";
     }
 
-    for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr ) {
+
+    for(auto r: sample_r) {
+    //for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr ) {
       valid_res.clear();
       invalid_res.clear();
       rstr = std::to_string(r);

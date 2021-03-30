@@ -7,7 +7,7 @@ int main(int narg, char **arg) {
   MPI_Comm_size(MPI_COMM_WORLD,&nProcs);
 
   // Load input file
-  Parser params("./config.xml");
+  Parser params("./config.xml",false);
   params.CoresPerWorker = nProcs;
 
   if(nProcs>params.CoresPerWorker) {
@@ -39,7 +39,12 @@ int main(int narg, char **arg) {
   const int nRes = 7; // TODO remove this
 	const int nRepeats = params.nRepeats;
 
+  int fileindex=1;
+  std::string cmd;
+  double dr,E_init,nm,E_tot,fs,dF_int=0.0,dF,F_bar=0.0,E_bar=0.0,psi;
+  double *f,*lmp_ptr;
 
+  std::vector<double> dFa,ra,dEa;
 
   params.seed(123);
   MPI_Comm instance_comm;
@@ -67,22 +72,27 @@ int main(int narg, char **arg) {
 
   sim.make_path(params.PathwayConfigurations);
 
-  int fileindex=1;
-  std::string cmd;
-  double dr,E,nm,fE,fs;
-  double *f;
-
   f = new double[3*sim.natoms];
 
   if (params.nPlanes>1) dr = (params.stopr-params.startr)/(double)(params.nPlanes-1);
   else dr = 0.1;
+  std::vector<double> sample_r;
+  if(params.spline_path and not params.match_planes) {
+    for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr )
+      sample_r.push_back(r);
+  } else for(auto r: sim.pathway_r) if(r>=0.0 && r<=1.0) sample_r.push_back(r);
+
+
 
   if(rank==0) {
     std::cout<<"\n\nPath Loaded\n\n";
-    std::cout<<std::setprecision(15)<<"r index dE |tangent| |force|"<<std::endl;
+    std::cout<<std::setw(17)<<"              r";
+    std::cout<<std::setw(17)<<"          index";
+    std::cout<<std::setw(19)<<"        E - E_0";
+    std::cout<<std::setw(17)<<"         -dF/dr"<<std::endl;
   }
 
-  for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr ) {
+  for (auto r : sample_r) {
 
     sim.populate(r,nm,0.0);
 
@@ -108,14 +118,27 @@ int main(int narg, char **arg) {
     cmd = "run 0";
     sim.run_commands(cmd);
 
-    E = sim.getForceEnergy(f);
+    E_tot = sim.getForceEnergy(f);
+
 
     fs=0.0;
     for(int i=0; i<3*sim.natoms; i++) fs += f[i]*f[i];
+    dF = 1.0*(sim.get_fix("hp",1,0));
+    psi = 1.0*(sim.get_fix("hp",1,2));
 
-    if(r==params.startr) fE = E;
-    if(rank==0)
-      std::cout<<std::setprecision(15)<<r<<" "<<fileindex<<" "<<E-fE<<" "<<nm<<" "<<sqrt(fs)<<std::endl;
+    if(r==params.startr) E_init = E_tot;
+
+    ra.push_back(r);
+    dFa.push_back(dF*nm);
+    dEa.push_back(E_tot-E_init);
+
+    if(rank==0) {
+      std::cout<<std::setw(17)<<r<<" ";
+      std::cout<<std::setw(17)<<fileindex<<" ";
+      std::cout<<std::setw(17)<<std::setprecision(5)<<E_tot-E_init<<" ";
+      std::cout<<std::setw(17)<<std::setprecision(5)<<dF*nm<<std::endl;
+    }
+
     sim.lammps_dump_path("dumps/pafipath."+std::to_string(fileindex)+".data",r);
     fileindex++;
 
@@ -127,6 +150,31 @@ int main(int narg, char **arg) {
 
   // close down LAMMPS instances
   sim.close();
+
+
+  spline dFspl,dEspl;
+  dFspl.set_points(ra,dFa);
+  dEspl.set_points(ra,dEa);
+  double dF_dense_int = 0.0,F_bar_dense=0.0,E_bar_dense;
+  for (double r = params.startr; r <= params.stopr+0.5*dr/30.; r += dr/30. ) {
+    dF_dense_int -= dFspl(r)/2.0 * dr/30.;
+    F_bar_dense = std::max(F_bar_dense,dF_dense_int);
+    dF_dense_int -= dFspl(r)/2.0 * dr/30.;
+    E_bar_dense = std::max(E_bar_dense,dEspl(r));
+  }
+
+
+  if(rank==0) {
+    std::cout<<"\n\n\tBARRIER FROM ENERGY: "<<std::setprecision(5)<<E_bar_dense;
+    std::cout<<"eV, FORCE INTEGRATION:"<<std::setprecision(5)<<F_bar_dense<<"eV";
+    std::cout<<"\n\n\tABSOLUTE ERROR: "<<std::setprecision(5)<<std::fabs(F_bar_dense-E_bar_dense)*1000.<<"meV";
+    std::cout<<", RELATIVE ERROR: "<<std::setprecision(5)<<(F_bar_dense/E_bar_dense-1.0)*100.<<"%"<<std::endl;
+    if(std::fabs(F_bar_dense-E_bar_dense)<=0.005) {
+      std::cout<<"\n\tERROR < 5meV - WITHIN LIKELY POTENTIAL ACCURACY, OK FOR SAMPLING!";
+      std::cout<<"\n\n\tTO FURTHER REDUCE ERROR, ";
+    } else std::cout<<"\n\tERROR > 5meV, PROBABLY TOO HIGH! ";
+    std::cout<<"CONSIDER MORE NEB IMAGES AND/OR INCREASING nPlanes IN config.xml\n\n\n"<<std::endl;;
+  }
 
   MPI_Finalize();
 
