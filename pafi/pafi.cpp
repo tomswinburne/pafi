@@ -51,7 +51,7 @@ int main(int narg, char **arg) {
 
 
 
-  // ******************* WORKERS AND MPI ***************************************
+  // ******************* SET UP WORKERS ***************************************
   const int nWorkers = nProcs / params.CoresPerWorker;
   const int instance = rank / params.CoresPerWorker;
   const int local_rank = rank % params.CoresPerWorker;
@@ -68,14 +68,15 @@ int main(int narg, char **arg) {
                       "with "<<params.CoresPerWorker<<" cores per worker\n\n";
   // see GlobalSeed
   params.seed(instance);
+
+
   Simulator sim(instance_comm,params,instance);
   if(!sim.has_pafi) exit(-1);
 
   sim.make_path(params.PathwayConfigurations);
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
 
-
-  // ******************* WORKERS AND MPI ***************************************
+  // ******************* SET UP WORKERS ***************************************
 
 
   // ********************** DECLARATIONS ***************************************
@@ -109,12 +110,14 @@ int main(int narg, char **arg) {
   std::vector<double> valid_res, invalid_res;
 
 
+
   // ********************** DECLARATIONS ***************************************
 
 
   // ********************** SAMPLING *******************************************
   for(double T = params.lowT; T <= params.highT;) {
 
+    // dump file
     Tstr = std::to_string((int)(T));
 
     dump_suffix = "_"+Tstr+"K_"+std::to_string(dump_index);
@@ -125,6 +128,9 @@ int main(int narg, char **arg) {
       raw.open(fn.c_str(),std::ofstream::out);
       std::cout<<"\nStarting T="+Tstr+"K run\n\n";
     }
+    //
+
+
 
     for(int i=0;i<nWorkers;i++) valid[i]=0;
     for(int i=0;i<rsize;i++) local_res[i]=0.0;
@@ -158,6 +164,7 @@ int main(int narg, char **arg) {
       valid_res.clear();
       invalid_res.clear();
       rstr = std::to_string(r);
+
       for(int i=0;i<rsize;i++) local_res[i] = 0.0;
       for(int i=0;i<vsize;i++) local_dev[i] = 0.0;
 
@@ -165,6 +172,7 @@ int main(int narg, char **arg) {
       total_valid_data=0;
       totalRepeats=0;
       t_max_jump=0.0;
+
       while (total_valid_data<=int(params.redo_thresh*nWorkers*nRepeats)) {
 
         sim.sample(r, T, results, local_dev);
