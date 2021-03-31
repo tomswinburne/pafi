@@ -1,11 +1,14 @@
 #ifndef SIM_H
 #define SIM_H
 
+#include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <vector>
 #include <array>
 #include <string>
 #include <map>
+#include <list>
 
 #include "Constants.hpp"
 #include "Parser.hpp"
@@ -54,7 +57,7 @@ public:
 
   void write(std::string fn, double r);
 
-  void write_dev(std::string fn, double r, double *dev, double *dev_sq);
+  void write_dev(std::string fn, double r, double *dev);
 
   void make_path(std::vector<std::string> knot_list);
 
@@ -64,6 +67,8 @@ public:
 
   void expansion(double T,double *newscale);
 
+  std::map<std::string,double> results;
+  std::vector<double> dF_data;
   double scale[3];
   double refE,refT,refP;
   int natoms, tag, nknots;

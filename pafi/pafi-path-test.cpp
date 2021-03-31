@@ -157,9 +157,9 @@ int main(int narg, char **arg) {
       sim.sample(r, T, results, local_dev);
 
 
-      if(r==sim.sample_r[0]) E_init = results["refE"];
+      if(r==sim.sample_r[0]) E_init = results["MinEnergy"];
 
-      E_max = std::max(results["refE"]-E_init,E_max);
+      E_max = std::max(results["MinEnergy"]-E_init,E_max);
       for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i];
 
       totalRepeats++;

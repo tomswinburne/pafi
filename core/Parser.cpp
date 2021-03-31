@@ -203,7 +203,7 @@ std::string Parser::welcome_message(){
   str+="      | )          | )   ( |    | )          ___) (___\n";
   str+="      |/           |/     \\|    |/           \\_______/\n";
   str+="      Projected    Average      Force        Integrator\n";
-  str+="          (c) TD Swinburne and M-C Marinica 2020\n\n";
+  str+="          (c) TD Swinburne and M-C Marinica 2021\n\n";
 
 	str+="\nScripts:\n\n";
 	for(auto s: scripts) str+=s.first+" : "+s.second+"\n";

@@ -1,0 +1,140 @@
+
+
+
+      int i_r=0; i_r<results.size(); i_r++ )
+
+
+      bool valid = bool(results["MaxJump"]<params.maxjump_thresh);
+
+
+
+      valid_res.clear();
+      invalid_res.clear();
+      rstr = std::to_string(r);
+
+      for(int i=0;i<rsize;i++) local_res[i] = 0.0;
+
+      // store running average of local_dev in local_dev_sq
+      total_valid_data=0;
+      totalRepeats=0;
+      t_max_jump=0.0;
+
+      while (total_valid_data<=int(params.redo_thresh*nWorkers*nRepeats)) {
+
+        sim.sample(r, T, results, local_dev);
+        for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i];
+
+        totalRepeats++;
+
+        if(local_rank == 0) {
+          if(sim.error_count>0) std::cout<<sim.last_error()<<std::endl;
+          local_res[instance*nRes + 0] = results["preT"];
+          local_res[instance*nRes + 1] = results["postT"];
+          local_res[instance*nRes + 2] = results["aveF"];
+          local_res[instance*nRes + 3] = results["stdF"];
+          local_res[instance*nRes + 4] = results["aveP"];
+          local_res[instance*nRes + 5] = results["TdX"];
+          local_res[instance*nRes + 6] = results["MaxDev"];
+          local_res[instance*nRes + 7] = results["MaxJump"];
+        }
+
+
+        if (rank==0) {
+          for(int i=0;i<nWorkers;i++) {
+            t_max_jump = std::max(t_max_jump,all_res[i*nRes+7]);
+            valid[i] = int(all_res[i*nRes+7]<params.maxjump_thresh);
+            if(valid[i]) {
+              for(int j=0;j<nRes;j++) valid_res.push_back(all_res[i*nRes+j]);
+            } else {
+              for(int j=0;j<nRes;j++) invalid_res.push_back(all_res[i*nRes+j]);
+            }
+          }
+        }
+
+        // Broadcast validity
+        MPI_Bcast(valid,nWorkers,MPI_INT,0,MPI_COMM_WORLD);
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        // nullify invalid batches
+        if(valid[instance]==0 && !params.postDump) for(int i=0;i<vsize;i++) {
+          local_dev[i]=0.0;
+          local_dev_sq[i]=0.0;
+        }
+
+        // add all to total
+        MPI_Reduce(local_dev,all_dev,vsize,
+            MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+        MPI_Reduce(local_dev_sq,all_dev_sq,vsize,
+            MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        for(int i=0;i<nWorkers;i++) total_valid_data += valid[i];
+        p_jump = double(total_valid_data) / double(nWorkers*totalRepeats);
+
+        if(totalRepeats>=params.maxExtraRepeats+nRepeats) break;
+
+        if(p_jump < 0.1 ) {
+          if(rank==0) std::cout<<"Reference path too unstable for sampling.\n"
+                                "Try a lower temperature. See README for tips";
+          break;
+        }
+        if(rank==0) std::cout<<"#"<<std::flush;
+      }
+      // collate
+      if(rank==0) {
+        total_invalid_data = totalRepeats*nWorkers - total_valid_data;
+
+        // deviation vectors
+        if(params.postDump) for(int i=0;i<vsize;i++) {
+          all_dev[i]/=double(totalRepeats*nWorkers);
+          all_dev_sq[i]/=double(totalRepeats*nWorkers);
+        } else if(total_valid_data>0) for(int i=0;i<vsize;i++) {
+          all_dev[i]/=double(total_valid_data);
+          all_dev_sq[i]/=double(total_valid_data);
+        }
+
+        dump_fn = params.dump_dir+"/dev_"+rstr+dump_suffix+".dat";
+
+        sim.write_dev(dump_fn,r,all_dev,all_dev_sq);
+
+        // raw output
+        raw<<total_valid_data<<" ";
+        for(auto j: raw_dump_indicies)
+          for(int i=0;i<total_valid_data;i++) raw<<valid_res[i*nRes+j]<<" ";
+
+        for(auto j: raw_dump_indicies)
+          for(int i=0;i<total_invalid_data;i++) raw<<invalid_res[i*nRes+j]<<" ";
+        raw<<std::endl;
+
+        double *final_res = new double[2*nRes];
+        for(int j=0;j<2*nRes;j++) final_res[j] = 0.;
+
+        // average
+        for(int i=0;i<total_valid_data;i++) for(int j=0;j<nRes;j++)
+          final_res[j] += valid_res[i*nRes+j] / double(total_valid_data);
+
+        for(int i=0;i<total_valid_data;i++) for(int j=0;j<nRes;j++) {
+          temp = valid_res[i*nRes+j]-final_res[j];
+          final_res[j+nRes] += temp * temp;
+        }
+        // under assumption that sample time is longer than autocorrelations,
+        // expected variance in time average is ensemble variance / nWorkers
+        // raw_output gives data to confirm this assumption (CLT with grouping)
+        if(total_valid_data>0) for(int j=0;j<nRes;j++)
+          final_res[j+nRes] = sqrt(final_res[j+nRes])/double(total_valid_data);
+
+        integr.push_back(r);
+        dfer.push_back(final_res[2]); // <dF/dr>
+        dfere.push_back(final_res[2+nRes]);//"err(<dF/dr>)"
+        psir.push_back(final_res[4]); // <Psi>
+        std::cout<<std::setw(5)<<r;//"r"
+        std::cout<<std::setw(20)<<final_res[0];//"av(<Tpre>)"
+        std::cout<<std::setw(20)<<final_res[1];//"av(<Tpost>)"
+        std::cout<<std::setw(20)<<final_res[2];//"av(<dF/dr>)"
+        std::cout<<std::setw(20)<<final_res[2+nRes];//"err(<dF/dr>)"
+        std::cout<<std::setw(20)<<final_res[5];//"av(|<X>-U).(dU/dr)|)"
+        std::cout<<std::setw(20)<<final_res[4];//"av(Psi)"
+        std::cout<<std::setw(20)<<t_max_jump;// max jump
+        std::cout<<std::setw(20)<<p_jump;// ratio of jumps
+        std::cout<<"\n";
+      }

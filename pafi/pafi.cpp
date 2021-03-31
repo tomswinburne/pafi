@@ -3,11 +3,11 @@
 int main(int narg, char **arg) {
 
   MPI_Init(&narg,&arg);
-  int rank, nProcs;
+  int rank, nProcs, i, j;
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   MPI_Comm_size(MPI_COMM_WORLD,&nProcs);
 
-  // ************************ READ INPUT FILE **********************************
+  // ************************ READ CONFIG FILE **********************************
   Parser params("./config.xml",false);
 
   if(!params.xml_success) {
@@ -27,14 +27,16 @@ int main(int narg, char **arg) {
     }
     exit(-1);
   }
+  // ************************ READ CONFIG FILE ***********************************
 
-  // check for dump folder
+
+  // ************************ DUMP FOLDER *********************************
   std::ofstream raw;
   int dump_index=-1;
+  std::string dump_suffix, dump_file, dev_file;
   if(rank==0) params.find_dump_file(raw,dump_index);
   MPI_Bcast(&dump_index,1,MPI_INT,0,MPI_COMM_WORLD);
   MPI_Barrier(MPI_COMM_WORLD);
-
   if(dump_index<0) {
     if(rank==0) {
       std::cout<<"\n\n\n*****************************\n\n\n";
@@ -43,299 +45,114 @@ int main(int narg, char **arg) {
     }
     exit(-1);
   }
-
-  if(rank==0)  std::cout<<params.welcome_message();
-
-  MPI_Barrier(MPI_COMM_WORLD);
-  // ************************ END INPUT FILE ***********************************
+  // ************************ DUMP FOLDER *********************************
 
 
 
   // ******************* SET UP WORKERS ***************************************
+  MPI_Barrier(MPI_COMM_WORLD);
   const int nWorkers = nProcs / params.CoresPerWorker;
   const int instance = rank / params.CoresPerWorker;
   const int local_rank = rank % params.CoresPerWorker;
-  const int nRepeats = params.nRepeats;
+
   MPI_Comm instance_comm;
   MPI_Comm_split(MPI_COMM_WORLD,instance,0,&instance_comm);
-
-  // TODO remove these dependencies?
-  const int nRes = 8;
-  const std::list<int> raw_dump_indicies = {2,3,4,7};// <f> std(f) <Psi> <Jump>
-
 
   if(rank==0) std::cout<<"\n\nInitializing "<<nWorkers<<" workers "
                       "with "<<params.CoresPerWorker<<" cores per worker\n\n";
   // see GlobalSeed
   params.seed(instance);
 
-
   Simulator sim(instance_comm,params,instance);
   if(!sim.has_pafi) exit(-1);
+  if(rank==0)  std::cout<<params.welcome_message();
 
   sim.make_path(params.PathwayConfigurations);
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
-
-  // ******************* SET UP WORKERS ***************************************
-
-
-  // ********************** DECLARATIONS ***************************************
-  const int vsize = 3 * sim.natoms;
-  const int rsize = nRes*nWorkers;
-
-  int *valid = new int[nWorkers];
-  double *local_res = new double[rsize];
-  double *local_dev = new double[vsize];
-  double *local_dev_sq = new double[vsize];
-  double *all_dev = NULL;
-  double *all_dev_sq = NULL;
-  double *all_res = NULL;
-
-  if (rank == 0) {
-    all_dev = new double[vsize];
-    all_dev_sq = new double[vsize];
-    all_res = new double[rsize];
-  }
-
-  int total_valid_data, totalRepeats, total_invalid_data;
-
-  double temp, dr, t_max_jump, p_jump;
-
-  std::string rstr,Tstr,dump_fn,fn,dump_suffix;
-
-  std::map<std::string,double> results;
-
-  std::vector<double> integr, dfer, dfere, psir;
-
-  std::vector<double> valid_res, invalid_res;
-
-
-
-  // ********************** DECLARATIONS ***************************************
+  // ******************* SET UP WORKERS ****************************************
 
 
   // ********************** SAMPLING *******************************************
+
+  const int vsize = 3 * sim.natoms;
+  double *dev = new double[vsize*(1+(instance==0))];
+  int *valid = new int[1+nWorkers*(instance==0)];
+  double *all_data = NULL, *ens_data=NULL, *data=NULL;
+  int dsize=-1;
+  std::vector<double> dF;
+
   for(double T = params.lowT; T <= params.highT;) {
 
-    // dump file
-    Tstr = std::to_string((int)(T));
-
-    dump_suffix = "_"+Tstr+"K_"+std::to_string(dump_index);
+    dump_suffix = std::to_string(int(T))+"K_"+std::to_string(dump_index);
+    dump_file = params.dump_dir + "/raw_ensemble_output_"+dump_suffix;
 
     if(rank==0) {
-      fn = params.dump_dir + "/raw_ensemble_output"+dump_suffix;
-      std::cout<<"opening dump file "<<fn<<std::endl;
-      raw.open(fn.c_str(),std::ofstream::out);
-      std::cout<<"\nStarting T="+Tstr+"K run\n\n";
-    }
-    //
-
-
-
-    for(int i=0;i<nWorkers;i++) valid[i]=0;
-    for(int i=0;i<rsize;i++) local_res[i]=0.0;
-    for(int i=0;i<vsize;i++) local_dev[i] = 0.0;
-    for(int i=0;i<vsize;i++) local_dev_sq[i] = 0.0;
-
-    results.clear();
-    integr.clear();
-    dfer.clear();
-    dfere.clear();
-    psir.clear();
-    valid_res.clear();
-    invalid_res.clear();
-
-    if (rank == 0) {
+      raw.open(dump_file.c_str(),std::ofstream::out);
+      std::cout<<"\nStarting T="<<T<<"K run\n\n";
       std::cout<<"<> == time averages,  av/err over ensemble"<<std::endl;
-      std::cout<<std::setw(5)<<"r";
-      std::cout<<std::setw(20)<<"av(<Tpre>)";
-      std::cout<<std::setw(20)<<"av(<Tpost>)";
-      std::cout<<std::setw(20)<<"av(<dF/dr>)";
-      std::cout<<std::setw(20)<<"err(<dF/dr>)";
-      std::cout<<std::setw(20)<<"av(|(<X>-U).N|)";
-      std::cout<<std::setw(20)<<"av(<N_true>.N)";
-      std::cout<<std::setw(20)<<"Max Jump";
-      std::cout<<std::setw(20)<<"P(Valid)";
-      std::cout<<"\n";
+      sim.screen_output_header();
+      dF.clear();
     }
-
-
     for(auto r: sim.sample_r) {
-      valid_res.clear();
-      invalid_res.clear();
-      rstr = std::to_string(r);
+      // sample
+      for(i=0;i<vsize;i++) dev[i] = 0.0;
+      sim.sample(r, T, dev);
 
-      for(int i=0;i<rsize;i++) local_res[i] = 0.0;
-      for(int i=0;i<vsize;i++) local_dev[i] = 0.0;
+      // is it valid
+      valid[0] = int(sim.results["Valid"]+0.01);
+      MPI_Gather(valid,1,MPI_INT,valid+1,1,MPI_INT,0,MPI_COMM_WORLD);
 
-      // store running average of local_dev in local_dev_sq
-      total_valid_data=0;
-      totalRepeats=0;
-      t_max_jump=0.0;
+      // reset deviation if invalid
+      if(valid[instance]==0) for(i=0;i<vsize;i++) dev[i] = 0.0;
+      MPI_Reduce(dev,dev+vsize,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 
-      while (total_valid_data<=int(params.redo_thresh*nWorkers*nRepeats)) {
-
-        sim.sample(r, T, results, local_dev);
-        for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i];
-
-        totalRepeats++;
-
-        if(local_rank == 0) {
-          if(sim.error_count>0) std::cout<<sim.last_error()<<std::endl;
-          local_res[instance*nRes + 0] = results["preT"];
-          local_res[instance*nRes + 1] = results["postT"];
-          local_res[instance*nRes + 2] = results["aveF"];
-          local_res[instance*nRes + 3] = results["stdF"];
-          local_res[instance*nRes + 4] = results["aveP"];
-          local_res[instance*nRes + 5] = results["TdX"];
-          local_res[instance*nRes + 6] = results["MaxDev"];
-          local_res[instance*nRes + 7] = results["MaxJump"];
+      // declare everything here for flexibility
+      if(dsize<0) {
+        dsize=sim.results.size();
+        data = new double[dsize];
+        if(rank==0) {
+          i=0;
+          raw<<"# ";
+          for(auto res: sim.results) raw<<i++<<": "<<res.first<<"  ";
+          raw<<std::endl;
+          all_data = new double[dsize*nWorkers];
+          ens_data = new double[dsize*2+1];
         }
+      }
+      i=0; for(auto res: sim.results) data[i++] = res.second;
+      MPI_Gather(data,dsize,MPI_DOUBLE,all_data,dsize,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
-        MPI_Barrier(MPI_COMM_WORLD);
-        MPI_Reduce(local_res,all_res,rsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
-
-        if (rank==0) {
-          for(int i=0;i<nWorkers;i++) {
-            t_max_jump = std::max(t_max_jump,all_res[i*nRes+7]);
-            valid[i] = int(all_res[i*nRes+7]<params.maxjump_thresh);
-            if(valid[i]) {
-              for(int j=0;j<nRes;j++) valid_res.push_back(all_res[i*nRes+j]);
-            } else {
-              for(int j=0;j<nRes;j++) invalid_res.push_back(all_res[i*nRes+j]);
-            }
+      if(rank==0) {
+        // raw output
+        for(i=0;i<dsize*nWorkers;i++) raw<<all_data[i]<<" ";
+        raw<<std::endl;
+        // ensemble average
+        for(j=0;j<2*dsize+1;j++) ens_data[j] = 0.0;
+        for(i=0;i<nWorkers;i++) if(valid[1+i]) {
+          ens_data[2*dsize] += 1.0;
+          for(j=0;j<dsize;j++) {
+            ens_data[j]+=all_data[i*dsize+j];
+            ens_data[j+dsize] += all_data[i*dsize+j] * all_data[i*dsize+j];
           }
         }
-
-        // Broadcast validity
-        MPI_Bcast(valid,nWorkers,MPI_INT,0,MPI_COMM_WORLD);
-        MPI_Barrier(MPI_COMM_WORLD);
-
-        // nullify invalid batches
-        if(valid[instance]==0 && !params.postDump) for(int i=0;i<vsize;i++) {
-          local_dev[i]=0.0;
-          local_dev_sq[i]=0.0;
+        if(ens_data[2*dsize]>0.5) {
+          for(j=0;j<2*dsize;j++) ens_data[j] /= ens_data[2*dsize];
+          for(j=0;j<dsize;j++) ens_data[j+dsize] -= ens_data[j] * ens_data[j];
+          // N^2 for average-of-averages
+          for(j=0;j<vsize;j++) dev[j+vsize] /= ens_data[2*dsize] * ens_data[2*dsize];
+          dev_file = "dev_"+std::to_string(r)+"_"+dump_suffix+".dat";
+          sim.write_dev(params.dump_dir+"/"+dev_file,r,dev+vsize);
         }
-
-        // add all to total
-        MPI_Reduce(local_dev,all_dev,vsize,
-            MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
-        MPI_Reduce(local_dev_sq,all_dev_sq,vsize,
-            MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
-        MPI_Barrier(MPI_COMM_WORLD);
-
-        for(int i=0;i<nWorkers;i++) total_valid_data += valid[i];
-        p_jump = double(total_valid_data) / double(nWorkers*totalRepeats);
-
-        if(totalRepeats>=params.maxExtraRepeats+nRepeats) break;
-
-        if(p_jump < 0.1 ) {
-          if(rank==0) std::cout<<"Reference path too unstable for sampling.\n"
-                                "Try a lower temperature. See README for tips";
-          break;
-        }
-        if(rank==0) std::cout<<"#"<<std::flush;
-      }
-      // collate
-      if(rank==0) {
-        total_invalid_data = totalRepeats*nWorkers - total_valid_data;
-
-        // deviation vectors
-        if(params.postDump) for(int i=0;i<vsize;i++) {
-          all_dev[i]/=double(totalRepeats*nWorkers);
-          all_dev_sq[i]/=double(totalRepeats*nWorkers);
-        } else if(total_valid_data>0) for(int i=0;i<vsize;i++) {
-          all_dev[i]/=double(total_valid_data);
-          all_dev_sq[i]/=double(total_valid_data);
-        }
-
-        dump_fn = params.dump_dir+"/dev_"+rstr+dump_suffix+".dat";
-        sim.write_dev(dump_fn,r,all_dev,all_dev_sq);
-
-        std::cout<<" "<<totalRepeats<<"/"<<nRepeats<<" ";
-        std::cout<<total_valid_data<<"/"<<nRepeats*nWorkers<<" ";
-        std::cout<<valid_res.size()/nWorkers<<std::endl;
-        // raw output
-        raw<<total_valid_data<<" ";
-        for(auto j: raw_dump_indicies)
-          for(int i=0;i<total_valid_data;i++) raw<<valid_res[i*nRes+j]<<" ";
-        for(auto j: raw_dump_indicies)
-          for(int i=0;i<total_invalid_data;i++) raw<<invalid_res[i*nRes+j]<<" ";
-        raw<<std::endl;
-
-        double *final_res = new double[2*nRes];
-        for(int j=0;j<2*nRes;j++) final_res[j] = 0.;
-
-        // average
-        for(int i=0;i<total_valid_data;i++) for(int j=0;j<nRes;j++)
-          final_res[j] += valid_res[i*nRes+j] / double(total_valid_data);
-
-        for(int i=0;i<total_valid_data;i++) for(int j=0;j<nRes;j++) {
-          temp = valid_res[i*nRes+j]-final_res[j];
-          final_res[j+nRes] += temp * temp;
-        }
-        // under assumption that sample time is longer than autocorrelations,
-        // expected variance in time average is ensemble variance / nWorkers
-        // raw_output gives data to confirm this assumption (CLT with grouping)
-        if(total_valid_data>0) for(int j=0;j<nRes;j++)
-          final_res[j+nRes] = sqrt(final_res[j+nRes])/double(total_valid_data);
-
-        integr.push_back(r);
-        dfer.push_back(final_res[2]); // <dF/dr>
-        dfere.push_back(final_res[2+nRes]);//"err(<dF/dr>)"
-        psir.push_back(final_res[4]); // <Psi>
-        std::cout<<std::setw(5)<<r;//"r"
-        std::cout<<std::setw(20)<<final_res[0];//"av(<Tpre>)"
-        std::cout<<std::setw(20)<<final_res[1];//"av(<Tpost>)"
-        std::cout<<std::setw(20)<<final_res[2];//"av(<dF/dr>)"
-        std::cout<<std::setw(20)<<final_res[2+nRes];//"err(<dF/dr>)"
-        std::cout<<std::setw(20)<<final_res[5];//"av(|<X>-U).(dU/dr)|)"
-        std::cout<<std::setw(20)<<final_res[4];//"av(Psi)"
-        std::cout<<std::setw(20)<<t_max_jump;// max jump
-        std::cout<<std::setw(20)<<p_jump;// ratio of jumps
-        std::cout<<"\n";
+        sim.fill_results(ens_data);
+        sim.screen_output_line(r);
       }
     }
 
-    // free_energy_profile
-    if(rank==0){
+    if(rank==0) {
       raw.close();
-      std::cout<<"\nT="+Tstr+"K run complete, integrating FEP....\n\n";
-      spline dfspl,psispl,dfespl;
-
-      dfspl.set_points(integr,dfer);
-      dfespl.set_points(integr,dfere);
-      psispl.set_points(integr,psir);
-
-      std::vector<std::array<double,4>> fF;
-      std::array<double,4> fline;
-      double dr = 1./(double)(2 * integr.size());
-      double rtF=0.0;
-
-      fline[0]=params.startr;
-      fline[1]=rtF;
-      fline[2]=0.;
-      fline[3] = psispl(params.startr);
-      fF.push_back(fline);
-
-      for(double sr=params.startr+dr; sr<= params.stopr+dr*0.5; sr+=dr) {
-        rtF -=  dr * dfspl(sr);
-        fline[0] = sr;
-        fline[1] = rtF;
-        fline[2] = BOLTZ*T*log(fabs(psispl(sr)/psispl(0.)));
-        fline[3] = psispl(sr);
-        fF.push_back(fline);
-      }
-      std::ofstream out;
-      fn = params.dump_dir + "/free_energy_profile"+dump_suffix;
-      out.open(fn.c_str(),std::ofstream::out);
-      out<<"# r F(r) av(<dF/dr>) err(<dF/dr>) av(<Psi>)\n";
-      for(auto l: fF) {
-        out<<l[0]<<" "<<l[1]<<" ";
-        out<<dfspl(l[0])<<" "<<dfespl(l[0])<<" "<<l[3]<<"\n";
-      }
-      out.close();
-      std::cout<<"Integration complete\n\n";
+      dump_file = params.dump_dir + "/free_energy_profile_"+dump_suffix;
+      double barrier = sim.integrate(dump_file);
+      std::cout<<"T="<<T<<"K run complete; est. barrier: "<<barrier<<"eV"<<std::endl;
     }
 
     if( params.highT > params.lowT + 1.0 && params.TSteps > 1) \

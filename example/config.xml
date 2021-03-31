@@ -16,24 +16,24 @@
 
 
   <!-- LowTemperature to HighTemperature in TemperatureSteps steps -->
-  <LowTemperature> 200 </LowTemperature>
-  <HighTemperature> 800 </HighTemperature>
-  <TemperatureSteps> 4 </TemperatureSteps>
+  <LowTemperature> 0 </LowTemperature>
+  <HighTemperature> 0 </HighTemperature>
+  <TemperatureSteps> 1 </TemperatureSteps>
 
   <!-- We require nprocs % CoresPerWorker==0 -->
-  <CoresPerWorker> 4 </CoresPerWorker>
+  <CoresPerWorker> 1 </CoresPerWorker>
 
   <!-- Number of samples per plane per worker -->
   <nRepeats> 1 </nRepeats>
 
   <!-- Data gathering steps -->
-  <SampleSteps> 2000 </SampleSteps>
+  <SampleSteps> 200 </SampleSteps>
 
   <!-- Steps for thermalization -->
-  <ThermSteps> 1000 </ThermSteps>
+  <ThermSteps> 100 </ThermSteps>
 
   <!-- Max steps for optional in-plane minimizations (see below) -->
-  <MinSteps> 2000 </MinSteps>
+  <MinSteps> 200 </MinSteps>
 
   <!--
     RELATIVE thermal expansion coefficients along X,Y,Z directions of simulation-

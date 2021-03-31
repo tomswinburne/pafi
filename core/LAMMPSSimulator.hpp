@@ -1,5 +1,6 @@
 #ifndef LSIM_H
 #define LSIM_H
+
 #include <mpi.h>
 
 #include "GeneralSimulator.hpp"
@@ -40,8 +41,11 @@ public:
     Main sample run. Results vector should have thermalization temperature,
     sample temperature <f>, <f^2>, <psi> and <x-u>.n
   */
-  void sample(double r, double T, std::map<std::string,double> &results,
-                                                                  double *dev);
+  void sample(double r, double T, double *dev);
+  void screen_output_header();
+  void screen_output_line(double r);
+  void fill_results(double *ens_data);
+  double integrate(std::string res_file);
 
   std::string header(double mass);
 

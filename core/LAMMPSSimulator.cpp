@@ -68,7 +68,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t) {
 
   made_fix=false;
   made_compute=false;
-
+  dF_data.clear();
 };
 
 /*
@@ -257,8 +257,80 @@ void LAMMPSSimulator::rescale_cell(double T) {
   Main sample run. Results vector should have thermalization temperature,
   sample temperature <f>, <f^2>, <psi> and <x-u>.n, and max_jump
 */
-void LAMMPSSimulator::sample(double r, double T,
-            std::map<std::string,double> &results, double *dev) {
+void LAMMPSSimulator::screen_output_header() {
+  std::cout<<std::setw(5)<<"r";
+  std::cout<<std::setw(20)<<"av(<Tpre>)";
+  std::cout<<std::setw(20)<<"av(<Tpost>)";
+  std::cout<<std::setw(20)<<"av(<dF/dr>)";
+  std::cout<<std::setw(20)<<"err(<dF/dr>)";
+  std::cout<<std::setw(20)<<"av(|(<X>-U).N|)";
+  std::cout<<std::setw(20)<<"av(<N_true>.N)";
+  std::cout<<std::setw(20)<<"Max Jump";
+  std::cout<<std::setw(20)<<"P(Valid)";
+  std::cout<<"\n";
+};
+
+void LAMMPSSimulator::screen_output_line(double r) {
+  // screen output
+  std::cout<<std::setw(5)<<r;//"r"
+  std::cout<<std::setw(20)<<results["preT"];//"av(<Tpre>)"
+  std::cout<<std::setw(20)<<results["postT"];//"av(<Tpost>)"
+  std::cout<<std::setw(20)<<results["aveF"];//"av(<dF/dr>)"
+  std::cout<<std::setw(20)<<results["aveFstd"];//"err(<dF/dr>)"
+  std::cout<<std::setw(20)<<results["dXTangent"];//"av(|<X>-U).(dU/dr)|)"
+  std::cout<<std::setw(20)<<results["avePsi"];//"av(Psi)"
+  std::cout<<std::setw(20)<<results["MaxJump"];// max jump
+  std::cout<<std::setw(20)<<results["Valid"];// ratio of jumps
+  std::cout<<"\n";
+};
+
+void LAMMPSSimulator::fill_results(double *ens_data) {
+  int i=0;
+  std::list<std::string> fields;
+  for(auto &res : results) {
+    res.second = ens_data[i++];
+    fields.push_back(res.first);
+  }
+  for(auto field: fields) results[field+"std"] = sqrt(std::fabs(ens_data[i++]));
+  dF_data.push_back(results["aveF"]);
+  dF_data.push_back(results["aveFstd"]);
+  dF_data.push_back(results["avePsi"]);
+};
+
+double LAMMPSSimulator::integrate(std::string res_file) {
+  std::vector<double> y;
+  spline dF,errdF,Psi;
+  double f_bar=0.0,ef_bar=0.0,p_bar=0.0,f_bar_max=0.0;
+  if(dF_data.size()!=3*sample_r.size()) {
+    std::cout<<"sample_r.size!=dF_data.size!"<<std::endl;
+    return f_bar;
+  }
+  y.clear(); for(int i=0;i<dF_data.size()/3;i++) y.push_back(dF_data[3*i+0]);
+  dF.set_points(sample_r,y);
+  y.clear(); for(int i=0;i<dF_data.size()/3;i++) y.push_back(dF_data[3*i+1]);
+  errdF.set_points(sample_r,y);
+  y.clear(); for(int i=0;i<dF_data.size()/3;i++) y.push_back(dF_data[3*i+2]);
+  Psi.set_points(sample_r,y);
+
+  std::ofstream out;
+  out.open(res_file.c_str(),std::ofstream::out);
+  out<<"# r av(F(r)) std(F(r)) ave(Psi)"<<std::endl;
+  double diff_r = sample_r[sample_r.size()-1] - sample_r[0];
+  double ndense = sample_r.size() * 10.0;
+  for(double r=sample_r[0];r<=sample_r[0]+diff_r;r+=diff_r/ndense) {
+    f_bar -= diff_r/ndense/2.0 * dF(r);
+    ef_bar += diff_r/ndense/2.0 * errdF(r);
+    f_bar_max = std::max(f_bar,f_bar_max);
+    out<<r<<" "<<f_bar<<" "<<ef_bar<<" "<<Psi(r)<<std::endl;
+    f_bar -= diff_r/ndense/2.0 * dF(r);
+    ef_bar += diff_r/ndense/2.0 * errdF(r);
+    f_bar_max = std::max(f_bar,f_bar_max);
+  }
+  return f_bar_max;
+};
+
+void LAMMPSSimulator::sample(double r, double T, double *dev) {
+  results.clear();
   error_count = 0;
   last_error_message="";
   results.clear();
@@ -292,7 +364,7 @@ void LAMMPSSimulator::sample(double r, double T,
 
   // time average
   refE = getEnergy();
-  results["refE"] = refE;
+  results["MinEnergy"] = refE;
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"hp",0,1,4,0);
   refP = *lmp_ptr;
@@ -347,6 +419,7 @@ void LAMMPSSimulator::sample(double r, double T,
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,0,0);
   results["aveF"] = *lmp_ptr * norm_mag;
   lammps_free(lmp_ptr);
+  results["aveFstd"]=0.0; // from single worker
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,1,0);
   results["stdF"] = *lmp_ptr * norm_mag * norm_mag;
@@ -354,11 +427,11 @@ void LAMMPSSimulator::sample(double r, double T,
   lammps_free(lmp_ptr);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,2,0);
-  results["aveP"] = *lmp_ptr;
+  results["avePsi"] = *lmp_ptr;
   lammps_free(lmp_ptr);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,3,0);
-  results["TdX"] = *lmp_ptr;
+  results["dXTangent"] = *lmp_ptr;
   lammps_free(lmp_ptr);
 
   // post minmization - max jump
@@ -375,6 +448,8 @@ void LAMMPSSimulator::sample(double r, double T,
     if(!params->postDump) for(int j=0;j<3;j++) dev[3*i+j] = 0.0;
   }
   results["MaxJump"] = sqrt(max_disp);
+
+  results["Valid"] = double(bool(results["MaxJump"]<params->maxjump_thresh));
 
   // deviation average
   run_commands("reset_timestep "+SampleSteps); // for fix calculation
