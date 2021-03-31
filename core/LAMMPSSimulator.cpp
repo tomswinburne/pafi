@@ -284,7 +284,7 @@ void LAMMPSSimulator::screen_output_line(double r) {
   std::cout<<"\n";
 };
 
-void LAMMPSSimulator::fill_results(double *ens_data) {
+void LAMMPSSimulator::fill_results(double r,double *ens_data) {
   int i=0;
   std::list<std::string> fields;
   for(auto &res : results) {
@@ -292,38 +292,48 @@ void LAMMPSSimulator::fill_results(double *ens_data) {
     fields.push_back(res.first);
   }
   for(auto field: fields) results[field+"std"] = sqrt(std::fabs(ens_data[i++]));
+  dF_data.push_back(r);
   dF_data.push_back(results["aveF"]);
   dF_data.push_back(results["aveFstd"]);
   dF_data.push_back(results["avePsi"]);
 };
 
+
+
 double LAMMPSSimulator::integrate(std::string res_file) {
-  std::vector<double> y;
-  spline dF,errdF,Psi;
-  double f_bar=0.0,ef_bar=0.0,p_bar=0.0,f_bar_max=0.0;
-  if(dF_data.size()!=3*sample_r.size()) {
-    std::cout<<"sample_r.size!=dF_data.size!"<<std::endl;
-    return f_bar;
+
+  double diff_r = sample_r[sample_r.size()-1] - sample_r[0];
+  double ndense = sample_r.size() * 10.0;
+  double d,c,f_bar=0.0,ef_bar=0.0,f_bar_max=0.0;
+
+  std::vector<spline> dF;
+  for(int k=0;k<3;k++) {
+    spline spl;
+    std::vector<double> data;
+    for(int j=0;j<sample_r.size();j++) {
+      d=0; c=0;
+      for(int i=0;i<dF_data.size()/4;i++)
+        if(std::fabs(dF_data[i*4]-sample_r[j])<0.01) {
+          d += dF_data[i*4+1];
+          c += 1.0;
+        }
+      if(c>0.5) d/= c;
+      data.push_back(d);
+    }
+    spl.set_points(sample_r,data);
+    dF.push_back(spl);
   }
-  y.clear(); for(int i=0;i<dF_data.size()/3;i++) y.push_back(dF_data[3*i+0]);
-  dF.set_points(sample_r,y);
-  y.clear(); for(int i=0;i<dF_data.size()/3;i++) y.push_back(dF_data[3*i+1]);
-  errdF.set_points(sample_r,y);
-  y.clear(); for(int i=0;i<dF_data.size()/3;i++) y.push_back(dF_data[3*i+2]);
-  Psi.set_points(sample_r,y);
 
   std::ofstream out;
   out.open(res_file.c_str(),std::ofstream::out);
   out<<"# r av(F(r)) std(F(r)) ave(Psi)"<<std::endl;
-  double diff_r = sample_r[sample_r.size()-1] - sample_r[0];
-  double ndense = sample_r.size() * 10.0;
   for(double r=sample_r[0];r<=sample_r[0]+diff_r;r+=diff_r/ndense) {
-    f_bar -= diff_r/ndense/2.0 * dF(r);
-    ef_bar += diff_r/ndense/2.0 * errdF(r);
+    f_bar -= diff_r/ndense/2.0 * dF[0](r);
+    ef_bar += diff_r/ndense/2.0 * dF[1](r);
     f_bar_max = std::max(f_bar,f_bar_max);
-    out<<r<<" "<<f_bar<<" "<<ef_bar<<" "<<Psi(r)<<std::endl;
-    f_bar -= diff_r/ndense/2.0 * dF(r);
-    ef_bar += diff_r/ndense/2.0 * errdF(r);
+    out<<r<<" "<<f_bar<<" "<<ef_bar<<" "<<dF[2](r)<<std::endl;
+    f_bar -= diff_r/ndense/2.0 * dF[0](r);
+    ef_bar += diff_r/ndense/2.0 * dF[1](r);
     f_bar_max = std::max(f_bar,f_bar_max);
   }
   return f_bar_max;

@@ -24,7 +24,7 @@
   <CoresPerWorker> 1 </CoresPerWorker>
 
   <!-- Number of samples per plane per worker -->
-  <nRepeats> 1 </nRepeats>
+  <nRepeats> 2 </nRepeats>
 
   <!-- Data gathering steps -->
   <SampleSteps> 200 </SampleSteps>
@@ -81,7 +81,7 @@
 
   <!-- If Rediscretize==1, sample on nPlanes equally spaced
   planes in [StartCoordinate,StopCoordinate], a subset of [0,1] -->
-  <nPlanes> 11 </nPlanes>
+  <nPlanes> 5 </nPlanes>
   <StartCoordinate> 0.0 </StartCoordinate>
   <StopCoordinate> 1.0 </StopCoordinate>
 

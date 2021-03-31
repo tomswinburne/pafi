@@ -44,7 +44,7 @@ public:
   void sample(double r, double T, double *dev);
   void screen_output_header();
   void screen_output_line(double r);
-  void fill_results(double *ens_data);
+  void fill_results(double r,double *ens_data);
   double integrate(std::string res_file);
 
   std::string header(double mass);

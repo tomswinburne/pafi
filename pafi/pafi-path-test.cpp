@@ -105,7 +105,7 @@ int main(int narg, char **arg) {
     MPI_Gather(valid,1,MPI_INT,valid+1,1,MPI_INT,0,MPI_COMM_WORLD);
 
     // reset deviation if invalid
-    if(valid[instance]==0) for(i=0;i<vsize;i++) dev[i] = 0.0;
+    if(valid[0]==0) for(i=0;i<vsize;i++) dev[i] = 0.0;
     MPI_Reduce(dev,dev+vsize,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 
     // declare everything here for flexibility
@@ -113,8 +113,8 @@ int main(int narg, char **arg) {
       dsize=sim.results.size();
       data = new double[dsize];
       if(rank==0) {
-        i=0;
-        raw<<"# ";
+        i=1;
+        raw<<"# 0: r";
         for(auto res: sim.results) raw<<i++<<": "<<res.first<<"  ";
         raw<<std::endl;
         all_data = new double[dsize*nWorkers];
@@ -126,6 +126,7 @@ int main(int narg, char **arg) {
 
     if(rank==0) {
       // raw output
+      raw<<r<<" ";
       for(i=0;i<dsize*nWorkers;i++) raw<<all_data[i]<<" ";
       raw<<std::endl;
       // ensemble average
@@ -145,7 +146,7 @@ int main(int narg, char **arg) {
         dev_file = "dev_"+std::to_string(r)+"_"+dump_suffix+".dat";
         sim.write_dev(params.dump_dir+"/"+dev_file,r,dev+vsize);
       }
-      sim.fill_results(ens_data);
+      sim.fill_results(r,ens_data);
       sim.screen_output_line(r);
       dF.push_back(sim.results["aveF"]);
       dE.push_back(sim.results["MinEnergy"]);

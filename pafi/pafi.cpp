@@ -54,6 +54,7 @@ int main(int narg, char **arg) {
   const int nWorkers = nProcs / params.CoresPerWorker;
   const int instance = rank / params.CoresPerWorker;
   const int local_rank = rank % params.CoresPerWorker;
+  const int min_valid = int(params.redo_thresh*nWorkers*params.nRepeats);
 
   MPI_Comm instance_comm;
   MPI_Comm_split(MPI_COMM_WORLD,instance,0,&instance_comm);
@@ -74,12 +75,12 @@ int main(int narg, char **arg) {
 
   // ********************** SAMPLING *******************************************
 
+  // data holders
   const int vsize = 3 * sim.natoms;
   double *dev = new double[vsize*(1+(instance==0))];
   int *valid = new int[1+nWorkers*(instance==0)];
   double *all_data = NULL, *ens_data=NULL, *data=NULL;
-  int dsize=-1;
-  std::vector<double> dF;
+  int total_valid,repeats,dsize=-1;
 
   for(double T = params.lowT; T <= params.highT;) {
 
@@ -91,60 +92,65 @@ int main(int narg, char **arg) {
       std::cout<<"\nStarting T="<<T<<"K run\n\n";
       std::cout<<"<> == time averages,  av/err over ensemble"<<std::endl;
       sim.screen_output_header();
-      dF.clear();
     }
     for(auto r: sim.sample_r) {
-      // sample
-      for(i=0;i<vsize;i++) dev[i] = 0.0;
-      sim.sample(r, T, dev);
+      total_valid=0;
+      repeats=0;
+      while((repeats<=params.nRepeats) and (total_valid<=min_valid)) {
+        repeats++;
+        // sample
+        for(i=0;i<vsize;i++) dev[i] = 0.0;
+        sim.sample(r, T, dev);
 
-      // is it valid
-      valid[0] = int(sim.results["Valid"]+0.01);
-      MPI_Gather(valid,1,MPI_INT,valid+1,1,MPI_INT,0,MPI_COMM_WORLD);
+        // is it valid
+        valid[0] = int(sim.results["Valid"]+0.01);
+        MPI_Gather(valid,1,MPI_INT,valid+1,1,MPI_INT,0,MPI_COMM_WORLD);
 
-      // reset deviation if invalid
-      if(valid[instance]==0) for(i=0;i<vsize;i++) dev[i] = 0.0;
-      MPI_Reduce(dev,dev+vsize,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+        // reset deviation if invalid
+        if(valid[0]==0) for(i=0;i<vsize;i++) dev[i] = 0.0;
+        MPI_Reduce(dev,dev+vsize,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 
-      // declare everything here for flexibility
-      if(dsize<0) {
-        dsize=sim.results.size();
-        data = new double[dsize];
-        if(rank==0) {
-          i=0;
-          raw<<"# ";
-          for(auto res: sim.results) raw<<i++<<": "<<res.first<<"  ";
-          raw<<std::endl;
-          all_data = new double[dsize*nWorkers];
-          ens_data = new double[dsize*2+1];
-        }
-      }
-      i=0; for(auto res: sim.results) data[i++] = res.second;
-      MPI_Gather(data,dsize,MPI_DOUBLE,all_data,dsize,MPI_DOUBLE,0,MPI_COMM_WORLD);
-
-      if(rank==0) {
-        // raw output
-        for(i=0;i<dsize*nWorkers;i++) raw<<all_data[i]<<" ";
-        raw<<std::endl;
-        // ensemble average
-        for(j=0;j<2*dsize+1;j++) ens_data[j] = 0.0;
-        for(i=0;i<nWorkers;i++) if(valid[1+i]) {
-          ens_data[2*dsize] += 1.0;
-          for(j=0;j<dsize;j++) {
-            ens_data[j]+=all_data[i*dsize+j];
-            ens_data[j+dsize] += all_data[i*dsize+j] * all_data[i*dsize+j];
+        // declare everything here for flexibility
+        if(dsize<0) {
+          dsize=sim.results.size();
+          data = new double[dsize];
+          if(rank==0) {
+            i=1;
+            raw<<"# 0: r ";
+            for(auto res: sim.results) raw<<i++<<": "<<res.first<<"  ";
+            raw<<std::endl;
+            all_data = new double[dsize*nWorkers];
+            ens_data = new double[dsize*2+1];
           }
         }
-        if(ens_data[2*dsize]>0.5) {
-          for(j=0;j<2*dsize;j++) ens_data[j] /= ens_data[2*dsize];
-          for(j=0;j<dsize;j++) ens_data[j+dsize] -= ens_data[j] * ens_data[j];
-          // N^2 for average-of-averages
-          for(j=0;j<vsize;j++) dev[j+vsize] /= ens_data[2*dsize] * ens_data[2*dsize];
-          dev_file = "dev_"+std::to_string(r)+"_"+dump_suffix+".dat";
-          sim.write_dev(params.dump_dir+"/"+dev_file,r,dev+vsize);
+        i=0; for(auto res: sim.results) data[i++] = res.second;
+        MPI_Gather(data,dsize,MPI_DOUBLE,all_data,dsize,MPI_DOUBLE,0,MPI_COMM_WORLD);
+
+        if(rank==0) {
+          // raw output
+          raw<<r<<" ";
+          for(i=0;i<dsize*nWorkers;i++) raw<<all_data[i]<<" ";
+          // ensemble average
+          for(j=0;j<2*dsize+1;j++) ens_data[j] = 0.0;
+          for(i=0;i<nWorkers;i++) if(valid[1+i]) {
+            total_valid++;
+            ens_data[2*dsize] += 1.0;
+            for(j=0;j<dsize;j++) {
+              ens_data[j]+=all_data[i*dsize+j];
+              ens_data[j+dsize] += all_data[i*dsize+j] * all_data[i*dsize+j];
+            }
+          }
+          if(ens_data[2*dsize]>0.5) {
+            for(j=0;j<2*dsize;j++) ens_data[j] /= ens_data[2*dsize];
+            for(j=0;j<dsize;j++) ens_data[j+dsize] -= ens_data[j] * ens_data[j];
+            // N^2 for average-of-averages
+            for(j=0;j<vsize;j++) dev[j+vsize] /= ens_data[2*dsize] * ens_data[2*dsize];
+            dev_file = "dev_"+std::to_string(r)+"_"+dump_suffix+".dat";
+            sim.write_dev(params.dump_dir+"/"+dev_file,r,dev+vsize);
+          }
+          sim.fill_results(r,ens_data);
+          sim.screen_output_line(r);
         }
-        sim.fill_results(ens_data);
-        sim.screen_output_line(r);
       }
     }
 
