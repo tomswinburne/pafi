@@ -5,7 +5,8 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t) {
   scale[0]=1.0; scale[1]=1.0; scale[2]=1.0;
   last_error_message="";
   tag = t;
-  MPI_Comm_rank(instance_comm,&local_rank);
+  comm = &instance_comm;
+  MPI_Comm_rank(*comm,&local_rank);
   params = &p;
   // set up LAMMPS
   char str1[32];
@@ -19,7 +20,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t) {
     lmparg[4] = str1;
   } else lmparg[4] = (char *) "none";
 
-  lmp = new LAMMPS(5,lmparg,instance_comm);
+  lmp = new LAMMPS(5,lmparg,*comm);
 
   //lammps_open(5,lmparg,instance_comm,(void **) &lmp);
   run_script("Input");
@@ -108,6 +109,7 @@ void LAMMPSSimulator::run_commands(std::vector<std::string> strv) {
     #endif
     lammps_command((void *)lmp,(char *)s.c_str());
   }
+  MPI_Barrier(*comm);
   log_error(strv);
 };
 
@@ -241,6 +243,11 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
 
 /* Rescale simulation cell */
 void LAMMPSSimulator::rescale_cell(double T) {
+  #ifdef VERBOSE
+  if(local_rank==0)
+    std::cout<<
+    "LAMMPSSimulator.rescale_cell(): T = "<<T<<std::endl;
+  #endif
   double newscale[3];
   std::string cmd, ssx,ssy,ssz;
   expansion(T,newscale);
@@ -251,13 +258,18 @@ void LAMMPSSimulator::rescale_cell(double T) {
   cmd += "run 0";
   run_commands(cmd);
   scale[0]=newscale[0]; scale[1]=newscale[1]; scale[2]=newscale[2];
+  #ifdef VERBOSE
+  if(local_rank==0)
+    std::cout<<
+    "END LAMMPSSimulator.rescale_cell(): T = "<<T<<std::endl;
+  #endif
+
 };
 
 
-void LAMMPSSimulator::screen_output_header(double T) {
+void LAMMPSSimulator::screen_output_header(double T, int fw, bool end) {
   std::cout<<"\nStarting T="<<T<<"K run\n\n";
   std::cout<<"<> == time averages,  av/err over ensemble"<<std::endl;
-  int fw = 18;
   std::cout<<std::setw(35)<<"r";
   std::cout<<std::setw(fw)<<"av(<Tpre>)";
   std::cout<<std::setw(fw)<<"av(<Tpost>)";
@@ -267,12 +279,11 @@ void LAMMPSSimulator::screen_output_header(double T) {
   std::cout<<std::setw(fw)<<"av(<N_true>.N)";
   std::cout<<std::setw(fw)<<"Max Jump";
   std::cout<<std::setw(fw)<<"% Valid";
-  std::cout<<"\n";
+  if(end) std::cout<<std::endl;
 };
 
-void LAMMPSSimulator::screen_output_line(double r) {
+void LAMMPSSimulator::screen_output_line(double r,int fw,bool end) {
   // screen output
-  int fw = 18;
   std::cout<<std::setw(35)<<r;//"r"
   std::cout<<std::setw(fw)<<results["preT"];//"av(<Tpre>)"
   std::cout<<std::setw(fw)<<results["postT"];//"av(<Tpost>)"
@@ -282,62 +293,78 @@ void LAMMPSSimulator::screen_output_line(double r) {
   std::cout<<std::setw(fw)<<results["avePsi"];//"av(Psi)"
   std::cout<<std::setw(fw)<<results["MaxJump"];// max jump
   std::cout<<std::setw(fw)<<results["Valid"]*100.0;// ratio of jumps
-  std::cout<<"\n";
+  if(end) std::cout<<std::endl;
 };
 
-void LAMMPSSimulator::fill_results(double r, double *ens_data) {
+void LAMMPSSimulator::fill_results(double r, double *ens_data, bool end) {
   int i=0;
   std::list<std::string> fields;
-
   for(auto &res : results) {
     res.second = ens_data[i++];
     fields.push_back(res.first);
   }
   for(auto field: fields) results[field+"std"] = sqrt(std::fabs(ens_data[i++]));
   data_log.push_back(r);
-  data_log.push_back(results["aveF"]);
-  data_log.push_back(results["aveFstd"]);
-  data_log.push_back(results["avePsi"]);
+  if(end) {
+    data_log.push_back(results["aveF"]); // splines[0]
+    data_log.push_back(results["aveFstd"]); // splines[1]
+    data_log.push_back(results["avePsi"]); // splines[2]
+  }
 };
 
 
-double LAMMPSSimulator::integrate(std::string res_file) {
+void LAMMPSSimulator::integrate(std::string res_file, double &barrier, bool end) {
 
-  double diff_r = sample_r[sample_r.size()-1] - sample_r[0];
-  double ndense = sample_r.size() * 10.0;
-  double d,c,f_bar=0.0,ef_bar=0.0,f_bar_max=0.0;
+  int ssize = data_log.size()/sample_r.size();
+  double d,c;
 
-  std::vector<spline> dF;
-  for(int k=0;k<3;k++) {
+  splines.clear();
+
+  for(int k=0;k<ssize-1;k++) {
     spline spl;
     std::vector<double> data;
     for(int j=0;j<sample_r.size();j++) {
       d=0; c=0;
-      for(int i=0;i<data_log.size()/4;i++)
-        if(std::fabs(data_log[i*4]-sample_r[j])<0.01) {
-          d += data_log[i*4+1];
+      for(int i=0;i<data_log.size()/ssize;i++)
+        if(std::fabs(data_log[i*ssize]-sample_r[j])<0.01) {
+          d += data_log[i*ssize+1];
           c += 1.0;
         }
       if(c>0.5) d/= c;
       data.push_back(d);
     }
     spl.set_points(sample_r,data);
-    dF.push_back(spl);
+    splines.push_back(spl);
   }
+  barrier=0;
 
-  std::ofstream out;
-  out.open(res_file.c_str(),std::ofstream::out);
-  out<<"# r av(F(r)) std(F(r)) ave(Psi)"<<std::endl;
-  for(double r=sample_r[0];r<=sample_r[0]+diff_r;r+=diff_r/ndense) {
-    f_bar -= diff_r/ndense/2.0 * dF[0](r);
-    ef_bar += diff_r/ndense/2.0 * dF[1](r);
-    f_bar_max = std::max(f_bar,f_bar_max);
-    out<<r<<" "<<f_bar<<" "<<ef_bar<<" "<<dF[2](r)<<std::endl;
-    f_bar -= diff_r/ndense/2.0 * dF[0](r);
-    ef_bar += diff_r/ndense/2.0 * dF[1](r);
-    f_bar_max = std::max(f_bar,f_bar_max);
+  if(end) {
+
+    std::ofstream out;
+    out.open(res_file.c_str(),std::ofstream::out);
+
+    out<<"# r av(F(r)) std(F(r)) ave(Psi)"<<std::endl;
+
+    // choose integration parameters
+    double diff_r = sample_r[sample_r.size()-1] - sample_r[0];
+    double dr = diff_r / sample_r.size() / 10.0;
+    double f_bar=0.0,ef_bar=0.0,f_bar_max=0.0;
+
+    for(double r=sample_r[0];r<=sample_r[0]+diff_r;r+=dr) {
+
+      f_bar -= dr/2.0 * splines[0](r);
+      ef_bar += dr/2.0 * splines[1](r);
+      f_bar_max = std::max(f_bar,f_bar_max);
+
+      out<<r<<" "<<f_bar<<" "<<ef_bar<<" "<<splines[2](r)<<std::endl;
+
+      f_bar -= dr/2.0 * splines[0](r);
+      ef_bar += dr/2.0 * splines[1](r);
+      f_bar_max = std::max(f_bar,f_bar_max);
+    }
+
+    barrier=f_bar_max;
   }
-  return f_bar_max;
 };
 
 
@@ -348,7 +375,7 @@ double LAMMPSSimulator::integrate(std::string res_file) {
 
 
 void LAMMPSSimulator::sample(double r, double T, double *dev) {
-  results.clear();
+  
   error_count = 0;
   last_error_message="";
   results.clear();
@@ -422,8 +449,10 @@ void LAMMPSSimulator::sample(double r, double T, double *dev) {
   //run_script("AveRun");  // average Fixes, requiring a time average
   cmd += "fix af all ave/time 1 "+SampleSteps+" "+SampleSteps;
   cmd += " f_hp[1] f_hp[2] f_hp[3] f_hp[4]\n";
-  cmd += "run "+SampleSteps;
   run_commands(cmd);
+
+  // run SampleSteps and add to results
+  constrained_average(SampleSteps);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
   sampleT = (*lmp_ptr-refE)/natoms/1.5/BOLTZ;
@@ -433,6 +462,9 @@ void LAMMPSSimulator::sample(double r, double T, double *dev) {
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"at",0,0,0,0);
   refT = ((*lmp_ptr) - refP) / natoms / BOLTZ / 3.0;
   lammps_free(lmp_ptr);
+
+
+
   //run_script("PostAveRun");  // collate fixes and add to results
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,0,0);
@@ -546,6 +578,11 @@ std::array<double,9> LAMMPSSimulator::getCellData() {
     cell[6+i] = pv[i];
   }
   return cell;
+};
+
+void LAMMPSSimulator::constrained_average(std::string SampleSteps) {
+  std::string cmd = "run "+SampleSteps;
+  run_commands(cmd);
 };
 
 

@@ -15,6 +15,7 @@ class DataGatherer {
   public:
     DataGatherer(){
       dsize=0;
+      ens_data==NULL;
     }
 
     int initialize(Parser &p, std::string dump_file,int _nWorkers) {
@@ -22,11 +23,15 @@ class DataGatherer {
       nWorkers = _nWorkers;
       params = &p;
       raw.open(dump_file.c_str(),std::ofstream::out);
+      std::cout<<"INITIALIZED "<<nWorkers<<std::endl;
       if(raw.is_open()) return 1;
       return 0;
     };
 
     void prepare(std::map<std::string,double> &results) {
+      #ifdef VERBOSE
+      std::cout<<"DataGatherer:: prepare()"<<std::endl;
+      #endif
       if(!raw.is_open()) return;
       int i=1,j=0;
       std::vector<double> blank;
@@ -36,19 +41,25 @@ class DataGatherer {
         raw<<i++<<": "<<res.first<<"  ";
         all_results[res.first] = blank;
       }
-      all_results["sample_r"] = blank;
+      sample_r = blank;
       raw<<std::endl;
 
       dsize = results.size();
-      all_data = new double[dsize*nWorkers];
-      ens_data = new double[dsize*2+1];
+      if(ens_data==NULL) ens_data = new double[dsize*2+1];
 
 
       // ensemble average
       for(j=0;j<2*dsize+1;j++) ens_data[j] = 0.0;
+
+      #ifdef VERBOSE
+      std::cout<<"END DataGatherer:: prepare()"<<std::endl;
+      #endif
     };
 
-    int ensemble(double r, int *valid) {
+    int ensemble(double r, int *valid, double *all_data) {
+      #ifdef VERBOSE
+      std::cout<<"DataGatherer:: ensemble()"<<std::endl;
+      #endif
       if(!raw.is_open()) return 0;
 
       int total_valid=0,i,j;
@@ -58,13 +69,27 @@ class DataGatherer {
       for(i=0;i<nWorkers*dsize;i++) raw<<all_data[i]<<" ";
       raw<<std::endl;
 
+
+      #ifdef VERBOSE
+      std::cout<<"DataGatherer:: ensemble(): all_results"<<std::endl;
+      #endif
+
       // all results
-      j=0;
-      all_results["sample_r"].push_back(r);
-      for(auto &res: all_results) {
-        for(i=0;i<nWorkers;i++) res.second.push_back(all_data[i*dsize+j]);
-        j++;
+
+
+      for(i=0;i<nWorkers;i++) {
+        sample_r.push_back(r);
+        j=0; for(auto &res: all_results)
+          res.second.push_back(all_data[i*dsize+j++]);
       }
+
+      #ifdef VERBOSE
+      std::cout<<"END DataGatherer:: ensemble(): all_results"<<std::endl;
+      #endif
+
+      #ifdef VERBOSE
+      std::cout<<"DataGatherer:: ensemble(): ens_data"<<std::endl;
+      #endif
 
       // unnormalize for sum
       for(j=0;j<dsize;j++) {
@@ -91,7 +116,11 @@ class DataGatherer {
           ens_data[j+dsize] /= ens_data[2*dsize]; // N^2 for aves-of-aves
         }
       }
+      #ifdef VERBOSE
+      std::cout<<"END DataGatherer:: ensemble()"<<std::endl;
+      #endif
       return total_valid;
+
     };
 
     void next() {
@@ -106,8 +135,10 @@ class DataGatherer {
 
   Parser *params;
   std::ofstream raw;
-  double *all_data,*ens_data;
+  double *ens_data;
   int dsize,nWorkers;
   std::map<std::string,std::vector<double>> all_results;
+  std::vector<double> sample_r;
+
 };
 #endif
