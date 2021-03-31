@@ -39,9 +39,9 @@ class DataGatherer {
       raw<<"# 0: r ";
       for(auto res: results) {
         raw<<i++<<": "<<res.first<<"  ";
-        //all_results[res.first] = blank;
+        all_results[res.first] = blank;
       }
-      //all_results["sample_r"] = blank;
+      sample_r = blank;
       raw<<std::endl;
 
       dsize = results.size();
@@ -75,15 +75,13 @@ class DataGatherer {
       #endif
 
       // all results
-      /*
-      j=0;
-      all_results["sample_r"].push_back(r);
-      for(auto &res: all_results) {
-        if(res.first)
-        for(i=0;i<nWorkers;i++) res.second.push_back(all_data[i*dsize+j]);
-        j++;
+
+
+      for(i=0;i<nWorkers;i++) {
+        sample_r.push_back(r);
+        j=0; for(auto &res: all_results)
+          res.second.push_back(all_data[i*dsize+j++]);
       }
-      */
 
       #ifdef VERBOSE
       std::cout<<"END DataGatherer:: ensemble(): all_results"<<std::endl;
@@ -127,7 +125,6 @@ class DataGatherer {
 
     void next() {
       // wipe ens_data
-      std::cout<<"HHH"<<std::endl;
       for(int j=0;j<2*dsize+1;j++) ens_data[j] = 0.0;
     };
 
@@ -141,5 +138,7 @@ class DataGatherer {
   double *ens_data;
   int dsize,nWorkers;
   std::map<std::string,std::vector<double>> all_results;
+  std::vector<double> sample_r;
+
 };
 #endif

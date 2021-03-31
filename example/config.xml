@@ -81,7 +81,7 @@
 
   <!-- If Rediscretize==1, sample on nPlanes equally spaced
   planes in [StartCoordinate,StopCoordinate], a subset of [0,1] -->
-  <nPlanes> 5 </nPlanes>
+  <nPlanes> 3 </nPlanes>
   <StartCoordinate> 0.0 </StartCoordinate>
   <StopCoordinate> 1.0 </StopCoordinate>
 
