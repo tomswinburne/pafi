@@ -21,10 +21,10 @@
   <TemperatureSteps> 1 </TemperatureSteps>
 
   <!-- We require nprocs % CoresPerWorker==0 -->
-  <CoresPerWorker> 1 </CoresPerWorker>
+  <CoresPerWorker> 2 </CoresPerWorker>
 
   <!-- Number of samples per plane per worker -->
-  <nRepeats> 3 </nRepeats>
+  <nRepeats> 1 </nRepeats>
 
   <!-- Data gathering steps -->
   <SampleSteps> 200 </SampleSteps>
@@ -60,7 +60,7 @@
   <Friction> 0.05 </Friction>
 
   <!-- 0/1 Output LAMMPS logfiles for error checking purposes -->
-  <LogLammps> 0 </LogLammps>
+  <LogLammps> 1 </LogLammps>
 
   <!--
    0 : (Default) Output time-and-ensemble averaged in-plane deviation from reference pathway. Can indicate finite temperature path but will have sampling noise

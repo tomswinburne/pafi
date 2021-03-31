@@ -21,5 +21,6 @@
 #include "Spline.hpp"
 #include "Utils.hpp"
 
+#include "CustomSimulator.hpp"
 #include "LAMMPSSimulator.hpp"
 typedef LAMMPSSimulator Simulator;

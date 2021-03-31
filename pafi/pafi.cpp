@@ -77,16 +77,16 @@ int main(int narg, char **arg) {
 
   // generic - deviation
   const int vsize = 3 * sim.natoms;
-  double *dev = new double[vsize*(1+(instance==0))];
+  double *dev = new double[vsize*(1+(rank==0))];
 
   // generic - validity
-  int *valid = new int[1+nWorkers*(instance==0)];
+  int *valid = new int[1+nWorkers*(rank==0)];
 
   // generic - data
-  double p_valid,*data=NULL;
+  double p_valid,*data=NULL,*all_data=NULL;
   int total_valid, dsize = -1, raw_data_open = 0;
   DataGatherer g;
-  
+
   for(double T = params.lowT; T <= params.highT;) {
 
     // open dump files for this temperature
@@ -112,22 +112,26 @@ int main(int narg, char **arg) {
         // is it valid
         valid[0] = int(sim.results["Valid"]+0.01);
         MPI_Gather(valid,1,MPI_INT,valid+1,1,MPI_INT,0,MPI_COMM_WORLD);
-
+        MPI_Barrier(MPI_COMM_WORLD);
+        std::cout<<"valid"<<std::endl;
         // reset deviation if invalid
         if(valid[0]==0) for(i=0;i<vsize;i++) dev[i] = 0.0;
         MPI_Reduce(dev,dev+vsize,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+        MPI_Barrier(MPI_COMM_WORLD);
+        std::cout<<"dev"<<std::endl;
 
         // declare data here once, after first simulation for flexibility
         if(dsize<0) {
           dsize = sim.results.size();
           data = new double[dsize];
+          all_data = new double[dsize*nWorkers];
           if(rank==0) g.prepare(sim.results);
         }
 
         i=0; for(auto res: sim.results) data[i++] = res.second;
-        MPI_Gather(data,dsize,MPI_DOUBLE,g.all_data,dsize,MPI_DOUBLE,0,MPI_COMM_WORLD);
+        MPI_Gather(data,dsize,MPI_DOUBLE,all_data,dsize,MPI_DOUBLE,0,MPI_COMM_WORLD);
+        if(rank==0) total_valid += g.ensemble(r,valid+1,all_data);
 
-        if(rank==0) total_valid += g.ensemble(r,valid+1);
         MPI_Bcast(&total_valid,1,MPI_INT,0,MPI_COMM_WORLD);
         p_valid = 100.0 / double(nWorkers*repeat) * total_valid;
         if(rank==0 and params.nRepeats>1) {
@@ -138,6 +142,7 @@ int main(int narg, char **arg) {
             std::cout<<std::endl;
         }
         if((repeat>=params.nRepeats) and (total_valid>=min_valid)) break;
+
       }
       if(rank==0) {
         if(total_valid>0) for(j=0;j<vsize;j++) dev[j+vsize] /= 1.0*total_valid;
@@ -147,12 +152,14 @@ int main(int narg, char **arg) {
         sim.screen_output_line(r);
         g.next(); // wipe ens_data
       }
+      MPI_Barrier(MPI_COMM_WORLD);
     }
 
     if(rank==0) {
       g.close();
       dump_file = params.dump_dir + "/free_energy_profile_"+dump_suffix;
-      double barrier = sim.integrate(dump_file);
+      double barrier;
+      sim.integrate(dump_file,barrier);
       std::cout<<"T="<<T<<"K run complete; est. barrier: "<<barrier<<"eV"<<std::endl;
     }
 

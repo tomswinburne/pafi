@@ -11,6 +11,7 @@
 #include <set>
 #include <list>
 
+#include "mpi.h"
 #include "Constants.hpp"
 #include "Parser.hpp"
 #include "Boundary.hpp"
@@ -68,6 +69,7 @@ public:
 
   void expansion(double T,double *newscale);
 
+  MPI_Comm *comm;
   std::map<std::string,double> results;
   std::vector<double> data_log;
   double scale[3];
@@ -75,7 +77,7 @@ public:
   int natoms, tag, nknots;
   MinImage pbc;
   Parser *params;
-  std::vector<spline> pathway;
+  std::vector<spline> pathway, splines;
   std::vector<double> pathway_r, sample_r;
   bool s_flag,has_pafi,spline_path;
 private:
