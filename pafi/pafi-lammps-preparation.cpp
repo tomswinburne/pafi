@@ -155,15 +155,38 @@ int main(int narg, char **arg) {
 
 
   if(rank==0) {
+
+    std::cout<<"\n\n******************************************************************\n\n"
+    "\tONLY SIMPLE TESTS PERFORMED HERE!\n"
+    "\tPLEASE USE pafi-path-test TO TEST PATHWAY FOR FORCE INTEGRATION\n"
+    "\n******************************************************************\n\n"<<std::endl;
+
     std::cout<<"\n\n\tBARRIER FROM ENERGY: "<<std::setprecision(5)<<E_bar_dense;
     std::cout<<"eV, FORCE INTEGRATION:"<<std::setprecision(5)<<F_bar_dense<<"eV";
     std::cout<<"\n\n\tABSOLUTE ERROR: "<<std::setprecision(5)<<std::fabs(F_bar_dense-E_bar_dense)*1000.<<"meV";
     std::cout<<", RELATIVE ERROR: "<<std::setprecision(5)<<(F_bar_dense/E_bar_dense-1.0)*100.<<"%"<<std::endl;
-    if(std::fabs(F_bar_dense-E_bar_dense)<=0.005) {
-      std::cout<<"\n\tERROR < 5meV - WITHIN LIKELY POTENTIAL ACCURACY, OK FOR SAMPLING!";
-      std::cout<<"\n\n\tTO FURTHER REDUCE ERROR, ";
-    } else std::cout<<"\n\tERROR > 5meV, PROBABLY TOO HIGH! ";
-    std::cout<<"CONSIDER MORE NEB IMAGES AND/OR INCREASING nPlanes IN config.xml\n\n\n"<<std::endl;;
+
+
+    if(std::fabs(F_bar_dense-E_bar_dense)<=0.003) {
+      std::cout<<"\n\tError < 3meV - verify with pafi-path-test\n";
+    } else if(std::fabs(F_bar_dense-E_bar_dense)<0.01) {
+      std::cout<<"\n\tAbove target error of ~3meV, verify with pafi-path-test\n";
+    } else {
+      std::cout<<"\n\tError > 10meV  - if using this setup, the "
+      "error of "<<F_bar_dense-E_bar_dense<<" eV MUST be propagated to"
+      "PAFI results! verify with pafi-path-test\n";
+    }
+    if(std::fabs(F_bar_dense-E_bar_dense)>=0.001) {
+      std::cout<<"\n\tTo reduce this error: ";
+      std::cout<<"\n\t More NEB images and/or increasing nPlanes in config.xml";
+      std::cout<<"\n\t Try Rediscretize==0/1 to change how images are interpolated\n\n"<<std::endl;
+    }
+
+    std::cout<<std::endl;
+    std::cout<<std::endl;
+    std::cout<<std::endl;
+
+
   }
 
   MPI_Comm_free(&instance_comm);

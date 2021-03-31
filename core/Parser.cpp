@@ -215,31 +215,23 @@ std::string Parser::welcome_message(){
   return str;
 };
 
-/*
-Check for dump files. Ugly implementation for portability across filesystems
-*/
-bool Parser::file_exists(const std::string& name) {
-    FILE *file = fopen(name.c_str(), "r");
-    if (file!=NULL) {
-        fclose(file);
-        return true;
-    } else {
-        return false;
-    }
-};
-
-void Parser::find_dump_file(std::ofstream &raw, int &suffix){
+// Check for dump files. Ugly implementation for portability across filesystems
+void Parser::find_dump_file(int &suffix) {
+  std::ofstream raw;
   std::string params_file;
+  FILE *file;
   for (suffix=0; suffix < 100; suffix++) {
     params_file = dump_dir+"/params_"+std::to_string(suffix);
-    if(!file_exists(params_file)) {
-      raw.open(params_file.c_str(),std::ofstream::out);
-      if(raw.is_open()) {
-        raw<<welcome_message();
-        raw.close();
-        break;
-      }
+    file = fopen(params_file.c_str(), "r"); // read only - don't overwrite !
+    if (file!=NULL) {
+        fclose(file);
+        continue;
     }
+    raw.open(params_file.c_str(),std::ofstream::out);
+    if(raw.is_open()) {
+      raw<<welcome_message();
+      raw.close();
+    }
+    if(suffix==100) suffix=-1;
   }
-  if(suffix==100) suffix=-1;
 };

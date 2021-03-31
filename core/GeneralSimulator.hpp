@@ -69,7 +69,7 @@ public:
   void expansion(double T,double *newscale);
 
   std::map<std::string,double> results;
-  std::vector<double> dF_data;
+  std::vector<double> data_log;
   double scale[3];
   double refE,refT,refP;
   int natoms, tag, nknots;

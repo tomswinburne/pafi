@@ -68,7 +68,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t) {
 
   made_fix=false;
   made_compute=false;
-  dF_data.clear();
+  data_log.clear();
 };
 
 /*
@@ -253,51 +253,52 @@ void LAMMPSSimulator::rescale_cell(double T) {
   scale[0]=newscale[0]; scale[1]=newscale[1]; scale[2]=newscale[2];
 };
 
-/*
-  Main sample run. Results vector should have thermalization temperature,
-  sample temperature <f>, <f^2>, <psi> and <x-u>.n, and max_jump
-*/
-void LAMMPSSimulator::screen_output_header() {
-  std::cout<<std::setw(5)<<"r";
-  std::cout<<std::setw(20)<<"av(<Tpre>)";
-  std::cout<<std::setw(20)<<"av(<Tpost>)";
-  std::cout<<std::setw(20)<<"av(<dF/dr>)";
-  std::cout<<std::setw(20)<<"err(<dF/dr>)";
-  std::cout<<std::setw(20)<<"av(|(<X>-U).N|)";
-  std::cout<<std::setw(20)<<"av(<N_true>.N)";
-  std::cout<<std::setw(20)<<"Max Jump";
-  std::cout<<std::setw(20)<<"P(Valid)";
+
+void LAMMPSSimulator::screen_output_header(double T) {
+  std::cout<<"\nStarting T="<<T<<"K run\n\n";
+  std::cout<<"<> == time averages,  av/err over ensemble"<<std::endl;
+  int fw = 18;
+  std::cout<<std::setw(35)<<"r";
+  std::cout<<std::setw(fw)<<"av(<Tpre>)";
+  std::cout<<std::setw(fw)<<"av(<Tpost>)";
+  std::cout<<std::setw(fw)<<"av(<dF/dr>)";
+  std::cout<<std::setw(fw)<<"err(<dF/dr>)";
+  std::cout<<std::setw(fw)<<"av(|(<X>-U).N|)";
+  std::cout<<std::setw(fw)<<"av(<N_true>.N)";
+  std::cout<<std::setw(fw)<<"Max Jump";
+  std::cout<<std::setw(fw)<<"% Valid";
   std::cout<<"\n";
 };
 
 void LAMMPSSimulator::screen_output_line(double r) {
   // screen output
-  std::cout<<std::setw(5)<<r;//"r"
-  std::cout<<std::setw(20)<<results["preT"];//"av(<Tpre>)"
-  std::cout<<std::setw(20)<<results["postT"];//"av(<Tpost>)"
-  std::cout<<std::setw(20)<<results["aveF"];//"av(<dF/dr>)"
-  std::cout<<std::setw(20)<<results["aveFstd"];//"err(<dF/dr>)"
-  std::cout<<std::setw(20)<<results["dXTangent"];//"av(|<X>-U).(dU/dr)|)"
-  std::cout<<std::setw(20)<<results["avePsi"];//"av(Psi)"
-  std::cout<<std::setw(20)<<results["MaxJump"];// max jump
-  std::cout<<std::setw(20)<<results["Valid"];// ratio of jumps
+  int fw = 18;
+  std::cout<<std::setw(35)<<r;//"r"
+  std::cout<<std::setw(fw)<<results["preT"];//"av(<Tpre>)"
+  std::cout<<std::setw(fw)<<results["postT"];//"av(<Tpost>)"
+  std::cout<<std::setw(fw)<<results["aveF"];//"av(<dF/dr>)"
+  std::cout<<std::setw(fw)<<results["aveFstd"];//"err(<dF/dr>)"
+  std::cout<<std::setw(fw)<<results["dXTangent"];//"av(|<X>-U).(dU/dr)|)"
+  std::cout<<std::setw(fw)<<results["avePsi"];//"av(Psi)"
+  std::cout<<std::setw(fw)<<results["MaxJump"];// max jump
+  std::cout<<std::setw(fw)<<results["Valid"]*100.0;// ratio of jumps
   std::cout<<"\n";
 };
 
-void LAMMPSSimulator::fill_results(double r,double *ens_data) {
+void LAMMPSSimulator::fill_results(double r, double *ens_data) {
   int i=0;
   std::list<std::string> fields;
+
   for(auto &res : results) {
     res.second = ens_data[i++];
     fields.push_back(res.first);
   }
   for(auto field: fields) results[field+"std"] = sqrt(std::fabs(ens_data[i++]));
-  dF_data.push_back(r);
-  dF_data.push_back(results["aveF"]);
-  dF_data.push_back(results["aveFstd"]);
-  dF_data.push_back(results["avePsi"]);
+  data_log.push_back(r);
+  data_log.push_back(results["aveF"]);
+  data_log.push_back(results["aveFstd"]);
+  data_log.push_back(results["avePsi"]);
 };
-
 
 
 double LAMMPSSimulator::integrate(std::string res_file) {
@@ -312,9 +313,9 @@ double LAMMPSSimulator::integrate(std::string res_file) {
     std::vector<double> data;
     for(int j=0;j<sample_r.size();j++) {
       d=0; c=0;
-      for(int i=0;i<dF_data.size()/4;i++)
-        if(std::fabs(dF_data[i*4]-sample_r[j])<0.01) {
-          d += dF_data[i*4+1];
+      for(int i=0;i<data_log.size()/4;i++)
+        if(std::fabs(data_log[i*4]-sample_r[j])<0.01) {
+          d += data_log[i*4+1];
           c += 1.0;
         }
       if(c>0.5) d/= c;
@@ -338,6 +339,13 @@ double LAMMPSSimulator::integrate(std::string res_file) {
   }
   return f_bar_max;
 };
+
+
+/*
+  Main sample run. Results vector should have thermalization temperature,
+  sample temperature <f>, <f^2>, <psi> and <x-u>.n, and max_jump
+*/
+
 
 void LAMMPSSimulator::sample(double r, double T, double *dev) {
   results.clear();
@@ -411,6 +419,7 @@ void LAMMPSSimulator::sample(double r, double T, double *dev) {
   if(!params->postDump) {
     cmd += "fix ap all ave/atom 1 "+SampleSteps+" "+SampleSteps+" x y z\n";
   }
+  //run_script("AveRun");  // average Fixes, requiring a time average
   cmd += "fix af all ave/time 1 "+SampleSteps+" "+SampleSteps;
   cmd += " f_hp[1] f_hp[2] f_hp[3] f_hp[4]\n";
   cmd += "run "+SampleSteps;
@@ -424,7 +433,7 @@ void LAMMPSSimulator::sample(double r, double T, double *dev) {
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"at",0,0,0,0);
   refT = ((*lmp_ptr) - refP) / natoms / BOLTZ / 3.0;
   lammps_free(lmp_ptr);
-
+  //run_script("PostAveRun");  // collate fixes and add to results
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,0,0);
   results["aveF"] = *lmp_ptr * norm_mag;

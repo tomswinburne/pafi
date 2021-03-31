@@ -24,7 +24,7 @@
   <CoresPerWorker> 1 </CoresPerWorker>
 
   <!-- Number of samples per plane per worker -->
-  <nRepeats> 2 </nRepeats>
+  <nRepeats> 3 </nRepeats>
 
   <!-- Data gathering steps -->
   <SampleSteps> 200 </SampleSteps>

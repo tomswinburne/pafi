@@ -19,6 +19,7 @@
 #include "Constants.hpp"
 #include "Parser.hpp"
 #include "Spline.hpp"
+#include "Utils.hpp"
 
 #include "LAMMPSSimulator.hpp"
 typedef LAMMPSSimulator Simulator;

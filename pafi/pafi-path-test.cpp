@@ -31,10 +31,8 @@ int main(int narg, char **arg) {
 
 
   // ************************ DUMP FOLDER *********************************
-  std::ofstream raw;
   int dump_index=-1;
-  std::string dump_suffix, dump_file, dev_file;
-  if(rank==0) params.find_dump_file(raw,dump_index);
+  if(rank==0) params.find_dump_file(dump_index);
   MPI_Bcast(&dump_index,1,MPI_INT,0,MPI_COMM_WORLD);
   MPI_Barrier(MPI_COMM_WORLD);
   if(dump_index<0) {
@@ -45,6 +43,7 @@ int main(int narg, char **arg) {
     }
     exit(-1);
   }
+  std::string dump_suffix, dump_file, dev_file;
   // ************************ DUMP FOLDER *********************************
 
 
@@ -74,28 +73,43 @@ int main(int narg, char **arg) {
 
   // ********************** SAMPLING *******************************************
 
+  // generic - deviation
   const int vsize = 3 * sim.natoms;
   double *dev = new double[vsize*(1+(instance==0))];
+
+  // generic - validity
   int *valid = new int[1+nWorkers*(instance==0)];
-  double *all_data = NULL, *ens_data=NULL, *data=NULL;
-  int dsize=-1;
+
+  // generic - data
+  double p_valid,*data=NULL;
+  int total_valid, dsize = -1, raw_data_open = 0;
+  DataGatherer g;
+
+  // for testing
   std::vector<double> dF,maxjumpr,dE;
 
+
+  // dump_files
   double T = 0.0;
   dump_suffix = std::to_string(int(T))+"K_"+std::to_string(dump_index);
   dump_file = params.dump_dir + "/raw_ensemble_output_"+dump_suffix;
+  if(rank==0) raw_data_open = g.initialize(params,dump_file,nWorkers);
+  MPI_Bcast(&raw_data_open,1,MPI_INT,0,MPI_COMM_WORLD);
+  if(raw_data_open==0) {
+    if(rank==0) std::cout<<"Could not open "<<dump_file<<"! EXIT"<<std::endl;
+    exit(-1);
+  }
 
   if(rank==0) {
-    raw.open(dump_file.c_str(),std::ofstream::out);
     std::cout<<"\n\n\n*****************************\n\n";
     std::cout<<"T=0K test run, checking pathway for force integration accuracy\n";
     std::cout<<"\n*****************************\n\n";
-    sim.screen_output_header();
-    dF.clear();
-    maxjumpr.clear();
-    dE.clear();
+    sim.screen_output_header(0.0);
   }
+
+  dsize = -1;
   for(auto r: sim.sample_r) {
+    total_valid=0;
     // sample
     for(i=0;i<vsize;i++) dev[i] = 0.0;
     sim.sample(r, T, dev);
@@ -108,56 +122,37 @@ int main(int narg, char **arg) {
     if(valid[0]==0) for(i=0;i<vsize;i++) dev[i] = 0.0;
     MPI_Reduce(dev,dev+vsize,vsize,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 
-    // declare everything here for flexibility
+    // declare data here once, after first simulation for flexibility
     if(dsize<0) {
-      dsize=sim.results.size();
+      dsize = sim.results.size();
       data = new double[dsize];
-      if(rank==0) {
-        i=1;
-        raw<<"# 0: r";
-        for(auto res: sim.results) raw<<i++<<": "<<res.first<<"  ";
-        raw<<std::endl;
-        all_data = new double[dsize*nWorkers];
-        ens_data = new double[dsize*2+1];
-      }
+      if(rank==0) g.prepare(sim.results);
     }
+
     i=0; for(auto res: sim.results) data[i++] = res.second;
-    MPI_Gather(data,dsize,MPI_DOUBLE,all_data,dsize,MPI_DOUBLE,0,MPI_COMM_WORLD);
+    MPI_Gather(data,dsize,MPI_DOUBLE,g.all_data,dsize,MPI_DOUBLE,0,MPI_COMM_WORLD);
+
+    if(rank==0) total_valid += g.ensemble(r,valid+1);
+    MPI_Bcast(&total_valid,1,MPI_INT,0,MPI_COMM_WORLD);
 
     if(rank==0) {
-      // raw output
-      raw<<r<<" ";
-      for(i=0;i<dsize*nWorkers;i++) raw<<all_data[i]<<" ";
-      raw<<std::endl;
-      // ensemble average
-      for(j=0;j<2*dsize+1;j++) ens_data[j] = 0.0;
-      for(i=0;i<nWorkers;i++) if(valid[1+i]) {
-        ens_data[2*dsize] += 1.0;
-        for(j=0;j<dsize;j++) {
-          ens_data[j]+=all_data[i*dsize+j];
-          ens_data[j+dsize] += all_data[i*dsize+j] * all_data[i*dsize+j];
-        }
-      }
-      if(ens_data[2*dsize]>0.5) {
-        for(j=0;j<2*dsize;j++) ens_data[j] /= ens_data[2*dsize];
-        for(j=0;j<dsize;j++) ens_data[j+dsize] -= ens_data[j] * ens_data[j];
-        // N^2 for average-of-averages
-        for(j=0;j<vsize;j++) dev[j+vsize] /= ens_data[2*dsize] * ens_data[2*dsize];
+      if(total_valid>0) {
+        for(j=0;j<vsize;j++) dev[j+vsize] /= 1.0*total_valid;
         dev_file = "dev_"+std::to_string(r)+"_"+dump_suffix+".dat";
         sim.write_dev(params.dump_dir+"/"+dev_file,r,dev+vsize);
       }
-      sim.fill_results(r,ens_data);
+      sim.fill_results(r,g.ens_data);
       sim.screen_output_line(r);
+      g.next(); // wipe ens_data
       dF.push_back(sim.results["aveF"]);
       dE.push_back(sim.results["MinEnergy"]);
       maxjumpr.push_back(sim.results["MaxJump"]);
     }
   }
 
-
   // free_energy_profile
   if(rank==0) {
-    raw.close();
+    g.close();
     std::cout<<"\nT=0K test run complete, testing path....\n\n";
 
     std::cout<<"Absolute Forces and differences between knots: \n";

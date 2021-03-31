@@ -37,7 +37,7 @@ std::string seed_str();
 
 bool file_exists(const std::string& name);
 
-void find_dump_file(std::ofstream &raw, int &suffix);
+void find_dump_file(int &suffix);
 
 
 rapidxml::xml_document<> xml_doc;

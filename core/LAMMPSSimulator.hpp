@@ -42,8 +42,10 @@ public:
     sample temperature <f>, <f^2>, <psi> and <x-u>.n
   */
   void sample(double r, double T, double *dev);
-  void screen_output_header();
+
+  void screen_output_header(double T);
   void screen_output_line(double r);
+
   void fill_results(double r,double *ens_data);
   double integrate(std::string res_file);
 
