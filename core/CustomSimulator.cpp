@@ -1,13 +1,5 @@
 #include "CustomSimulator.hpp"
 
-
-CustomSimulator::CustomSimulator(MPI_Comm &instance_comm, Parser &p, int t) :
-  LAMMPSSimulator(instance_comm, p, t) {
-    /*
-      anything extra to initialize ?
-    */
-  };
-
 /*
   Workflow:
   1) Load in configuration
@@ -21,6 +13,18 @@ CustomSimulator::CustomSimulator(MPI_Comm &instance_comm, Parser &p, int t) :
     "MinEnergy", "preT", "postT", "aveF" (PAFI force), "stdF",
     "avePsi", "dXTangent", "MaxJump", "Valid", "MaxDev"
   */
+
+
+CustomSimulator::CustomSimulator(MPI_Comm &instance_comm, Parser &p, int t)
+  : LAMMPSSimulator(instance_comm, p, t) {
+    /*
+      anything extra to initialize ?
+    */
+    log_fields.push_back(std::make_pair("aveF",false));
+  };
+
+//void CustomSimulator::populate() {
+
 
 void CustomSimulator::constrained_average(std::string SampleSteps) {
   std::string cmd;

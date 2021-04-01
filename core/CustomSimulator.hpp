@@ -1,7 +1,6 @@
 #ifndef CSIM_H
 #define CSIM_H
 
-#include <mpi.h>
 
 #include "LAMMPSSimulator.hpp"
 

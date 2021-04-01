@@ -16,8 +16,8 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t)
 
   lmp = new LAMMPS(5,lmparg,*comm);
 
-  //lammps_open(5,lmparg,instance_comm,(void **) &lmp);
   run_script("Input");
+
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): Ran input script"<<std::endl;
   #endif
@@ -25,6 +25,14 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t)
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): natoms: "<<natoms<<std::endl;
   #endif
+
+  /* possible starting point for parallel IO- not really required here.
+  nlocal = (3*natoms) / local_size;
+  if(local_rank==local_size-1) nlocal += (3*natoms)%local_size;
+  offset =  nlocal*local_rank;
+  */
+  nlocal = 3*natoms;
+  offset = 0;
 
   has_pafi = (bool)lammps_config_has_package((char *)"USER-MISC");
   #ifdef VERBOSE
@@ -54,6 +62,13 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t)
   gather("image",1,image);
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered image"<<std::endl;
+  #endif
+
+  x = new double[3*natoms]; // mainly for declaration
+  lt = new double[natoms];
+  gather("image",1,image);
+  #ifdef VERBOSE
+  if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered x"<<std::endl;
   #endif
 
   if(!has_pafi and local_rank==0) {
@@ -181,7 +196,7 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
 
   rescale_cell(T); // updates scale vector
 
-  double t[3*natoms],lt[natoms];
+
   std::string cmd;
   double ncom[]={0.,0.,0.};
   norm_mag=0.;
@@ -199,8 +214,8 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
 
 
   std::string xyz[3]; xyz[0]="x"; xyz[1]="y"; xyz[2]="z";
-  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) t[3*i+j] = pathway[3*i+j].deriv(0,r) * scale[j];
-  scatter("x",3,t);
+  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) x[3*i+j] = pathway[3*i+j].deriv(0,r) * scale[j];
+  scatter("x",3,x);
 
   for(int j=0;j<3;j++) {
     #ifdef VERBOSE
@@ -211,16 +226,16 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
     scatter("d_u"+xyz[j],1,lt);
   }
 
-  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) t[3*i+j] = pathway[3*i+j].deriv(1,r) * scale[j];
+  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) x[3*i+j] = pathway[3*i+j].deriv(1,r) * scale[j];
 
   // Center of mass projection and tangent length
-  for(int i=0;i<3*natoms;i++) ncom[i%3] += t[i]/(double)natoms;
-  for(int i=0;i<3*natoms;i++) t[i] -= ncom[i%3];
-  for(int i=0;i<3*natoms;i++) norm_mag += t[i]*t[i];
+  for(int i=0;i<3*natoms;i++) ncom[i%3] += x[i]/(double)natoms;
+  for(int i=0;i<3*natoms;i++) x[i] -= ncom[i%3];
+  for(int i=0;i<3*natoms;i++) norm_mag += x[i]*x[i];
   norm_mag = sqrt(norm_mag);
-  for(int i=0;i<3*natoms;i++) t[i] /= norm_mag;
+  for(int i=0;i<3*natoms;i++) x[i] /= norm_mag;
   for(int j=0;j<3;j++) {
-    for(int i=0;i<natoms;i++)  lt[i] = t[3*i+j];
+    for(int i=0;i<natoms;i++)  lt[i] = x[3*i+j];
     scatter("d_n"+xyz[j],1,lt);
     for(int i=0;i<natoms;i++)  lt[i] = pathway[3*i+j].deriv(2,r) * scale[j] / norm_mag / norm_mag;
     scatter("d_dn"+xyz[j],1,lt);
@@ -600,6 +615,11 @@ void LAMMPSSimulator::constrained_average(std::string SampleSteps) {
 
 
 void LAMMPSSimulator::close() {
+  GeneralSimulator::close();
+  delete [] id;
+  delete [] species;
+  delete [] image;
+  delete [] lt;
   lammps_close(lmp);
 };
 

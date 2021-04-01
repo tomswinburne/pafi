@@ -48,8 +48,6 @@ public:
     return res;
   };
 
-  virtual void close(){};
-
   virtual void populate(double r, double T){};
 
   virtual void sample(double r, double T, std::map<std::string,double> &results){};
@@ -71,13 +69,19 @@ public:
 
   void expansion(double T,double *newscale);
 
+  virtual void close() {
+    delete [] x;
+  };
+
   MPI_Comm *comm;
   std::map<std::string,double> results;
   std::vector<double> data_log;
   std::vector< std::pair<std::string,bool> > log_fields;
   double scale[3];
   double refE,refT,refP;
-  int natoms, tag, nknots, out_width, error_count, local_rank;
+  double *x;
+  int natoms, tag, nknots, out_width, error_count;
+  int local_rank, local_size, nlocal, offset;
   MinImage pbc;
   Parser *params;
   std::vector<spline> pathway, splines;

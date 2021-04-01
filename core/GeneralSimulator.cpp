@@ -4,11 +4,17 @@ GeneralSimulator::GeneralSimulator(MPI_Comm &instance_comm, Parser &p, int t) {
   tag = t;
   comm = &instance_comm;
   MPI_Comm_rank(*comm,&local_rank);
+  MPI_Comm_size(*comm,&local_size);
   params = &p;
   error_count = 0;
   scale[0]=1.0; scale[1]=1.0; scale[2]=1.0;
   last_error_message="";
   out_width = 16;
+  // to be overwritten
+  natoms = 0;
+  nlocal = 0;
+  offset = 0;
+
 };
 
 void GeneralSimulator::write(std::string fn, double r) {
@@ -77,36 +83,49 @@ void GeneralSimulator::expansion(double T, double *newscale) {
 };
 
 void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
-  pathway_r.clear();
+  /*
+    TODO: parallel i/o and splining
+    Only really a problem with memory limitations, say 2GB / core.
+    This implies 300M coordinates at double precision == 1M atoms, 100 planes.
+    Typical large-scale use - 150k atoms, 20 planes.
+    So memory-heavy but nothing problematic so far, leaving for future
+  */
+  if(nlocal==0) {
+    if(local_rank==0)
+      std::cout<<"GeneralSimulator::make_path : Not initialized!"<<std::endl;
+    return ;
+  }
+
   int nknots = knot_list.size();
-  // no way around it- have to store all the knots
-  std::vector<double> xs(nknots,0.), ys(nknots,0.), zs(nknots,0.);
-  std::vector<double> r(nknots,0.), rr(nknots,0.);
-  double *knots = new double[(const int)(3*natoms*nknots)];
-  double *x = new double[(const int)(3*natoms)];
-  spline xspl,yspl,zspl;
+  std::vector<double> xs(nknots,0.), r(nknots,0.), rr(nknots,0.);
+  double *knots = new double[nlocal*nknots];
   double dx;
 
+  pathway_r.clear();
+  pathway.clear();
+  pathway.assign(nlocal,*(new spline));
+
   // run through knots, and make spline
+  // in current implementation, nlocal = 3*natoms, offset = 0;
   load_config(knot_list[0],x);
 
-  for (int i=0;i<3*natoms;i++) knots[i] = x[i];
+  for (int i=0;i<nlocal;i++) knots[i] = x[i+offset];
 
   for (int knot=1; knot<nknots; knot++) {
     load_config(knot_list[knot],x);
-    for(int i=0;i<3*natoms;i++) x[i]-=knots[i];
-    pbc.wrap(x,3*natoms);
-    for(int i=0;i<3*natoms;i++) \
-      knots[i+knot*3*natoms] = x[i]+knots[i];
+    for(int i=0;i<nlocal;i++) x[i+offset]-=knots[i];
+    pbc.wrap(x+offset,nlocal);
+    for(int i=0;i<nlocal;i++) \
+      knots[i+knot*nlocal] = x[i+offset]+knots[i];
   }
 
   for(int knot=0;knot<nknots;knot++) {
     r[knot] = 0.;
     rr[knot] = 0.;
-    for(int i=0;i<3*natoms;i++) {
-      dx = knots[i+knot*3*natoms]-knots[i];
+    for(int i=0;i<nlocal;i++) {
+      dx = knots[i+knot*nlocal]-knots[i];
       r[knot] += dx*dx;
-      dx = knots[i+knot*3*natoms]-knots[i+(nknots-1)*3*natoms];
+      dx = knots[i+knot*nlocal]-knots[i+(nknots-1)*nlocal];
       rr[knot] += dx*dx;
     }
   }
@@ -122,23 +141,9 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
   }
 
 
-  for(int i=0; i<natoms; i++) {
-    for(int knot=0;knot<nknots;knot++) {
-      xs[knot] = knots[3*natoms*knot + 3*i + 0];
-      ys[knot] = knots[3*natoms*knot + 3*i + 1];
-      zs[knot] = knots[3*natoms*knot + 3*i + 2];
-    }
-
-
-    xspl.set_points(r,xs,params->spline_path);
-    pathway.push_back(xspl);
-
-    yspl.set_points(r,ys,params->spline_path);
-    pathway.push_back(yspl);
-
-    zspl.set_points(r,zs,params->spline_path);
-    pathway.push_back(zspl);
-
+  for(int i=0; i<nlocal; i++) {
+    for(int knot=0;knot<nknots;knot++) xs[knot] = knots[nlocal*knot + i];
+    pathway[i].set_points(r,xs,params->spline_path);
   }
   delete [] knots; // clear memory
 
@@ -153,9 +158,11 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
   } else {
     for(auto r: pathway_r) if(r>=0.0 && r<=1.0) sample_r.push_back(r);
   }
+
 };
 
 double GeneralSimulator::path(int i, double r, int d, double s) {
+
   if(params->spline_path or d==0) return pathway[i].deriv(d,r) * s;
   double dr = 1.0 / pathway_r.size();
   double val = pathway[i].deriv(0,r);

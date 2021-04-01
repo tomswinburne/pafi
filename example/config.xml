@@ -16,8 +16,8 @@
 
 
   <!-- LowTemperature to HighTemperature in TemperatureSteps steps -->
-  <LowTemperature> 0 </LowTemperature>
-  <HighTemperature> 0 </HighTemperature>
+  <LowTemperature> 50 </LowTemperature>
+  <HighTemperature> 50 </HighTemperature>
   <TemperatureSteps> 1 </TemperatureSteps>
 
   <!-- We require nprocs % CoresPerWorker==0 -->

@@ -1,8 +1,6 @@
 #ifndef LSIM_H
 #define LSIM_H
 
-#include <mpi.h>
-
 #include "GeneralSimulator.hpp"
 
 #include "lammps/lammps.h"
@@ -13,7 +11,7 @@ using namespace LAMMPS_NS;
 class LAMMPSSimulator : public GeneralSimulator {
 
 public:
-  LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t);
+  LAMMPSSimulator(MPI_Comm &instance_comm, Parser &p, int t);
 
   /*
     Load xyz configuration from data file and put in vector
@@ -77,6 +75,7 @@ public:
   std::array<double,9> getCellData();
   // LAMMPS specific
   int *species,*q, *image, *id;
+  double *lt; // for scattering
 protected:
   LAMMPS *lmp;
   bool made_fix,made_compute;
