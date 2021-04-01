@@ -148,19 +148,7 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
     pathway[i].set_points(r,xs,parser->spline_path);
   }
   delete [] knots; // clear memory
-
-  sample_r.clear();
-  double dr = 0.1;
-  if (parser->nPlanes>1)
-    dr = (parser->stopr-parser->startr)/(double)(parser->nPlanes-1);
-
-  if(parser->spline_path and not parser->match_planes) {
-    for (double r = parser->startr; r <= parser->stopr+0.5*dr; r += dr )
-      sample_r.push_back(r);
-  } else {
-    for(auto r: pathway_r) if(r>=0.0 && r<=1.0) sample_r.push_back(r);
-  }
-
+  
 };
 
 double GeneralSimulator::path(int i, double r, int d, double s) {

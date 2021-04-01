@@ -332,7 +332,7 @@ void LAMMPSSimulator::fill_results(double r, double *ens_data, bool end) {
 };
 
 
-void LAMMPSSimulator::end_of_cycle(std::string res_file, bool end) {
+void LAMMPSSimulator::end_of_cycle(std::string res_file, std::vector<double> sample_r) {
   double barrier=0.;
   int ssize = data_log.size()/sample_r.size();
   double d,c;
@@ -358,44 +358,44 @@ void LAMMPSSimulator::end_of_cycle(std::string res_file, bool end) {
   }
   barrier=0;
 
-  if(end) {
-    std::ofstream out;
-    int i;
 
-    out.open(res_file.c_str(),std::ofstream::out);
+  std::ofstream out;
+  int i;
 
-    out<<"# r ";
+  out.open(res_file.c_str(),std::ofstream::out);
+
+  out<<"# r ";
+  for(auto f: log_fields) if(results.find(f.first)!=results.end()) {
+    out<<f.first<<" ";
+    if(f.second) out<<"(int) ";
+  }
+  out<<std::endl;
+
+  // choose integration parameters
+  double diff_r = sample_r[sample_r.size()-1] - sample_r[0];
+  double dr = diff_r / sample_r.size() / 10.0;
+
+  std::vector<double> bar(ssize,0.),max(ssize,0.);
+
+  for(double r=sample_r[0];r<=sample_r[0]+diff_r;r+=dr) {
+
+    out<<r<<" ";
+    i=0;
     for(auto f: log_fields) if(results.find(f.first)!=results.end()) {
-      out<<f.first<<" ";
-      if(f.second) out<<"(int) ";
+      if(f.second) bar[i] += dr/2.0 * splines[i](r);
+      else bar[i] = splines[i](r);
+      max[i] = std::max(bar[i],max[i]);
+      out<<bar[i]<<" ";
+      if(f.second) bar[i] += dr/2.0 * splines[i](r);
+      else bar[i] = splines[i](r);
+      max[i] = std::max(bar[i],max[i]);
+      i++;
     }
     out<<std::endl;
-
-    // choose integration parameters
-    double diff_r = sample_r[sample_r.size()-1] - sample_r[0];
-    double dr = diff_r / sample_r.size() / 10.0;
-
-    std::vector<double> bar(ssize,0.),max(ssize,0.);
-
-    for(double r=sample_r[0];r<=sample_r[0]+diff_r;r+=dr) {
-
-      out<<r<<" ";
-      i=0;
-      for(auto f: log_fields) if(results.find(f.first)!=results.end()) {
-        if(f.second) bar[i] += dr/2.0 * splines[i](r);
-        else bar[i] = splines[i](r);
-        max[i] = std::max(bar[i],max[i]);
-        out<<bar[i]<<" ";
-        if(f.second) bar[i] += dr/2.0 * splines[i](r);
-        else bar[i] = splines[i](r);
-        max[i] = std::max(bar[i],max[i]);
-        i++;
-      }
-      out<<std::endl;
-    }
-    barrier=max[0];
-    std::cout<<"Run complete; est. barrier: "<<barrier<<"eV"<<std::endl;
   }
+  barrier=max[0];
+  std::cout<<"Run complete; est. barrier: "<<barrier<<"eV"<<std::endl;
+
 };
 
 

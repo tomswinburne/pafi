@@ -15,15 +15,30 @@ typedef std::map<std::string,double> DataVec;
 
 class DataGatherer {
   public:
-    DataGatherer() {
+    DataGatherer(Parser &p, std::vector<double> pathway_r, int _nWorkers) {
+      parser = &p;
       dsize=0;
       ens_data==NULL;
-    }
-
-    int initialize(Parser &p, std::string dump_file,int _nWorkers) {
-      if(raw.is_open()) raw.close();
       nWorkers = _nWorkers;
-      parser = &p;
+
+      // determine sample_r;
+
+      sample_r.clear();
+      double dr = 0.1;
+      if (parser->nPlanes>1)
+        dr = (parser->stopr-parser->startr)/(double)(parser->nPlanes-1);
+
+      if(parser->spline_path and not parser->match_planes) {
+        for (double r = parser->startr; r <= parser->stopr+0.5*dr; r += dr )
+          sample_r.push_back(r);
+      } else {
+        for(auto r: pathway_r) if(r>=0.0 && r<=1.0) sample_r.push_back(r);
+      }
+
+    };
+
+    int initialize(std::string dump_file) {
+      if(raw.is_open()) raw.close();
       raw.open(dump_file.c_str(),std::ofstream::out);
       if(raw.is_open()) return 1;
       return 0;

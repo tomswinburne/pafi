@@ -93,7 +93,7 @@ int main(int narg, char **arg) {
   // generic - data
   double p_valid,*data=NULL,*all_data=NULL;
   int total_valid, dsize = -1, raw_data_open = 0;
-  DataGatherer g;
+  DataGatherer g(parser,sim.pathway_r,nWorkers);
 
   if(rank==0) std::cout<<"\n\nInitialized "<<nWorkers<<" workers "
                       "with "<<parser.CoresPerWorker<<" cores per worker\n\n";
@@ -114,7 +114,7 @@ int main(int narg, char **arg) {
     dump_suffix = std::to_string(int(T))+"K_"+std::to_string(dump_index);
     dump_file = parser.dump_dir + "/raw_data_output_"+dump_suffix;
 
-    if(rank==0) raw_data_open = g.initialize(parser,dump_file,nWorkers);
+    if(rank==0) raw_data_open = g.initialize(dump_file);
     MPI_Bcast(&raw_data_open,1,MPI_INT,0,MPI_COMM_WORLD);
     if(raw_data_open==0) {
       if(rank==0) std::cout<<"Could not open "<<dump_file<<"! EXIT"<<std::endl;
@@ -125,7 +125,7 @@ int main(int narg, char **arg) {
     if(rank==0) sim.screen_output_header(T);
 
     dsize = -1;
-    for(auto r: sim.sample_r) {
+    for(auto r: g.sample_r) {
       total_valid=0;
       for(int repeat=1;repeat<=parser.nRepeats+parser.maxExtraRepeats;repeat++){
         // sample
@@ -188,7 +188,7 @@ int main(int narg, char **arg) {
       g.close();
       // to be replaced...
       dump_file = parser.dump_dir + "/free_energy_profile_"+dump_suffix;
-      sim.end_of_cycle(dump_file);
+      sim.end_of_cycle(dump_file,g.sample_r);
     }
 
     if( parser.highT > parser.lowT + 1.0 && parser.TSteps > 1) \

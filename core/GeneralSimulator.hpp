@@ -16,7 +16,7 @@
 #include "Parser.hpp"
 #include "Boundary.hpp"
 #include "Spline.hpp"
-#include "Utils.hpp"
+#include "CustomTypes.hpp"
 
 
 class GeneralSimulator {
@@ -83,7 +83,7 @@ public:
   MinImage pbc;
   Parser *parser;
   std::vector<spline> pathway, splines;
-  std::vector<double> pathway_r, sample_r;
+  std::vector<double> pathway_r;
   bool s_flag,has_pafi,spline_path;
   std::string last_error_message;
 private:
