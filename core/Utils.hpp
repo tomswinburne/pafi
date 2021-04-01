@@ -23,7 +23,6 @@ class DataGatherer {
       nWorkers = _nWorkers;
       params = &p;
       raw.open(dump_file.c_str(),std::ofstream::out);
-      std::cout<<"INITIALIZED "<<nWorkers<<std::endl;
       if(raw.is_open()) return 1;
       return 0;
     };

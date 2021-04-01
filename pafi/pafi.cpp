@@ -69,8 +69,6 @@ int main(int narg, char **arg) {
   MPI_Group_incl(world_group, nWorkers, cmasters, &ensemble_group);
   MPI_Comm_create_group(MPI_COMM_WORLD, ensemble_group, 0, &ensemble_comm);
 
-  if(rank==0) std::cout<<"\n\nInitializing "<<nWorkers<<" workers "
-                      "with "<<params.CoresPerWorker<<" cores per worker\n\n";
   // see GlobalSeed
   params.seed(instance);
 
@@ -96,6 +94,10 @@ int main(int narg, char **arg) {
   double p_valid,*data=NULL,*all_data=NULL;
   int total_valid, dsize = -1, raw_data_open = 0;
   DataGatherer g;
+
+  if(rank==0) std::cout<<"\n\nInitialized "<<nWorkers<<" workers "
+                      "with "<<params.CoresPerWorker<<" cores per worker\n\n";
+
 
   for(double T = params.lowT; T <= params.highT;) {
 
@@ -128,7 +130,7 @@ int main(int narg, char **arg) {
         if(valid[0]==0) for(i=0;i<vsize;i++) dev[i] = 0.0;
         if(MPI_COMM_NULL != ensemble_comm)
           MPI_Reduce(dev,dev+vsize,vsize,MPI_DOUBLE,MPI_SUM,0,ensemble_comm);
-        
+
         // declare data here once, after first simulation for flexibility
         if(dsize<0) {
           dsize = sim.results.size();
