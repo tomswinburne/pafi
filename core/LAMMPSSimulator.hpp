@@ -75,14 +75,12 @@ public:
 
   // Fill 9D array with Lx, Ly, Lz, xy, xz, yz, then periodicity in x, y, z
   std::array<double,9> getCellData();
-  int error_count;
   // LAMMPS specific
   int *species,*q, *image, *id;
 protected:
-  int local_rank;
   LAMMPS *lmp;
   bool made_fix,made_compute;
-  std::string last_error_message, last_command;
+  std::string last_command;
 
 };
 

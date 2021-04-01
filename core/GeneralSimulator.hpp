@@ -21,6 +21,8 @@ class GeneralSimulator {
 
 public:
 
+  GeneralSimulator(MPI_Comm &instance_comm, Parser &p, int t);
+
   virtual void load_config(std::string file_string,double *x){};
 
   virtual void run_script(std::string sn){};
@@ -72,14 +74,16 @@ public:
   MPI_Comm *comm;
   std::map<std::string,double> results;
   std::vector<double> data_log;
+  std::vector< std::pair<std::string,bool> > log_fields;
   double scale[3];
   double refE,refT,refP;
-  int natoms, tag, nknots;
+  int natoms, tag, nknots, out_width, error_count, local_rank;
   MinImage pbc;
   Parser *params;
   std::vector<spline> pathway, splines;
   std::vector<double> pathway_r, sample_r;
   bool s_flag,has_pafi,spline_path;
+  std::string last_error_message;
 private:
   /* nothing */
 };

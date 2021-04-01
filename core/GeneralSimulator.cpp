@@ -1,5 +1,17 @@
 #include "GeneralSimulator.hpp"
 
+GeneralSimulator::GeneralSimulator(MPI_Comm &instance_comm, Parser &p, int t) {
+  tag = t;
+  comm = &instance_comm;
+  MPI_Comm_rank(*comm,&local_rank);
+  params = &p;
+  error_count = 0;
+  scale[0]=1.0; scale[1]=1.0; scale[2]=1.0;
+  last_error_message="";
+  std::cout<<"HERE"<<std::endl;
+  out_width = 16;
+};
+
 void GeneralSimulator::write(std::string fn, double r) {
   std::ofstream out;
   out.open(fn.c_str(),std::ofstream::out);

@@ -222,11 +222,14 @@ void Parser::find_dump_file(int &suffix) {
   FILE *file;
   for (suffix=0; suffix < 100; suffix++) {
     params_file = dump_dir+"/params_"+std::to_string(suffix);
-    file = fopen(params_file.c_str(), "r"); // read only - don't overwrite !
-    if (file!=NULL) {
-        fclose(file);
-        continue;
-    }
+    raw.open(params_file.c_str(),std::ifstream::in);
+    if(raw.is_open()) std::cout<<"HHH "<<suffix<<std::endl;
+    raw.close();
+    //file = fopen(params_file.c_str(), "r"); // read only - don't overwrite !
+    //if (file!=NULL) {
+    //    fclose(file);
+    //    continue;
+    //}
     raw.open(params_file.c_str(),std::ofstream::out);
     if(raw.is_open()) {
       raw<<welcome_message();

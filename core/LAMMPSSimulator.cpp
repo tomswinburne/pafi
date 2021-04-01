@@ -1,13 +1,7 @@
 #include "LAMMPSSimulator.hpp"
 
-LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t) {
-  error_count = 0;
-  scale[0]=1.0; scale[1]=1.0; scale[2]=1.0;
-  last_error_message="";
-  tag = t;
-  comm = &instance_comm;
-  MPI_Comm_rank(*comm,&local_rank);
-  params = &p;
+LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t)
+  : GeneralSimulator::GeneralSimulator(instance_comm, p, t) {
   // set up LAMMPS
   char str1[32];
   char **lmparg = new char*[5];
@@ -70,6 +64,12 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t) {
   made_fix=false;
   made_compute=false;
   data_log.clear();
+
+  log_fields.clear();
+  // "ResultsString", integrate true/false
+  log_fields.push_back(std::make_pair("aveF",true));
+  log_fields.push_back(std::make_pair("aveFstd",true));
+  log_fields.push_back(std::make_pair("avePsi",false));
 };
 
 /*
@@ -304,11 +304,12 @@ void LAMMPSSimulator::fill_results(double r, double *ens_data, bool end) {
     fields.push_back(res.first);
   }
   for(auto field: fields) results[field+"std"] = sqrt(std::fabs(ens_data[i++]));
+
   data_log.push_back(r);
-  if(end) {
-    data_log.push_back(results["aveF"]); // splines[0]
-    data_log.push_back(results["aveFstd"]); // splines[1]
-    data_log.push_back(results["avePsi"]); // splines[2]
+  if(end) for(auto f: log_fields) if(results.find(f.first)!=results.end()) {
+    data_log.push_back(results[f.first]);
+  } else if(local_rank==0) {
+    std::cout<<"Field "<<f.first<<" not found!"<<std::endl;
   }
 };
 
@@ -331,6 +332,7 @@ void LAMMPSSimulator::integrate(std::string res_file, double &barrier, bool end)
           c += 1.0;
         }
       if(c>0.5) d/= c;
+      if(k==0) d *= -1.0;
       data.push_back(d);
     }
     spl.set_points(sample_r,data);
@@ -339,31 +341,39 @@ void LAMMPSSimulator::integrate(std::string res_file, double &barrier, bool end)
   barrier=0;
 
   if(end) {
-
     std::ofstream out;
     out.open(res_file.c_str(),std::ofstream::out);
 
-    out<<"# r av(F(r)) std(F(r)) ave(Psi)"<<std::endl;
+    out<<"# r ";
+    for(auto f: log_fields) if(results.find(f.first)!=results.end()) {
+      out<<f.first<<" ";
+      if(f.second) out<<"(int) ";
+    }
+    out<<std::endl;
 
     // choose integration parameters
     double diff_r = sample_r[sample_r.size()-1] - sample_r[0];
     double dr = diff_r / sample_r.size() / 10.0;
-    double f_bar=0.0,ef_bar=0.0,f_bar_max=0.0;
+    int i;
+
+    std::vector<double> bar(ssize,0.),max(ssize,0.);
 
     for(double r=sample_r[0];r<=sample_r[0]+diff_r;r+=dr) {
 
-      f_bar -= dr/2.0 * splines[0](r);
-      ef_bar += dr/2.0 * splines[1](r);
-      f_bar_max = std::max(f_bar,f_bar_max);
-
-      out<<r<<" "<<f_bar<<" "<<ef_bar<<" "<<splines[2](r)<<std::endl;
-
-      f_bar -= dr/2.0 * splines[0](r);
-      ef_bar += dr/2.0 * splines[1](r);
-      f_bar_max = std::max(f_bar,f_bar_max);
+      out<<r<<" ";
+      i=0;
+      for(auto f: log_fields) if(results.find(f.first)!=results.end()) {
+        if(f.second) bar[i] += dr/2.0 * splines[i](r);
+        else bar[i] = splines[i](r);
+        max[i] = std::max(bar[i],max[i]);
+        out<<bar[i]<<" ";
+        if(f.second) bar[i] += dr/2.0 * splines[i](r);
+        else bar[i] = splines[i](r);
+        max[i] = std::max(bar[i],max[i]);
+      }
+      out<<std::endl;
     }
-
-    barrier=f_bar_max;
+    barrier=max[0];
   }
 };
 
