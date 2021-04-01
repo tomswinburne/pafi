@@ -43,7 +43,6 @@ int main(int narg, char **arg) {
     }
     exit(-1);
   }
-  std::string dump_suffix, dump_file, dev_file;
   // ************************ DUMP FOLDER *********************************
 
 
@@ -91,12 +90,17 @@ int main(int narg, char **arg) {
   int *valid = new int[1+nWorkers*(rank==0)];
 
   // generic - data
-  double p_valid,*data=NULL,*all_data=NULL;
-  int total_valid, dsize = -1, raw_data_open = 0;
-  DataGatherer g(parser,sim.pathway_r,nWorkers);
+  double *data=NULL,*all_data=NULL;
+  int total_valid, data_size = -1, bool_int_result = 0;
+  Gatherer g;
+  std::map<std::string,double> h;
 
-  if(rank==0) std::cout<<"\n\nInitialized "<<nWorkers<<" workers "
+  if(rank==0) {
+    std::cout<<"\n\nInitialized "<<nWorkers<<" workers "
                       "with "<<parser.CoresPerWorker<<" cores per worker\n\n";
+    std::cout<<"<> == time averages,  av/err over ensemble"<<std::endl;
+  }
+
 
   // we want generic structure to go through paramater space, with form
   /*
@@ -108,93 +112,71 @@ int main(int narg, char **arg) {
   generates dump_suffix, raw_file, dump_file
   */
 
-  for(double T = parser.lowT; T <= parser.highT;) {
-
-    // DUMP
-    dump_suffix = std::to_string(int(T))+"K_"+std::to_string(dump_index);
-    dump_file = parser.dump_dir + "/raw_data_output_"+dump_suffix;
-
-    if(rank==0) raw_data_open = g.initialize(dump_file);
-    MPI_Bcast(&raw_data_open,1,MPI_INT,0,MPI_COMM_WORLD);
-    if(raw_data_open==0) {
-      if(rank==0) std::cout<<"Could not open "<<dump_file<<"! EXIT"<<std::endl;
-      exit(-1);
-    }
-    // DUMP
-
-    if(rank==0) sim.screen_output_header(T);
-
-    dsize = -1;
-    for(auto r: g.sample_r) {
-      total_valid=0;
-      for(int repeat=1;repeat<=parser.nRepeats+parser.maxExtraRepeats;repeat++){
-        // sample
-        for(i=0;i<vsize;i++) dev[i] = 0.0;
-        DataVec params;
-        params["ReactionCoordinate"] = r;
-        params["Temperature"] = T;
-        sim.sample(params, dev); // sim*(parser, dev)
-
-        // is it valid
-        valid[0] = int(sim.results["Valid"]+0.01);
-        if(MPI_COMM_NULL != ensemble_comm)
-          MPI_Gather(valid,1,MPI_INT,valid+1,1,MPI_INT,0,ensemble_comm);
-
-        // reset deviation if invalid
-        if(valid[0]==0) for(i=0;i<vsize;i++) dev[i] = 0.0;
-        if(MPI_COMM_NULL != ensemble_comm)
-          MPI_Reduce(dev,dev+vsize,vsize,MPI_DOUBLE,MPI_SUM,0,ensemble_comm);
-
-        // declare data here once, after first simulation for flexibility
-        if(dsize<0) {
-          dsize = sim.results.size();
-          data = new double[dsize];
-          all_data = new double[dsize*nWorkers];
-          if(rank==0) g.prepare(sim.results);
-        }
-
-        i=0; for(auto res: sim.results) data[i++] = res.second;
-        if(MPI_COMM_NULL != ensemble_comm)
-          MPI_Gather(data,dsize,MPI_DOUBLE,all_data,dsize,MPI_DOUBLE,0,ensemble_comm);
-
-        if(rank==0) total_valid += g.ensemble(r,valid+1,all_data);
-
-        MPI_Bcast(&total_valid,1,MPI_INT,0,MPI_COMM_WORLD);
-        p_valid = 100.0 / double(nWorkers*repeat) * total_valid;
-        if(rank==0 and parser.nRepeats>1) {
-            std::cout<<"Repeat "<<repeat<<"/"<<parser.nRepeats<<", Validity ";
-            std::cout<<std::setprecision(4)<<p_valid<<"% ";
-            if((repeat>=parser.nRepeats) and (total_valid<min_valid))
-              std::cout<<"Low validity! Running additional repeat!";
-            std::cout<<std::endl;
-        }
-        if((repeat>=parser.nRepeats) and (total_valid>=min_valid)) break;
-
-      }
-      if(rank==0) {
-        if(total_valid>0) for(j=0;j<vsize;j++) dev[j+vsize] /= 1.0*total_valid;
-
-        dev_file = "dev_"+std::to_string(r)+"_"+dump_suffix+".dat";
-        sim.write_dev(parser.dump_dir+"/"+dev_file,r,dev+vsize);
-
-        sim.fill_results(r,g.ens_data);
-        sim.screen_output_line(r);
-        g.next(); // wipe ens_data
-      }
-      MPI_Barrier(MPI_COMM_WORLD);
-    }
-
-    if(rank==0) {
-      g.close();
-      // to be replaced...
-      dump_file = parser.dump_dir + "/free_energy_profile_"+dump_suffix;
-      sim.end_of_cycle(dump_file,g.sample_r);
-    }
-
-    if( parser.highT > parser.lowT + 1.0 && parser.TSteps > 1) \
-      T += ( parser.highT - parser.lowT ) / ( parser.TSteps - 1 );
-    else break;
+  bool_int_result = g.initialize(parser,sim.pathway_r,nWorkers,dump_index,rank);
+  MPI_Bcast(&bool_int_result,1,MPI_INT,0,MPI_COMM_WORLD);
+  if(bool_int_result==0) {
+    if(rank==0) std::cout<<"Could not open raw dump file! EXIT"<<std::endl;
+    exit(-1);
   }
+
+
+  data_size = -1;
+  g.screen_output_header();
+
+  while(true) {
+    total_valid=0;
+    for(int repeat=1;repeat<=parser.nRepeats+parser.maxExtraRepeats;repeat++) {
+      // sample
+      for(i=0;i<vsize;i++) dev[i] = 0.0;
+
+      // need to distribute parameters....?
+      sim.sample(g.params(), dev); // sim*(parser, dev)
+
+      // is it valid
+
+      valid[0] = int(sim.results["Valid"]+0.01);
+      if(MPI_COMM_NULL != ensemble_comm)
+        MPI_Gather(valid,1,MPI_INT,valid+1,1,MPI_INT,0,ensemble_comm);
+
+      // reset deviation if invalid
+      if(valid[0]==0) for(i=0;i<vsize;i++) dev[i] = 0.0;
+      if(MPI_COMM_NULL != ensemble_comm)
+        MPI_Reduce(dev,dev+vsize,vsize,MPI_DOUBLE,MPI_SUM,0,ensemble_comm);
+
+      // declare data here once, after first simulation for flexibility
+      if(data_size<0) {
+        data_size = sim.results.size();
+        data = new double[data_size];
+        all_data = new double[data_size*nWorkers];
+        g.prepare(sim.results);
+      }
+
+      i=0; for(auto res: sim.results) data[i++] = res.second;
+      if(MPI_COMM_NULL != ensemble_comm)
+        MPI_Gather(data,data_size,MPI_DOUBLE,all_data,data_size,MPI_DOUBLE,0,ensemble_comm);
+
+      total_valid += g.collate(valid+1,all_data);
+      MPI_Bcast(&total_valid,1,MPI_INT,0,MPI_COMM_WORLD);
+
+      if(rank==0 and parser.nRepeats>1) {
+          std::cout<<"Repeat "<<repeat<<"/"<<parser.nRepeats<<", Validity ";
+          std::cout<<std::setprecision(4);
+          std::cout<<100.0/double(nWorkers*repeat) * total_valid<<"% ";
+          if((repeat>=parser.nRepeats) and (total_valid<min_valid))
+            std::cout<<"Low validity! Running additional repeat!";
+          std::cout<<std::endl;
+      }
+      if((repeat>=parser.nRepeats) and (total_valid>=min_valid)) break;
+    }
+    if(rank==0 and total_valid>0 and parser.write_dev) {
+      for(j=0;j<vsize;j++) dev[j+vsize] /= 1.0*total_valid;
+      sim.write_dev(g.dev_file,g.params()["ReactionCoordinate"],dev+vsize);
+    }
+    g.next(); // wipe ens_data
+    MPI_Barrier(MPI_COMM_WORLD);
+    if(g.finished()) break;
+  }
+  if(rank==0) g.close();
 
   // close down LAMMPS instances
   sim.close();

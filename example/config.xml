@@ -1,9 +1,29 @@
-<PAFI>
+<!-- Which parameters to scan.
+If ReactionCoordinate and Temperature are not present an error will be raised
+The iteration sequence follows the order in this file,
+i.e. a python equivalent of this example would be
+for T in Temperature:
+  for r in ReactionCoordinate:
+    # do simulation
+If Temperature and ReactionCoordinate are not present an error will be raised
+
+The format is Min, Max, number of Steps
+-->
+<Parameters>
+  <ReactionCoordinate>0.0 1.0 9</ReactionCoordinate>
+  <Temperature>50. 100. 2</Temperature>
+</Parameters>
+
+
+<Setup>
   <!-- Global random number seed used to set worker seeds.
   If all parameters are left unchanged, simulation results should be
   identical up to MD integration error for the same GlobalSeed
   -->
   <GlobalSeed>137</GlobalSeed>
+
+  <!-- do we dump deviation files? can be large -->
+  <WriteDev>0</WriteDev>
 
   <!--If FreshSeed==1, a new seed is set for each sampling run.
     With FreshSeed==0, a worker uses the same seed for all planes.
@@ -14,12 +34,6 @@
   <DumpFolder>./dumps</DumpFolder>
 
 
-
-  <!-- LowTemperature to HighTemperature in TemperatureSteps steps -->
-  <LowTemperature> 50 </LowTemperature>
-  <HighTemperature> 50 </HighTemperature>
-  <TemperatureSteps> 1 </TemperatureSteps>
-
   <!-- We require nprocs % CoresPerWorker==0 -->
   <CoresPerWorker> 2 </CoresPerWorker>
 
@@ -27,13 +41,13 @@
   <nRepeats> 1 </nRepeats>
 
   <!-- Data gathering steps -->
-  <SampleSteps> 200 </SampleSteps>
+  <SampleSteps> 20 </SampleSteps>
 
   <!-- Steps for thermalization -->
-  <ThermSteps> 100 </ThermSteps>
+  <ThermSteps> 10 </ThermSteps>
 
   <!-- Max steps for optional in-plane minimizations (see below) -->
-  <MinSteps> 200 </MinSteps>
+  <MinSteps> 20 </MinSteps>
 
   <!--
     RELATIVE thermal expansion coefficients along X,Y,Z directions of simulation-
@@ -60,7 +74,7 @@
   <Friction> 0.05 </Friction>
 
   <!-- 0/1 Output LAMMPS logfiles for error checking purposes -->
-  <LogLammps> 1 </LogLammps>
+  <LogLammps> 0 </LogLammps>
 
   <!--
    0 : (Default) Output time-and-ensemble averaged in-plane deviation from reference pathway. Can indicate finite temperature path but will have sampling noise
@@ -74,23 +88,9 @@
   -->
   <PreMin> 1 </PreMin>
 
-
-  <!-- If == 0 ignore NPlanes, Start Coordinate and StopCoordinate;
+  <!-- If == 0 ignore ReactionCoordinate parameter,
   sample only at provided pathway configurations. Test feature -->
   <Rediscretize>1</Rediscretize>
-
-  <!-- If Rediscretize==1, sample on nPlanes equally spaced
-  planes in [StartCoordinate,StopCoordinate], a subset of [0,1] -->
-  <nPlanes> 9 </nPlanes>
-  <StartCoordinate> 0.0 </StartCoordinate>
-  <StopCoordinate> 1.0 </StopCoordinate>
-
-
-
-  <!-- If==0, turn off cubic spline interpolation. NOT recommended -->
-  <SplinePath>1</SplinePath>
-
-
 
   <!-- Maximum Atomic Displacement between local in-plane minima
   before and after sampling run which can still be considered "in basin"
@@ -121,7 +121,8 @@
     md/image_9.dat
   </PathwayConfigurations>
 
-</PAFI>
+</Setup>
+
 <Scripts>
   <!-- LAMMPS script to read in the first pathway
       configuration and load the potential

@@ -9,6 +9,9 @@
 #include <fstream>
 #include <iostream>
 #include <random>
+#include <tuple>
+#include <iterator>
+
 
 #include "rapidxml.hpp"
 
@@ -29,6 +32,8 @@ void set_parameters();
 
 std::vector<std::string> split_lines(std::string r);
 
+std::vector<std::string> split_line(std::string r);
+
 std::vector<std::string> Script(std::string sn);
 
 void seed(unsigned worker_instance);
@@ -44,17 +49,18 @@ rapidxml::xml_document<> xml_doc;
 rapidxml::xml_node<> * root_node;
 rapidxml::xml_node<> * child_node;
 
-std::map<std::string,std::string> parameters;
+std::map<std::string,std::string> configuration;
 std::map<std::string,std::string> scripts;
 
 std::vector<std::string> PathwayConfigurations;
-double lowT,highT,Friction,startr,stopr,maxjump_thresh,redo_thresh;
-int CoresPerWorker, nPlanes, TSteps, nRepeats, maxExtraRepeats, globalSeed;
+double Friction, maxjump_thresh, redo_thresh;
+int CoresPerWorker, nRepeats, maxExtraRepeats, globalSeed;
 unsigned random_seed;
 std::string dump_dir;
-bool reseed, seeded, loglammps, postDump, preMin, xml_success, spline_path, match_planes;
+bool reseed, seeded, loglammps, postDump, preMin, xml_success,
+  spline_path, match_planes,write_dev;
 
-
+std::map<std::string,std::tuple<double,double,int>> parameters;
 
 private:
   std::mt19937 rng;

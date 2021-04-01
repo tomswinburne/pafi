@@ -63,21 +63,21 @@ void GeneralSimulator::expansion(double T, double *newscale) {
   double coeff;
 
   newscale[0] = 1.0;
-  coeff = std::stod(parser->parameters["LinearThermalExpansionX"]);
+  coeff = std::stod(parser->configuration["LinearThermalExpansionX"]);
   newscale[0] += coeff*T;
-  coeff = std::stod(parser->parameters["QuadraticThermalExpansionX"]);
+  coeff = std::stod(parser->configuration["QuadraticThermalExpansionX"]);
   newscale[0] += coeff*T*T;
 
   newscale[1] = 1.0;
-  coeff = std::stod(parser->parameters["LinearThermalExpansionY"]);
+  coeff = std::stod(parser->configuration["LinearThermalExpansionY"]);
   newscale[1] += coeff*T;
-  coeff = std::stod(parser->parameters["QuadraticThermalExpansionY"]);
+  coeff = std::stod(parser->configuration["QuadraticThermalExpansionY"]);
   newscale[1] += coeff*T*T;
 
   newscale[2] = 1.0;
-  coeff = std::stod(parser->parameters["LinearThermalExpansionZ"]);
+  coeff = std::stod(parser->configuration["LinearThermalExpansionZ"]);
   newscale[2] += coeff*T;
-  coeff = std::stod(parser->parameters["QuadraticThermalExpansionZ"]);
+  coeff = std::stod(parser->configuration["QuadraticThermalExpansionZ"]);
   newscale[2] += coeff*T*T;
   //std::cout<<scale[0]<<" "<<scale[1]<<" "<<scale[2]<<std::endl;
 };

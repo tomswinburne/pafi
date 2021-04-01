@@ -1,6 +1,7 @@
 #ifndef CSIM_H
 #define CSIM_H
 
+#include "GeneralGatherer.hpp"
 
 #include "LAMMPSSimulator.hpp"
 
@@ -11,11 +12,11 @@ public:
 
   void constrained_average(std::string SampleSteps);
 
-  void screen_output_header(double T);
+  void sample(std::map<std::string,double> params, double *dev);
+};
 
-  void screen_output_line(double r);
-
-  void sample(DataVec params, double *dev);
+class CustomGatherer : public GenericGatherer {
+public:
 };
 
 #endif

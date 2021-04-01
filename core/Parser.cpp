@@ -5,43 +5,40 @@
 Parser::Parser(std::string file, bool test) {
   xml_success = false;
 
-  // Default Values
-  parameters["CoresPerWorker"]="1";
-  parameters["LowTemperature"] = "100";
-  parameters["HighTemperature"] = "1000";
-  parameters["TemperatureSteps"] = "10";
-  parameters["LinearThermalExpansionX"] = "0.0";
-  parameters["LinearThermalExpansionY"] = "0.0";
-  parameters["LinearThermalExpansionZ"] = "0.0";
-  parameters["QuadraticThermalExpansionX"] = "0.0";
-  parameters["QuadraticThermalExpansionY"] = "0.0";
-  parameters["QuadraticThermalExpansionZ"] = "0.0";
-  parameters["SampleSteps"] = "1000";
-  parameters["ThermSteps"] = "1000";
-  parameters["ThermWindow"] = "500";
-  parameters["nRepeats"] = "1";
-  parameters["nPlanes"] = "10";
-  parameters["DumpFolder"] = "./dumps";
-  parameters["OverDamped"] = "1";
-  parameters["Friction"] = "0.1";
-  parameters["StartCoordinate"] = "0.0";
-  parameters["StopCoordinate"] = "1.0";
-  parameters["LogLammps"] = "0";
-  parameters["MaxJump"] = "0.1";
-  parameters["ReSampleThresh"] = "0.5";
-  parameters["maxExtraRepeats"] = "1";
-  parameters["PostDump"] = "0";
-  parameters["PreMin"] = "1";
-  parameters["SplinePath"] = "1";
-  parameters["MatchPlanes"] = "0";
-  parameters["GlobalSeed"] = "137";
-  parameters["FreshSeed"] = "1";
+  // Default Values simulation independent...
+  configuration["CoresPerWorker"]="1";
+
+  configuration["SampleSteps"] = "1000";
+  configuration["ThermSteps"] = "1000";
+  configuration["ThermWindow"] = "500";
+  configuration["nRepeats"] = "1";
+  configuration["DumpFolder"] = "./dumps";
+  configuration["OverDamped"] = "1";
+  configuration["Friction"] = "0.1";
+  configuration["LogLammps"] = "0";
+  configuration["MaxJump"] = "0.1";
+  configuration["ReSampleThresh"] = "0.5";
+  configuration["maxExtraRepeats"] = "1";
+  configuration["PostDump"] = "0";
+  configuration["PreMin"] = "1";
+  configuration["SplinePath"] = "1";
+  configuration["MatchPlanes"] = "0";
+  configuration["GlobalSeed"] = "137";
+  configuration["FreshSeed"] = "1";
+  // these could be overwritten during TI, or set to the lambda=1 value
+  configuration["LinearThermalExpansionX"] = "0.0";
+  configuration["LinearThermalExpansionY"] = "0.0";
+  configuration["LinearThermalExpansionZ"] = "0.0";
+  configuration["QuadraticThermalExpansionX"] = "0.0";
+  configuration["QuadraticThermalExpansionY"] = "0.0";
+  configuration["QuadraticThermalExpansionZ"] = "0.0";
 
 
   seeded = false;
   // Read the xml file into a vector
 	std::ifstream xmlfile(file);
-	std::vector<char> buffer((std::istreambuf_iterator<char>(xmlfile)), std::istreambuf_iterator<char>());
+	std::vector<char> buffer((std::istreambuf_iterator<char>(xmlfile)),
+    std::istreambuf_iterator<char>());
 	buffer.push_back('\0');
 
   // Parse the buffer using the xml file parsing library into xml_doc
@@ -49,19 +46,31 @@ Parser::Parser(std::string file, bool test) {
 
 	root_node = xml_doc.first_node();
 
-  bool found_pafi = false, found_scripts = false;
+  bool found_setup = false, found_scripts = false, found_scan = false;
 
   while (root_node) {
 
-    if(rtws(root_node->name())=="PAFI") {
-      found_pafi = true;
+    if(rtws(root_node->name())=="Setup") {
+      found_setup = true;
       child_node = root_node->first_node();
       while (child_node) {
         if(rtws(child_node->name())=="PathwayConfigurations") {
           PathwayConfigurations = split_lines(child_node->value());
         } else {
-          parameters[rtws(child_node->name())] = rtws(child_node->value());
+          configuration[rtws(child_node->name())] = rtws(child_node->value());
         }
+        child_node = child_node->next_sibling();
+      }
+    } else if(rtws(root_node->name())=="Parameters") {
+      found_scan = true;
+      child_node = root_node->first_node();
+      while (child_node) {
+        std::vector<std::string> ss = split_line(child_node->value());
+        if(ss.size()!=3)
+          std::cout<<"Error in "<<child_node->value()<<" XML declaration"<<std::endl;
+        parameters[rtws(child_node->name())] =
+          std::make_tuple(std::stod(ss[0]),std::stod(ss[1]),std::stoi(ss[2]));
+
         child_node = child_node->next_sibling();
       }
     } else if(rtws(root_node->name())=="Scripts") {
@@ -74,11 +83,15 @@ Parser::Parser(std::string file, bool test) {
     }
     root_node = root_node->next_sibling();
   }
-  if(!found_pafi) {
-    std::cout<<"XML file incomplete! Provide PAFI parameters!"<<std::endl;
+
+  if(!found_setup) {
+    std::cout<<"XML file incomplete! Provide Configuration!"<<std::endl;
     return;
   }
-
+  if(!found_scan) {
+    std::cout<<"XML file incomplete! Provide Parameters!"<<std::endl;
+    return;
+  }
   if(!found_scripts) {
     std::cout<<"XML file incomplete! Provide MD scripts!"<<std::endl;
     return;
@@ -92,52 +105,44 @@ Parser::Parser(std::string file, bool test) {
 
 void Parser::set_parameters() {
   // Now we can convert to type
-  CoresPerWorker = std::stoi(parameters["CoresPerWorker"]);
-	nPlanes = std::stoi(parameters["nPlanes"]);
-	nRepeats = std::stoi(parameters["nRepeats"]);
-  int therm_window = std::max(1,std::stoi(parameters["ThermSteps"])/2);
-  parameters["ThermWindow"] = std::to_string(therm_window);
-  dump_dir = parameters["DumpFolder"];
-	lowT = std::stod(parameters["LowTemperature"]);
-	highT = std::stod(parameters["HighTemperature"]);
-	Friction = std::stod(parameters["Friction"]);
-	TSteps = std::stoi(parameters["TemperatureSteps"]);
-  startr = std::stod(parameters["StartCoordinate"]);
-  stopr = std::stod(parameters["StopCoordinate"]);
-  loglammps = bool(std::stoi(parameters["LogLammps"]));
-  maxjump_thresh = std::stod(parameters["MaxJump"]);
-  redo_thresh = std::stod(parameters["ReSampleThresh"]);
-  maxExtraRepeats = std::stoi(parameters["maxExtraRepeats"]);
-  postDump = bool(std::stoi(parameters["PostDump"]));
-  preMin = bool(std::stoi(parameters["PreMin"]));
-  spline_path = bool(std::stoi(parameters["SplinePath"]));
-  match_planes = !bool(std::stoi(parameters["Rediscretize"]));
-  globalSeed = std::stoi(parameters["GlobalSeed"]);
-  reseed = bool(std::stoi(parameters["FreshSeed"]));
+  CoresPerWorker = std::stoi(configuration["CoresPerWorker"]);
+	nRepeats = std::stoi(configuration["nRepeats"]);
+
+  int therm_window = std::max(1,std::stoi(configuration["ThermSteps"])/2);
+  configuration["ThermWindow"] = std::to_string(therm_window);
+
+  dump_dir = configuration["DumpFolder"];
+	Friction = std::stod(configuration["Friction"]);
+	loglammps = bool(std::stoi(configuration["LogLammps"]));
+  maxjump_thresh = std::stod(configuration["MaxJump"]);
+  redo_thresh = std::stod(configuration["ReSampleThresh"]);
+  maxExtraRepeats = std::stoi(configuration["maxExtraRepeats"]);
+  postDump = bool(std::stoi(configuration["PostDump"]));
+  preMin = bool(std::stoi(configuration["PreMin"]));
+  spline_path = bool(std::stoi(configuration["SplinePath"]));
+  match_planes = !bool(std::stoi(configuration["Rediscretize"]));
+  globalSeed = std::stoi(configuration["GlobalSeed"]);
+  reseed = bool(std::stoi(configuration["FreshSeed"]));
+  write_dev = bool(std::stoi(configuration["WriteDev"]));
 };
 
 void Parser::overwrite_xml(int nProcs) {
   // Default Values
-  parameters["CoresPerWorker"]=std::to_string(nProcs);
-  parameters["LowTemperature"] = "0";
-  parameters["HighTemperature"] = "0";
-  parameters["TemperatureSteps"] = "1";
-  parameters["SampleSteps"] = "1";
-  parameters["ThermSteps"] = "1";
-  parameters["ThermWindow"] = "1";
-  parameters["nRepeats"] = "1";
-  //parameters["nPlanes"] = "10";
-  parameters["DumpFolder"] = "./dumps";
-  parameters["OverDamped"] = "1";
-  parameters["Friction"] = "0.1";
-  parameters["StartCoordinate"] = "0.0";
-  parameters["StopCoordinate"] = "1.0";
-  parameters["LogLammps"] = "0";
-  parameters["MaxJump"] = "0.1";
-  parameters["ReSampleThresh"] = "0.5";
-  parameters["maxExtraRepeats"] = "1";
-  parameters["PostDump"] = "1";
-  parameters["PreMin"] = "1";
+  configuration["CoresPerWorker"]=std::to_string(nProcs);
+  configuration["SampleSteps"] = "1";
+  configuration["ThermSteps"] = "1";
+  configuration["ThermWindow"] = "1";
+  configuration["nRepeats"] = "1";
+  configuration["DumpFolder"] = "./dumps";
+  configuration["OverDamped"] = "1";
+  configuration["Friction"] = "0.1";
+  configuration["LogLammps"] = "0";
+  configuration["MaxJump"] = "0.1";
+  configuration["ReSampleThresh"] = "0.5";
+  configuration["maxExtraRepeats"] = "1";
+  configuration["PostDump"] = "1";
+  configuration["PreMin"] = "1";
+  configuration["WriteDev"] = "1";
 
 };
 
@@ -168,6 +173,15 @@ std::vector<std::string> Parser::split_lines(std::string r) {
 	return sc;
 };
 
+std::vector<std::string> Parser::split_line(std::string r) {
+  std::istringstream iss(r);
+  std::vector<std::string> f{std::istream_iterator<std::string>{iss},
+    std::istream_iterator<std::string>{}};
+  return f;
+};
+
+
+
 std::string Parser::seed_str() {
   if(!seeded) {
 		std::cout<<"NOT SEEDED!!!\n";
@@ -185,7 +199,7 @@ std::string Parser::seed_str() {
 };
 
 std::vector<std::string> Parser::Script(std::string sn) {
-	//parameters["Temperature"] = std::to_string(T);
+	//configuration["Temperature"] = std::to_string(T);
 	return split_lines(scripts[sn]);
 };
 
@@ -208,10 +222,21 @@ std::string Parser::welcome_message(){
 	str+="\nScripts:\n\n";
 	for(auto s: scripts) str+=s.first+" : "+s.second+"\n";
 
-	str+="\nParameters:\n\n";
-  for(auto s: parameters) if(s.first!="PathwayConfigurations") str+=s.first+" : "+s.second+"\n";
+	str+="\nConfiguration:\n\n";
+  for(auto s: configuration) if(s.first!="PathwayConfigurations") str+=s.first+" : "+s.second+"\n";
 	str+="\n\n";
 
+  str+="\nParameter Scans :\n\n";
+  std::string tab = "\t";
+  for(auto s= std::prev(parameters.end()); ; s=std::prev(s)) {
+    str += tab;
+    str += s->first+" : "+std::to_string(std::get<0>(s->second));
+    str += " -> "+std::to_string(std::get<1>(s->second))+" in ";
+    str += std::to_string(std::get<2>(s->second))+" steps\n\n";
+    tab += "\t";
+    if(s==parameters.begin()) break;
+  }
+  str+="\n";
   return str;
 };
 

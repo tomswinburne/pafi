@@ -21,5 +21,3 @@
 #include "Spline.hpp"
 #include "CustomTypes.hpp"
 #include "CustomSimulator.hpp"
-typedef CustomSimulator Simulator;
-#include "Utils.hpp"

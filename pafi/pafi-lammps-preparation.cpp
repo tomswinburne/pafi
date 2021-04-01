@@ -91,7 +91,7 @@ int main(int narg, char **arg) {
     // pafi fix
     cmd = "run 0\n"; // to ensure the PreRun script is executed
     cmd += "run 0\nfix hp all pafi __pafipath 0.0 ";
-    cmd += parser.parameters["Friction"]+" ";
+    cmd += parser.configuration["Friction"]+" ";
     cmd += parser.seed_str()+" overdamped 1 com 0\n run 0";
     sim.run_commands(cmd);
 
@@ -101,7 +101,7 @@ int main(int narg, char **arg) {
         std::cout<<"LAMMPSSimulator.populate(): minimizing"<<std::endl;
       #endif
       cmd = "min_style fire\n minimize 0 0.01 ";
-      cmd += parser.parameters["MinSteps"]+" "+parser.parameters["MinSteps"];
+      cmd += parser.configuration["MinSteps"]+" "+parser.configuration["MinSteps"];
       sim.run_commands(cmd);
     }
 

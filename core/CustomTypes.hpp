@@ -2,5 +2,13 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-typedef std::map<std::string,double> DataVec;
+#include "CustomSimulator.hpp"
+
+#include "CustomSimulator.hpp"
+
+typedef CustomSimulator Simulator;
+
+typedef CustomGatherer Gatherer;
+
+
 #endif

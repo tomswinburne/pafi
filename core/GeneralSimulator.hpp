@@ -16,7 +16,6 @@
 #include "Parser.hpp"
 #include "Boundary.hpp"
 #include "Spline.hpp"
-#include "CustomTypes.hpp"
 
 
 class GeneralSimulator {
@@ -52,7 +51,6 @@ public:
 
   virtual void rescale_cell(double T){};
 
-
   // LAMMPS INDEPENDENT
 
   void write(std::string fn, double r);
@@ -72,7 +70,7 @@ public:
   };
 
   MPI_Comm *comm;
-  DataVec results;
+  std::map<std::string,double> results;
   std::vector<double> data_log;
   std::vector< std::pair<std::string,bool> > log_fields;
   double scale[3];

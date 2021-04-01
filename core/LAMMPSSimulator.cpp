@@ -285,35 +285,6 @@ void LAMMPSSimulator::rescale_cell(double T) {
 };
 
 
-void LAMMPSSimulator::screen_output_header(double T, int fw, bool end) {
-  std::cout<<"\nStarting T="<<T<<"K run\n\n";
-  std::cout<<"<> == time averages,  av/err over ensemble"<<std::endl;
-  std::cout<<std::setw(35)<<"r";
-  std::cout<<std::setw(fw)<<"av(<Tpre>)";
-  std::cout<<std::setw(fw)<<"av(<Tpost>)";
-  std::cout<<std::setw(fw)<<"av(<dF/dr>)";
-  std::cout<<std::setw(fw)<<"err(<dF/dr>)";
-  std::cout<<std::setw(fw)<<"av(|(<X>-U).N|)";
-  std::cout<<std::setw(fw)<<"av(<N_true>.N)";
-  std::cout<<std::setw(fw)<<"Max Jump";
-  std::cout<<std::setw(fw)<<"% Valid";
-  if(end) std::cout<<std::endl;
-};
-
-void LAMMPSSimulator::screen_output_line(double r,int fw,bool end) {
-  // screen output
-  std::cout<<std::setw(35)<<r;//"r"
-  std::cout<<std::setw(fw)<<results["preT"];//"av(<Tpre>)"
-  std::cout<<std::setw(fw)<<results["postT"];//"av(<Tpost>)"
-  std::cout<<std::setw(fw)<<results["aveF"];//"av(<dF/dr>)"
-  std::cout<<std::setw(fw)<<results["aveFstd"];//"err(<dF/dr>)"
-  std::cout<<std::setw(fw)<<results["dXTangent"];//"av(|<X>-U).(dU/dr)|)"
-  std::cout<<std::setw(fw)<<results["avePsi"];//"av(Psi)"
-  std::cout<<std::setw(fw)<<results["MaxJump"];// max jump
-  std::cout<<std::setw(fw)<<results["Valid"]*100.0;// ratio of jumps
-  if(end) std::cout<<std::endl;
-};
-
 void LAMMPSSimulator::fill_results(double r, double *ens_data, bool end) {
   int i=0;
   std::list<std::string> fields;
@@ -405,7 +376,7 @@ void LAMMPSSimulator::end_of_cycle(std::string res_file, std::vector<double> sam
 */
 
 
-void LAMMPSSimulator::sample(DataVec params, double *dev) {
+void LAMMPSSimulator::sample(std::map<std::string,double> params, double *dev) {
 
   error_count = 0;
   last_error_message="";
@@ -425,11 +396,11 @@ void LAMMPSSimulator::sample(DataVec params, double *dev) {
 
   // pafi fix
   cmd = "run 0\n"; // to ensure the PreRun script is executed
-  parser->parameters["Temperature"] = std::to_string(T);
-  cmd += "fix hp all pafi __pafipath "+parser->parameters["Temperature"]+" ";
-  cmd += parser->parameters["Friction"]+" ";
+  parser->configuration["Temperature"] = std::to_string(T);
+  cmd += "fix hp all pafi __pafipath "+parser->configuration["Temperature"]+" ";
+  cmd += parser->configuration["Friction"]+" ";
   cmd += parser->seed_str()+" overdamped ";
-  cmd += parser->parameters["OverDamped"]+" com 1\nrun 0";
+  cmd += parser->configuration["OverDamped"]+" com 1\nrun 0";
   run_commands(cmd);
 
   if(parser->preMin) {
@@ -438,7 +409,7 @@ void LAMMPSSimulator::sample(DataVec params, double *dev) {
       std::cout<<"LAMMPSSimulator.populate(): minimizing"<<std::endl;
     #endif
     cmd = "min_style fire\n minimize 0 0.01 ";
-    cmd += parser->parameters["MinSteps"]+" "+parser->parameters["MinSteps"];
+    cmd += parser->configuration["MinSteps"]+" "+parser->configuration["MinSteps"];
     run_commands(cmd);
   }
 
@@ -451,11 +422,11 @@ void LAMMPSSimulator::sample(DataVec params, double *dev) {
   lammps_free(lmp_ptr);
 
   cmd = "reset_timestep 0\n";
-  cmd += "fix ae all ave/time 1 "+parser->parameters["ThermWindow"]+" ";
-  cmd += parser->parameters["ThermSteps"]+" c_pe\n";
-  cmd += "fix at all ave/time 1 "+parser->parameters["ThermWindow"]+" ";
-  cmd += parser->parameters["ThermSteps"]+" f_hp[5]\n";
-  cmd += "run "+parser->parameters["ThermSteps"];
+  cmd += "fix ae all ave/time 1 "+parser->configuration["ThermWindow"]+" ";
+  cmd += parser->configuration["ThermSteps"]+" c_pe\n";
+  cmd += "fix at all ave/time 1 "+parser->configuration["ThermWindow"]+" ";
+  cmd += parser->configuration["ThermSteps"]+" f_hp[5]\n";
+  cmd += "run "+parser->configuration["ThermSteps"];
   run_commands(cmd);
 
   // pre temperature
@@ -474,7 +445,7 @@ void LAMMPSSimulator::sample(DataVec params, double *dev) {
 
 
   // time averages for sampling TODO: groupname for ave/atom
-  std::string SampleSteps = parser->parameters["SampleSteps"];
+  std::string SampleSteps = parser->configuration["SampleSteps"];
   cmd = "reset_timestep 0\n";
   cmd += "fix ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" c_pe\n";
   cmd += "fix at all ave/time 1 "+SampleSteps+" "+SampleSteps+" f_hp[5]\n";
@@ -522,7 +493,7 @@ void LAMMPSSimulator::sample(DataVec params, double *dev) {
 
   // post minmization - max jump
   cmd = "min_style fire\n minimize 0 0.01 ";
-  cmd += parser->parameters["MinSteps"]+" "+parser->parameters["MinSteps"];
+  cmd += parser->configuration["MinSteps"]+" "+parser->configuration["MinSteps"];
   run_commands(cmd);
   gather("x",3,dev);
   for(int i=0;i<3*natoms;i++) dev[i] -= path(i,r,0,scale[i%3]);
