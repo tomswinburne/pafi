@@ -90,6 +90,9 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
     Typical large-scale use - 150k atoms, 20 planes.
     So memory-heavy but nothing problematic so far, leaving for future
   */
+  pathway_r.clear();
+  pathway.clear();
+
   if(nlocal==0) {
     if(local_rank==0)
       std::cout<<"GeneralSimulator::make_path : Not initialized!"<<std::endl;
@@ -97,12 +100,11 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
   }
 
   int nknots = knot_list.size();
-  std::vector<double> xs(nknots,0.), r(nknots,0.), rr(nknots,0.);
-  double *knots = new double[nlocal*nknots];
   double dx;
+  std::vector<double> xs(nknots,0.), r(nknots,0.), rr(nknots,0.);
 
-  pathway_r.clear();
-  pathway.clear();
+  // big allocations, but have to do it at some point... is deleted before simulations
+  double *knots = new double[nlocal*nknots];
   pathway.assign(nlocal,*(new spline));
 
   // run through knots, and make spline

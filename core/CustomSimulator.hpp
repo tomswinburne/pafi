@@ -14,6 +14,8 @@ public:
   void screen_output_header(double T);
 
   void screen_output_line(double r);
+
+  void sample(double r, double T, double *dev);
 };
 
 #endif

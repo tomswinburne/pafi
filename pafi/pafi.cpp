@@ -98,18 +98,29 @@ int main(int narg, char **arg) {
   if(rank==0) std::cout<<"\n\nInitialized "<<nWorkers<<" workers "
                       "with "<<params.CoresPerWorker<<" cores per worker\n\n";
 
+  // we want generic structure to go through paramater space, with form
+  /*
+  Standard PAFI has two parameters: r, T
+  could extend to stress for example
+
+  Sweep [ T, r, ]....
+
+  generates dump_suffix, raw_file, dump_file
+  */
 
   for(double T = params.lowT; T <= params.highT;) {
 
-    // open dump files for this temperature
+    // DUMP
     dump_suffix = std::to_string(int(T))+"K_"+std::to_string(dump_index);
     dump_file = params.dump_dir + "/raw_data_output_"+dump_suffix;
+
     if(rank==0) raw_data_open = g.initialize(params,dump_file,nWorkers);
     MPI_Bcast(&raw_data_open,1,MPI_INT,0,MPI_COMM_WORLD);
     if(raw_data_open==0) {
       if(rank==0) std::cout<<"Could not open "<<dump_file<<"! EXIT"<<std::endl;
       exit(-1);
     }
+    // DUMP
 
     if(rank==0) sim.screen_output_header(T);
 
@@ -119,7 +130,7 @@ int main(int narg, char **arg) {
       for(int repeat=1;repeat<=params.nRepeats+params.maxExtraRepeats;repeat++){
         // sample
         for(i=0;i<vsize;i++) dev[i] = 0.0;
-        sim.sample(r, T, dev);
+        sim.sample(r, T, dev); // sim*(params, dev)
 
         // is it valid
         valid[0] = int(sim.results["Valid"]+0.01);
@@ -159,8 +170,10 @@ int main(int narg, char **arg) {
       }
       if(rank==0) {
         if(total_valid>0) for(j=0;j<vsize;j++) dev[j+vsize] /= 1.0*total_valid;
+
         dev_file = "dev_"+std::to_string(r)+"_"+dump_suffix+".dat";
         sim.write_dev(params.dump_dir+"/"+dev_file,r,dev+vsize);
+
         sim.fill_results(r,g.ens_data);
         sim.screen_output_line(r);
         g.next(); // wipe ens_data
@@ -170,10 +183,9 @@ int main(int narg, char **arg) {
 
     if(rank==0) {
       g.close();
+      // to be replaced...
       dump_file = params.dump_dir + "/free_energy_profile_"+dump_suffix;
-      double barrier;
-      sim.integrate(dump_file,barrier);
-      std::cout<<"T="<<T<<"K run complete; est. barrier: "<<barrier<<"eV"<<std::endl;
+      sim.end_of_cycle(dump_file);
     }
 
     if( params.highT > params.lowT + 1.0 && params.TSteps > 1) \

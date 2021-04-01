@@ -47,7 +47,7 @@ public:
   virtual void screen_output_line(double r, int fw=18, bool end=true);
 
   virtual void fill_results(double r,double *ens_data, bool end=true);
-  virtual void integrate(std::string res_file, double &barrier,bool end=true);
+  virtual void end_of_cycle(std::string res_file,bool end=true);
 
   virtual std::string header(double mass);
 

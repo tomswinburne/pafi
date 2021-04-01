@@ -16,7 +16,13 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t)
 
   lmp = new LAMMPS(5,lmparg,*comm);
 
+  // reset the system
+  run_commands("clear");
+  made_fix=false;
+  made_compute=false;
   run_script("Input");
+
+  // these won't change even if we rereun "input"
 
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): Ran input script"<<std::endl;
@@ -46,7 +52,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t)
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered id"<<std::endl;
   #endif
 
-  // get cell info
+  // get cell info TODO - allow to vary?
   pbc.load(getCellData());
 
   // Get type / image info
@@ -76,10 +82,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t)
     if(error_count>0) std::cout<<last_error()<<std::endl;
   }
 
-  made_fix=false;
-  made_compute=false;
   data_log.clear();
-
   log_fields.clear();
   // "ResultsString", integrate true/false
   log_fields.push_back(std::make_pair("aveF",true));
@@ -329,8 +332,8 @@ void LAMMPSSimulator::fill_results(double r, double *ens_data, bool end) {
 };
 
 
-void LAMMPSSimulator::integrate(std::string res_file, double &barrier, bool end) {
-
+void LAMMPSSimulator::end_of_cycle(std::string res_file, bool end) {
+  double barrier=0.;
   int ssize = data_log.size()/sample_r.size();
   double d,c;
 
@@ -391,6 +394,7 @@ void LAMMPSSimulator::integrate(std::string res_file, double &barrier, bool end)
       out<<std::endl;
     }
     barrier=max[0];
+    std::cout<<"Run complete; est. barrier: "<<barrier<<"eV"<<std::endl;
   }
 };
 
