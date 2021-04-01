@@ -24,6 +24,13 @@ public:
       std::cout<<std::endl;
     }
   }
+  void screen_output_line() {
+    GenericGatherer::screen_output_line(false);
+    if(rank==0){
+      std::cout<<std::setw(fw)<<" 0.0";
+      std::cout<<std::endl;
+    }
+  }
 };
 
 #endif
