@@ -342,6 +342,8 @@ void LAMMPSSimulator::integrate(std::string res_file, double &barrier, bool end)
 
   if(end) {
     std::ofstream out;
+    int i;
+
     out.open(res_file.c_str(),std::ofstream::out);
 
     out<<"# r ";
@@ -354,7 +356,6 @@ void LAMMPSSimulator::integrate(std::string res_file, double &barrier, bool end)
     // choose integration parameters
     double diff_r = sample_r[sample_r.size()-1] - sample_r[0];
     double dr = diff_r / sample_r.size() / 10.0;
-    int i;
 
     std::vector<double> bar(ssize,0.),max(ssize,0.);
 
@@ -370,6 +371,7 @@ void LAMMPSSimulator::integrate(std::string res_file, double &barrier, bool end)
         if(f.second) bar[i] += dr/2.0 * splines[i](r);
         else bar[i] = splines[i](r);
         max[i] = std::max(bar[i],max[i]);
+        i++;
       }
       out<<std::endl;
     }

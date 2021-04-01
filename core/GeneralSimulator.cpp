@@ -8,7 +8,6 @@ GeneralSimulator::GeneralSimulator(MPI_Comm &instance_comm, Parser &p, int t) {
   error_count = 0;
   scale[0]=1.0; scale[1]=1.0; scale[2]=1.0;
   last_error_message="";
-  std::cout<<"HERE"<<std::endl;
   out_width = 16;
 };
 
