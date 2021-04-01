@@ -375,7 +375,7 @@ void LAMMPSSimulator::integrate(std::string res_file, double &barrier, bool end)
 
 
 void LAMMPSSimulator::sample(double r, double T, double *dev) {
-  
+
   error_count = 0;
   last_error_message="";
   results.clear();

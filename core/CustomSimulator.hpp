@@ -12,12 +12,34 @@ public:
     LAMMPSSimulator(instance_comm, p, t){};
 
   void constrained_average(std::string SampleSteps) {
-    std::string cmd="run "+SampleSteps;
+    std::string cmd;
 
-    if(local_rank==0) std::cout<<cmd<<std::endl;
+    //if(local_rank==0) std::cout<<cmd<<std::endl;
+    /*
+      Here I can set up averages...
+    */
 
+    // run sampling
+    cmd = "run "+SampleSteps;
     LAMMPSSimulator::run_commands(cmd);
+    /*
+      Here I can add them to results...
+    */
   }
+
+  int out_width = 16;
+
+
+  // here I can print them
+  void screen_output_header(double T) {
+    LAMMPSSimulator::screen_output_header(T,out_width,false);
+    std::cout<<std::setw(out_width)<<"Opt. \n";
+  };
+
+  void screen_output_line(double r){
+    LAMMPSSimulator::screen_output_line(r,out_width,false);
+    std::cout<<std::setw(out_width)<<"0.0 \n";
+  };
 
   /*
     For the moment, we must "know" what is coming from LAMMPSSimulator
@@ -33,17 +55,8 @@ public:
     results["Valid"] = double(bool(results["MaxJump"]<params->maxjump_thresh));
     results["MaxDev"] = dm;
   */
-
-  void screen_output_header(double T) {
-    LAMMPSSimulator::screen_output_header(T,18,false);
-    std::cout<<"\n";
-  };
-  void screen_output_line(double r){
-    LAMMPSSimulator::screen_output_line(r,18,false);
-    std::cout<<"\n";
-  };
-
-  void fill_results(double r,double *ens_data){
+  /*
+  void fill_results(double r,double *ens_data) {
     LAMMPSSimulator::fill_results(r,ens_data,false);
     // this determines the splines. r is already added
     data_log.push_back(results["aveF"]); // splines[0]
@@ -80,6 +93,7 @@ public:
 
     barrier=f_bar_max;
   };
+  */
 
 };
 

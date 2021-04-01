@@ -23,4 +23,4 @@
 
 #include "CustomSimulator.hpp"
 #include "LAMMPSSimulator.hpp"
-typedef LAMMPSSimulator Simulator;
+typedef CustomSimulator Simulator;
