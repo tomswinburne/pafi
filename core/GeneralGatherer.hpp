@@ -181,7 +181,7 @@ class GenericGatherer {
       if(rank==0) for(int j=0;j<2*dsize+1;j++) ens_data[j] = 0.0;
     };
 
-    virtual void screen_output_header() {
+    virtual void screen_output_header(bool end=true) {
       if(rank>0) return;
       std::cout<<"\nStarting T="<<params()["Temperature"]<<"K run\n";
       std::cout<<std::setw(35)<<"r";
@@ -193,10 +193,10 @@ class GenericGatherer {
       std::cout<<std::setw(fw)<<"av(<N_true>.N)";
       std::cout<<std::setw(fw)<<"Max Jump";
       std::cout<<std::setw(fw)<<"% Valid";
-      std::cout<<std::endl;
+      if(end) std::cout<<std::endl;
     };
 
-    virtual void screen_output_line() {
+    virtual void screen_output_line(bool end=true) {
       if(rank>0) return;
       // screen output
       std::cout<<std::setw(35)<<params()["ReactionCoordinate"];//"r"
@@ -208,7 +208,7 @@ class GenericGatherer {
       std::cout<<std::setw(fw)<<ens_results["avePsi"].first;//"av(Psi)"
       std::cout<<std::setw(fw)<<ens_results["MaxJump"].first;// max jump
       std::cout<<std::setw(fw)<<ens_results["Valid"].first*100.0;// ratio of jumps
-      std::cout<<std::endl;
+      if(end) std::cout<<std::endl;
     };
 
 

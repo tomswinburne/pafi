@@ -17,6 +17,13 @@ public:
 
 class CustomGatherer : public GenericGatherer {
 public:
+  void screen_output_header() {
+    GenericGatherer::screen_output_header(false);
+    if(rank==0){
+      std::cout<<std::setw(fw)<<" Opt";
+      std::cout<<std::endl;
+    }
+  }
 };
 
 #endif
