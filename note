@@ -4,7 +4,7 @@
       int i_r=0; i_r<results.size(); i_r++ )
 
 
-      bool valid = bool(results["MaxJump"]<params.maxjump_thresh);
+      bool valid = bool(results["MaxJump"]<parser.maxjump_thresh);
 
 
 
@@ -19,7 +19,7 @@
       totalRepeats=0;
       t_max_jump=0.0;
 
-      while (total_valid_data<=int(params.redo_thresh*nWorkers*nRepeats)) {
+      while (total_valid_data<=int(parser.redo_thresh*nWorkers*nRepeats)) {
 
         sim.sample(r, T, results, local_dev);
         for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i];
@@ -42,7 +42,7 @@
         if (rank==0) {
           for(int i=0;i<nWorkers;i++) {
             t_max_jump = std::max(t_max_jump,all_res[i*nRes+7]);
-            valid[i] = int(all_res[i*nRes+7]<params.maxjump_thresh);
+            valid[i] = int(all_res[i*nRes+7]<parser.maxjump_thresh);
             if(valid[i]) {
               for(int j=0;j<nRes;j++) valid_res.push_back(all_res[i*nRes+j]);
             } else {
@@ -56,7 +56,7 @@
         MPI_Barrier(MPI_COMM_WORLD);
 
         // nullify invalid batches
-        if(valid[instance]==0 && !params.postDump) for(int i=0;i<vsize;i++) {
+        if(valid[instance]==0 && !parser.postDump) for(int i=0;i<vsize;i++) {
           local_dev[i]=0.0;
           local_dev_sq[i]=0.0;
         }
@@ -71,7 +71,7 @@
         for(int i=0;i<nWorkers;i++) total_valid_data += valid[i];
         p_jump = double(total_valid_data) / double(nWorkers*totalRepeats);
 
-        if(totalRepeats>=params.maxExtraRepeats+nRepeats) break;
+        if(totalRepeats>=parser.maxExtraRepeats+nRepeats) break;
 
         if(p_jump < 0.1 ) {
           if(rank==0) std::cout<<"Reference path too unstable for sampling.\n"
@@ -85,7 +85,7 @@
         total_invalid_data = totalRepeats*nWorkers - total_valid_data;
 
         // deviation vectors
-        if(params.postDump) for(int i=0;i<vsize;i++) {
+        if(parser.postDump) for(int i=0;i<vsize;i++) {
           all_dev[i]/=double(totalRepeats*nWorkers);
           all_dev_sq[i]/=double(totalRepeats*nWorkers);
         } else if(total_valid_data>0) for(int i=0;i<vsize;i++) {
@@ -93,7 +93,7 @@
           all_dev_sq[i]/=double(total_valid_data);
         }
 
-        dump_fn = params.dump_dir+"/dev_"+rstr+dump_suffix+".dat";
+        dump_fn = parser.dump_dir+"/dev_"+rstr+dump_suffix+".dat";
 
         sim.write_dev(dump_fn,r,all_dev,all_dev_sq);
 

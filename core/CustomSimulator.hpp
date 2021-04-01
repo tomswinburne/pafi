@@ -15,7 +15,7 @@ public:
 
   void screen_output_line(double r);
 
-  void sample(double r, double T, double *dev);
+  void sample(DataVec params, double *dev);
 };
 
 #endif

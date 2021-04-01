@@ -8,9 +8,9 @@ int main(int narg, char **arg) {
   MPI_Comm_size(MPI_COMM_WORLD,&nProcs);
 
   // ************************ READ CONFIG FILE **********************************
-  Parser params("./config.xml",false);
+  Parser parser("./config.xml",false);
 
-  if(!params.xml_success) {
+  if(!parser.xml_success) {
     if(rank==0) {
       std::cout<<"\n\n\n*****************************\n\n\n";
       std::cout<<"Configuration file could not be read!\n";
@@ -19,7 +19,7 @@ int main(int narg, char **arg) {
     exit(-1);
   }
 
-  if(nProcs%params.CoresPerWorker!=0) {
+  if(nProcs%parser.CoresPerWorker!=0) {
     if(rank==0) {
       std::cout<<"\n\n\n*****************************\n\n\n";
       std::cout<<"CoresPerWorker must factorize nProcs!\n";
@@ -32,7 +32,7 @@ int main(int narg, char **arg) {
 
   // ************************ DUMP FOLDER *********************************
   int dump_index=-1;
-  if(rank==0) params.find_dump_file(dump_index);
+  if(rank==0) parser.find_dump_file(dump_index);
   MPI_Bcast(&dump_index,1,MPI_INT,0,MPI_COMM_WORLD);
   MPI_Barrier(MPI_COMM_WORLD);
   if(dump_index<0) {
@@ -50,23 +50,23 @@ int main(int narg, char **arg) {
 
   // ******************* SET UP WORKERS ***************************************
   MPI_Barrier(MPI_COMM_WORLD);
-  const int nWorkers = nProcs / params.CoresPerWorker;
-  const int instance = rank / params.CoresPerWorker;
-  const int local_rank = rank % params.CoresPerWorker;
+  const int nWorkers = nProcs / parser.CoresPerWorker;
+  const int instance = rank / parser.CoresPerWorker;
+  const int local_rank = rank % parser.CoresPerWorker;
 
   MPI_Comm instance_comm;
   MPI_Comm_split(MPI_COMM_WORLD,instance,0,&instance_comm);
 
   if(rank==0) std::cout<<"\n\nInitializing "<<nWorkers<<" workers "
-                      "with "<<params.CoresPerWorker<<" cores per worker\n\n";
+                      "with "<<parser.CoresPerWorker<<" cores per worker\n\n";
   // see GlobalSeed
-  params.seed(instance);
+  parser.seed(instance);
 
-  Simulator sim(instance_comm,params,instance);
+  Simulator sim(instance_comm,parser,instance);
   if(!sim.has_pafi) exit(-1);
-  if(rank==0)  std::cout<<params.welcome_message();
+  if(rank==0)  std::cout<<parser.welcome_message();
 
-  sim.make_path(params.PathwayConfigurations);
+  sim.make_path(parser.PathwayConfigurations);
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
   // ******************* SET UP WORKERS ****************************************
 
@@ -92,8 +92,8 @@ int main(int narg, char **arg) {
   // dump_files
   double T = 0.0;
   dump_suffix = std::to_string(int(T))+"K_"+std::to_string(dump_index);
-  dump_file = params.dump_dir + "/raw_ensemble_output_"+dump_suffix;
-  if(rank==0) raw_data_open = g.initialize(params,dump_file,nWorkers);
+  dump_file = parser.dump_dir + "/raw_ensemble_output_"+dump_suffix;
+  if(rank==0) raw_data_open = g.initialize(parser,dump_file,nWorkers);
   MPI_Bcast(&raw_data_open,1,MPI_INT,0,MPI_COMM_WORLD);
   if(raw_data_open==0) {
     if(rank==0) std::cout<<"Could not open "<<dump_file<<"! EXIT"<<std::endl;
@@ -139,7 +139,7 @@ int main(int narg, char **arg) {
       if(total_valid>0) {
         for(j=0;j<vsize;j++) dev[j+vsize] /= 1.0*total_valid;
         dev_file = "dev_"+std::to_string(r)+"_"+dump_suffix+".dat";
-        sim.write_dev(params.dump_dir+"/"+dev_file,r,dev+vsize);
+        sim.write_dev(parser.dump_dir+"/"+dev_file,r,dev+vsize);
       }
       sim.fill_results(r,g.ens_data);
       sim.screen_output_line(r);
@@ -157,7 +157,7 @@ int main(int narg, char **arg) {
 
     std::cout<<"Absolute Forces and differences between knots: \n";
 
-    dump_file = params.dump_dir + "/free_energy_profile_"+dump_suffix;
+    dump_file = parser.dump_dir + "/free_energy_profile_"+dump_suffix;
     double F_bar_dense = sim.integrate(dump_file);
     double E_bar_dense=0.;
 

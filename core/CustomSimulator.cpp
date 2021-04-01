@@ -23,11 +23,11 @@ CustomSimulator::CustomSimulator(MPI_Comm &instance_comm, Parser &p, int t)
     log_fields.push_back(std::make_pair("aveF",false));
   };
 
-void CustomSimulator::sample(double r, double T, double *dev) {
+void CustomSimulator::sample(DataVec params, double *dev) {
   LAMMPSSimulator::run_commands("clear");
   made_fix=false; made_compute=false;
   LAMMPSSimulator::run_script("Input");
-  LAMMPSSimulator::sample(r,T,dev);
+  LAMMPSSimulator::sample(params,dev);
 };
 
 //void CustomSimulator::populate() {

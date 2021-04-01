@@ -16,6 +16,8 @@
 #include "Parser.hpp"
 #include "Boundary.hpp"
 #include "Spline.hpp"
+#include "Utils.hpp"
+
 
 class GeneralSimulator {
 
@@ -30,8 +32,6 @@ public:
   virtual void run_commands(std::vector<std::string> strv){};
 
   virtual void setup(double r, double T){};
-
-  virtual void sample(double r, double T, double *results, double *dev){};
 
   virtual double getEnergy(){
     return 0.0;
@@ -49,8 +49,6 @@ public:
   };
 
   virtual void populate(double r, double T){};
-
-  virtual void sample(double r, double T, std::map<std::string,double> &results){};
 
   virtual void rescale_cell(double T){};
 
@@ -74,7 +72,7 @@ public:
   };
 
   MPI_Comm *comm;
-  std::map<std::string,double> results;
+  DataVec results;
   std::vector<double> data_log;
   std::vector< std::pair<std::string,bool> > log_fields;
   double scale[3];
@@ -83,7 +81,7 @@ public:
   int natoms, tag, nknots, out_width, error_count;
   int local_rank, local_size, nlocal, offset;
   MinImage pbc;
-  Parser *params;
+  Parser *parser;
   std::vector<spline> pathway, splines;
   std::vector<double> pathway_r, sample_r;
   bool s_flag,has_pafi,spline_path;

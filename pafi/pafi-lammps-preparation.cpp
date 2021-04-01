@@ -7,8 +7,8 @@ int main(int narg, char **arg) {
   MPI_Comm_size(MPI_COMM_WORLD,&nProcs);
 
   // Load input file
-  Parser params("./config.xml",false);
-  params.CoresPerWorker = nProcs;
+  Parser parser("./config.xml",false);
+  parser.CoresPerWorker = nProcs;
 
 
   // Find fresh dump folder name - no nice solution here as
@@ -16,18 +16,18 @@ int main(int narg, char **arg) {
   // which we omit for portability
   int *int_dump_suffix = new int[1];
   std::ofstream raw;
-  std::string params_file = params.dump_dir+"/params_"+std::to_string(int_dump_suffix[0]);
+  std::string params_file = parser.dump_dir+"/params_"+std::to_string(int_dump_suffix[0]);
 
   // try to write to a file with a unique suffix
 
-  //if(rank==0)  std::cout<<params.welcome_message();
+  //if(rank==0)  std::cout<<parser.welcome_message();
 
 
-  const int nWorkers = nProcs / params.CoresPerWorker;
-  const int instance = rank / params.CoresPerWorker;
-  const int local_rank = rank % params.CoresPerWorker;
+  const int nWorkers = nProcs / parser.CoresPerWorker;
+  const int instance = rank / parser.CoresPerWorker;
+  const int local_rank = rank % parser.CoresPerWorker;
   const int nRes = 7; // TODO remove this
-	const int nRepeats = params.nRepeats;
+	const int nRepeats = parser.nRepeats;
 
   int fileindex=1;
   std::string cmd;
@@ -36,11 +36,11 @@ int main(int narg, char **arg) {
 
   std::vector<double> dFa,ra,dEa;
 
-  params.seed(123);
+  parser.seed(123);
   MPI_Comm instance_comm;
   MPI_Comm_split(MPI_COMM_WORLD,0,0,&instance_comm);
 
-  Simulator sim(instance_comm,params,instance);
+  Simulator sim(instance_comm,parser,instance);
   if(!sim.has_pafi) {
     if(rank==0)
       std::cout<<"PAFI Error: missing USER-MISC package in LAMMPS"<<std::endl;
@@ -60,15 +60,15 @@ int main(int narg, char **arg) {
     std::cout<<"\n\n";
   }
 
-  sim.make_path(params.PathwayConfigurations);
+  sim.make_path(parser.PathwayConfigurations);
 
   f = new double[3*sim.natoms];
 
-  if (params.nPlanes>1) dr = (params.stopr-params.startr)/(double)(params.nPlanes-1);
+  if (parser.nPlanes>1) dr = (parser.stopr-parser.startr)/(double)(parser.nPlanes-1);
   else dr = 0.1;
   std::vector<double> sample_r;
-  if(params.spline_path and not params.match_planes) {
-    for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr )
+  if(parser.spline_path and not parser.match_planes) {
+    for (double r = parser.startr; r <= parser.stopr+0.5*dr; r += dr )
       sample_r.push_back(r);
   } else for(auto r: sim.pathway_r) if(r>=0.0 && r<=1.0) sample_r.push_back(r);
 
@@ -91,17 +91,17 @@ int main(int narg, char **arg) {
     // pafi fix
     cmd = "run 0\n"; // to ensure the PreRun script is executed
     cmd += "run 0\nfix hp all pafi __pafipath 0.0 ";
-    cmd += params.parameters["Friction"]+" ";
-    cmd += params.seed_str()+" overdamped 1 com 0\n run 0";
+    cmd += parser.parameters["Friction"]+" ";
+    cmd += parser.seed_str()+" overdamped 1 com 0\n run 0";
     sim.run_commands(cmd);
 
-    if(params.preMin) {
+    if(parser.preMin) {
       #ifdef VERBOSE
       if(rank==0)
         std::cout<<"LAMMPSSimulator.populate(): minimizing"<<std::endl;
       #endif
       cmd = "min_style fire\n minimize 0 0.01 ";
-      cmd += params.parameters["MinSteps"]+" "+params.parameters["MinSteps"];
+      cmd += parser.parameters["MinSteps"]+" "+parser.parameters["MinSteps"];
       sim.run_commands(cmd);
     }
 
@@ -116,7 +116,7 @@ int main(int narg, char **arg) {
     dF = 1.0*(sim.get_fix("hp",1,0));
     psi = 1.0*(sim.get_fix("hp",1,2));
 
-    if(r==params.startr) E_init = E_tot;
+    if(r==parser.startr) E_init = E_tot;
 
     ra.push_back(r);
     dFa.push_back(dF*nm);
@@ -146,7 +146,7 @@ int main(int narg, char **arg) {
   dFspl.set_points(ra,dFa);
   dEspl.set_points(ra,dEa);
   double dF_dense_int = 0.0,F_bar_dense=0.0,E_bar_dense;
-  for (double r = params.startr; r <= params.stopr+0.5*dr/30.; r += dr/30. ) {
+  for (double r = parser.startr; r <= parser.stopr+0.5*dr/30.; r += dr/30. ) {
     dF_dense_int -= dFspl(r)/2.0 * dr/30.;
     F_bar_dense = std::max(F_bar_dense,dF_dense_int);
     dF_dense_int -= dFspl(r)/2.0 * dr/30.;

@@ -11,9 +11,11 @@
 
 //#include <Eigen/Dense> // For Supercell and Hessian
 
+typedef std::map<std::string,double> DataVec;
+
 class DataGatherer {
   public:
-    DataGatherer(){
+    DataGatherer() {
       dsize=0;
       ens_data==NULL;
     }
@@ -21,7 +23,7 @@ class DataGatherer {
     int initialize(Parser &p, std::string dump_file,int _nWorkers) {
       if(raw.is_open()) raw.close();
       nWorkers = _nWorkers;
-      params = &p;
+      parser = &p;
       raw.open(dump_file.c_str(),std::ofstream::out);
       if(raw.is_open()) return 1;
       return 0;
@@ -132,7 +134,7 @@ class DataGatherer {
     };
 
 
-  Parser *params;
+  Parser *parser;
   std::ofstream raw;
   double *ens_data;
   int dsize,nWorkers;

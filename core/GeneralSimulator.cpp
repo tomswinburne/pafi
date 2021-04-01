@@ -5,7 +5,7 @@ GeneralSimulator::GeneralSimulator(MPI_Comm &instance_comm, Parser &p, int t) {
   comm = &instance_comm;
   MPI_Comm_rank(*comm,&local_rank);
   MPI_Comm_size(*comm,&local_size);
-  params = &p;
+  parser = &p;
   error_count = 0;
   scale[0]=1.0; scale[1]=1.0; scale[2]=1.0;
   last_error_message="";
@@ -63,21 +63,21 @@ void GeneralSimulator::expansion(double T, double *newscale) {
   double coeff;
 
   newscale[0] = 1.0;
-  coeff = std::stod(params->parameters["LinearThermalExpansionX"]);
+  coeff = std::stod(parser->parameters["LinearThermalExpansionX"]);
   newscale[0] += coeff*T;
-  coeff = std::stod(params->parameters["QuadraticThermalExpansionX"]);
+  coeff = std::stod(parser->parameters["QuadraticThermalExpansionX"]);
   newscale[0] += coeff*T*T;
 
   newscale[1] = 1.0;
-  coeff = std::stod(params->parameters["LinearThermalExpansionY"]);
+  coeff = std::stod(parser->parameters["LinearThermalExpansionY"]);
   newscale[1] += coeff*T;
-  coeff = std::stod(params->parameters["QuadraticThermalExpansionY"]);
+  coeff = std::stod(parser->parameters["QuadraticThermalExpansionY"]);
   newscale[1] += coeff*T*T;
 
   newscale[2] = 1.0;
-  coeff = std::stod(params->parameters["LinearThermalExpansionZ"]);
+  coeff = std::stod(parser->parameters["LinearThermalExpansionZ"]);
   newscale[2] += coeff*T;
-  coeff = std::stod(params->parameters["QuadraticThermalExpansionZ"]);
+  coeff = std::stod(parser->parameters["QuadraticThermalExpansionZ"]);
   newscale[2] += coeff*T*T;
   //std::cout<<scale[0]<<" "<<scale[1]<<" "<<scale[2]<<std::endl;
 };
@@ -145,17 +145,17 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
 
   for(int i=0; i<nlocal; i++) {
     for(int knot=0;knot<nknots;knot++) xs[knot] = knots[nlocal*knot + i];
-    pathway[i].set_points(r,xs,params->spline_path);
+    pathway[i].set_points(r,xs,parser->spline_path);
   }
   delete [] knots; // clear memory
 
   sample_r.clear();
   double dr = 0.1;
-  if (params->nPlanes>1)
-    dr = (params->stopr-params->startr)/(double)(params->nPlanes-1);
+  if (parser->nPlanes>1)
+    dr = (parser->stopr-parser->startr)/(double)(parser->nPlanes-1);
 
-  if(params->spline_path and not params->match_planes) {
-    for (double r = params->startr; r <= params->stopr+0.5*dr; r += dr )
+  if(parser->spline_path and not parser->match_planes) {
+    for (double r = parser->startr; r <= parser->stopr+0.5*dr; r += dr )
       sample_r.push_back(r);
   } else {
     for(auto r: pathway_r) if(r>=0.0 && r<=1.0) sample_r.push_back(r);
@@ -165,7 +165,7 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
 
 double GeneralSimulator::path(int i, double r, int d, double s) {
 
-  if(params->spline_path or d==0) return pathway[i].deriv(d,r) * s;
+  if(parser->spline_path or d==0) return pathway[i].deriv(d,r) * s;
   double dr = 1.0 / pathway_r.size();
   double val = pathway[i].deriv(0,r);
   if(d==1) return (pathway[i].deriv(0,r+dr)-val) * s/dr;

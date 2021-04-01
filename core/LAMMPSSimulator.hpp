@@ -35,19 +35,21 @@ public:
     Rescale simulation cell
   */
   virtual void rescale_cell(double T);
+
   /*
     Main sample run. Results vector should have thermalization temperature,
     sample temperature <f>, <f^2>, <psi> and <x-u>.n
   */
-  virtual void sample(double r, double T, double *dev);
+  virtual void sample(DataVec params, double *dev);
 
   virtual void constrained_average(std::string SampleSteps);
 
+  // these should be replaced
   virtual void screen_output_header(double T, int fw=18, bool end=true);
   virtual void screen_output_line(double r, int fw=18, bool end=true);
-
   virtual void fill_results(double r,double *ens_data, bool end=true);
   virtual void end_of_cycle(std::string res_file,bool end=true);
+
 
   virtual std::string header(double mass);
 
