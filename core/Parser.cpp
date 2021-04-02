@@ -97,6 +97,10 @@ Parser::Parser(std::string file, bool test) {
     return;
   }
 
+
+
+
+
   xml_success = true;
 
   if(!test) set_parameters();

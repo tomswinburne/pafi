@@ -1,11 +1,12 @@
 #include "GenericSimulator.hpp"
 
-GenericSimulator::GenericSimulator(MPI_Comm &instance_comm, Parser &p, int t) {
+GenericSimulator::GenericSimulator(MPI_Comm &instance_comm, Parser &p, Holder &h, int t) {
   tag = t;
   comm = &instance_comm;
   MPI_Comm_rank(*comm,&local_rank);
   MPI_Comm_size(*comm,&local_size);
   parser = &p;
+  params = &h;
   error_count = 0;
   scale[0]=1.0; scale[1]=1.0; scale[2]=1.0;
   last_error_message="";

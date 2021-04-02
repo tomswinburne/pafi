@@ -16,7 +16,7 @@
 
 class GenericGatherer {
 public:
-GenericGatherer(Parser &p, std::vector<double> pathway_r, int _nW, int di, int _rank) {
+GenericGatherer(Parser &p, int _nW, int di, int _rank) {
   initialized = 1;
   rank = _rank;
   dump_index = di;
@@ -52,14 +52,6 @@ GenericGatherer(Parser &p, std::vector<double> pathway_r, int _nW, int di, int _
     initialized = 0;
   }
 
-  // special option
-  if((!parser->spline_path) or parser->match_planes) {
-    sample_axes["ReactionCoordinate"].clear();
-    for(auto r: pathway_r) if(r>=0.0 && r<=1.0) {
-      sample_axes["ReactionCoordinate"].push_back(r);
-    }
-  }
-
   raw_dump_file = parser->dump_dir+"/raw_data_output_"+std::to_string(dump_index);
 
   if(rank==0 and initialized==1) {
@@ -70,22 +62,30 @@ GenericGatherer(Parser &p, std::vector<double> pathway_r, int _nW, int di, int _
       initialized = 0;
     }
   }
+  set_params();
 };
 
-virtual Holder params() {
-  Holder h;
+void special_r_overwrite(std::vector<double> pathway_r) {
+  // special option
+  if((!parser->spline_path) or parser->match_planes) {
+    sample_axes["ReactionCoordinate"].clear();
+    for(auto r: pathway_r) if(r>=0.0 && r<=1.0) {
+      sample_axes["ReactionCoordinate"].push_back(r);
+    }
+  }
+};
+
+virtual void set_params() {
   dev_file = parser->dump_dir+"/deviation_";
   for(auto s: sweep_order) {
-    h[s.first] = sample_axes[s.first][s.second];
+    params[s.first] = sample_axes[s.first][s.second];
     dev_file += s.first+"_"+std::to_string(sample_axes[s.first][s.second]);
   }
   dev_file +="_"+std::to_string(dump_index);
-  return h;
 }
 
 virtual void prepare(Holder &sim_results) {
-  Holder p = params();
-  int j=0, i = -(p.size());
+  int j=0, i = -(params.size());
 
   if(dsize==0) dsize = sim_results.size();
   if(ens_data==NULL) {
@@ -99,7 +99,7 @@ virtual void prepare(Holder &sim_results) {
   if(all_data==NULL) all_data = new double[dsize*nWorkers];
 
   raw<<"# ";
-  for(auto par: p) raw<<i++<<": "<<par.first<<" ";
+  for(auto par: params) raw<<i++<<": "<<par.first<<" ";
   for(auto res: sim_results) {
     raw<<i++<<": "<<res.first<<"  ";
     ens_results[res.first] = *(new std::pair<double,double>);
@@ -115,7 +115,7 @@ virtual int collate(int *valid) {
   int total_valid=0,i,j;
 
   // raw output
-  for(auto par: params()) raw<<par.second<<" ";
+  for(auto par: params) raw<<par.second<<" ";
   for(i=0;i<nWorkers*dsize;i++) raw<<all_data[i]<<" ";
   raw<<std::endl;
 
@@ -148,7 +148,7 @@ virtual int collate(int *valid) {
   // put in results
   i=0; for(auto res = ens_results.begin(); res!=ens_results.end(); res++, i++)
     res->second = std::make_pair(ens_data[i],ens_data[dsize+i]);
-  all_ens_results.insert(std::make_pair(params(),ens_results));
+  all_ens_results.insert(std::make_pair(params,ens_results));
 
   return total_valid;
 };
@@ -175,6 +175,7 @@ virtual void next() {
     }
 
   }
+  set_params();
   // wipe ens_data if master node
   if(rank==0) {
     for(int j=0;j<2*dsize+1;j++) ens_data[j] = 0.0;
@@ -183,7 +184,7 @@ virtual void next() {
 
 virtual void screen_output_header(bool end=true) {
   if(rank>0) return;
-  std::cout<<"\nStarting T="<<params()["Temperature"]<<"K run\n";
+  std::cout<<"\nStarting T="<<params["Temperature"]<<"K run\n";
   std::cout<<std::setw(35)<<"r";
   std::cout<<std::setw(fw)<<"av(<Tpre>)";
   std::cout<<std::setw(fw)<<"av(<Tpost>)";
@@ -199,7 +200,7 @@ virtual void screen_output_header(bool end=true) {
 virtual void screen_output_line(bool end=true) {
   if(rank>0) return;
   // screen output
-  std::cout<<std::setw(35)<<params()["ReactionCoordinate"];//"r"
+  std::cout<<std::setw(35)<<params["ReactionCoordinate"];//"r"
   std::cout<<std::setw(fw)<<ens_results["preT"].first;//"av(<Tpre>)"
   std::cout<<std::setw(fw)<<ens_results["postT"].first;//"av(<Tpost>)"
   std::cout<<std::setw(fw)<<ens_results["aveF"].first;//"av(<dF/dr>)"
@@ -224,6 +225,7 @@ void close() {
 };
 
 int dsize,nWorkers,dump_index,rank,fw,initialized;
+Holder params;
 Parser *parser;
 std::ofstream raw;
 double *ens_data, *data, *all_data;

@@ -22,7 +22,7 @@ class GenericSimulator {
 
 public:
 
-  GenericSimulator(MPI_Comm &instance_comm, Parser &p, int t);
+  GenericSimulator(MPI_Comm &instance_comm, Parser &p, Holder &h, int t);
 
   virtual void load_config(std::string file_string,double *x){};
 
@@ -76,6 +76,7 @@ public:
   int local_rank, local_size, nlocal, offset;
   MinImage pbc;
   Parser *parser;
+  Holder *params;
   std::vector<spline> pathway, splines;
   std::vector<double> pathway_r;
   bool s_flag,has_pafi,spline_path;

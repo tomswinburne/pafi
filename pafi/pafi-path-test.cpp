@@ -86,14 +86,14 @@ int main(int narg, char **arg) {
   while(true) {
     // sample
     for(i=0;i<vsize;i++) dev[i] = 0.0;
-    sim.sample(g.params(), dev); // sim*(parser, dev)
+    sim.sample(g.params, dev); // sim*(parser, dev)
 
     g.prepare(sim.results); // allocate memory if not already done
     for(i=0;i<g.dsize;i++) g.all_data[i]=g.data[i]; // hack for test
     int total_valid = g.collate(valid+1);
 
     if(rank==0 and parser.write_dev)
-      sim.write_dev(g.dev_file,g.params()["ReactionCoordinate"],dev+vsize);
+      sim.write_dev(g.dev_file,g.params["ReactionCoordinate"],dev+vsize);
 
     g.next(); // wipe ens_data
     MPI_Barrier(MPI_COMM_WORLD);

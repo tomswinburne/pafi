@@ -1,7 +1,7 @@
 #include "LAMMPSSimulator.hpp"
 
-LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t)
-  : GenericSimulator::GenericSimulator(instance_comm, p, t) {
+LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, Holder &h, int t)
+  : GenericSimulator::GenericSimulator(instance_comm, p, h, t) {
   // set up LAMMPS
   char str1[32];
   char **lmparg = new char*[5];
@@ -15,6 +15,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t)
   } else lmparg[4] = (char *) "none";
 
   lmp = new LAMMPS(5,lmparg,*comm);
+
 
   // reset the system
   reset();

@@ -70,12 +70,21 @@ int main(int narg, char **arg) {
   // see GlobalSeed
   parser.seed(instance);
 
-  Simulator sim(instance_comm,parser,instance);
+  // set up data gatherer
+  Gatherer g(parser,nWorkers,dump_index,rank);
+  MPI_Bcast(&(g.initialized),1,MPI_INT,0,MPI_COMM_WORLD);
+  if(g.initialized==0) exit(-1);
+
+
+
+  Simulator sim(instance_comm,parser,g.params,instance);
   if(!sim.has_pafi) exit(-1);
   if(rank==0)  std::cout<<parser.welcome_message();
 
   sim.make_path(parser.PathwayConfigurations);
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
+  g.special_r_overwrite(sim.pathway_r);
+
   // ******************* SET UP WORKERS ****************************************
 
 
@@ -97,10 +106,6 @@ int main(int narg, char **arg) {
     std::cout<<"<> == time averages,  av/err over ensemble"<<std::endl;
   }
 
-  // set up data gatherer
-  Gatherer g(parser,sim.pathway_r,nWorkers,dump_index,rank);
-  MPI_Bcast(&(g.initialized),1,MPI_INT,0,MPI_COMM_WORLD);
-  if(g.initialized==0) exit(-1);
 
   g.screen_output_header();
 
@@ -111,7 +116,7 @@ int main(int narg, char **arg) {
       for(i=0;i<vsize;i++) dev[i] = 0.0;
 
       // need to distribute parameters....?
-      sim.sample(g.params(), dev); // sim*(parser, dev)
+      sim.sample(g.params, dev); // sim*(parser, dev)
 
       // is it valid
 
@@ -142,7 +147,7 @@ int main(int narg, char **arg) {
     }
     if(rank==0 and total_valid>0 and parser.write_dev) {
       for(j=0;j<vsize;j++) dev[j+vsize] /= 1.0*total_valid;
-      sim.write_dev(g.dev_file,g.params()["ReactionCoordinate"],dev+vsize);
+      sim.write_dev(g.dev_file,g.params["ReactionCoordinate"],dev+vsize);
     }
     g.next(); // wipe ens_data
     MPI_Barrier(MPI_COMM_WORLD);

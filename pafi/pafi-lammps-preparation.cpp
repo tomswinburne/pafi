@@ -86,13 +86,13 @@ int main(int narg, char **arg) {
   while(true) {
     // sample
     for(i=0;i<vsize;i++) dev[i] = 0.0;
-    sim.sample(g.params(), dev); // sim*(parser, dev)
+    sim.sample(g.params, dev); // sim*(parser, dev)
 
     g.prepare(sim.results); // allocate memory if not already done
     for(i=0;i<g.dsize;i++) g.all_data[i]=g.data[i]; // hack for test
     int total_valid = g.collate(valid+1);
 
-    double r = g.params()["ReactionCoordinate"];
+    double r = g.params["ReactionCoordinate"];
     std::string dump_file_name = "dumps/pafipath."+std::to_string(fileindex)+".dat";
     sim.lammps_dump_path(dump_file_name,r);
 
