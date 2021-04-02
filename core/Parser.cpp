@@ -255,21 +255,21 @@ std::string Parser::welcome_message(){
 // Check for dump files. Ugly implementation for portability across filesystems
 void Parser::find_dump_file(int &suffix) {
   std::ofstream raw;
+  std::ifstream test;
   std::string params_file;
-  FILE *file;
   for (suffix=0; suffix < 100; suffix++) {
     params_file = dump_dir+"/params_"+std::to_string(suffix);
-    file = fopen(params_file.c_str(), "r"); // read only - don't overwrite !
-    if (file!=NULL) {
-        fclose(file);
-        continue;
+    test.open(params_file.c_str(),std::ifstream::in);
+    if(test.is_open()) {
+      test.close();
+    } else {
+      raw.open(params_file.c_str(),std::ofstream::out);
+      if(raw.is_open()) {
+        raw<<welcome_message();
+        raw.close();
+        return;
+      }
     }
-    raw.open(params_file.c_str(),std::ofstream::out);
-    if(raw.is_open()) {
-      raw<<welcome_message();
-      raw.close();
-    }
-    break;
-    if(suffix==100) suffix=-1;
   }
+  if(suffix==100) suffix=-1;
 };

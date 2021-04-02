@@ -38,11 +38,12 @@ int main(int narg, char **arg) {
   if(dump_index<0) {
     if(rank==0) {
       std::cout<<"\n\n\n*****************************\n\n\n";
-      std::cout<<"Could not write to output path / find directory! Exiting!\n";
+      std::cout<<"PAFI could not write to output path : does the directory ";
+      std::cout<<parser.dump_dir<<" exist? Exiting!\n";
       std::cout<<"\n\n\n*****************************\n\n\n";
     }
     exit(-1);
-  }
+  } else if(rank==0) std::cout<<"HHHHH"<<dump_index<<std::endl;
   // ************************ DUMP FOLDER *********************************
 
 

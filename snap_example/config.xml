@@ -34,7 +34,7 @@ The format is Min, Max, number of Steps
 
   <!-- omit trailing forward slash -->
   <DumpFolder>./dumps</DumpFolder>
-  
+
 
   <!-- We require nprocs % CoresPerWorker==0 -->
   <CoresPerWorker> 4 </CoresPerWorker>
@@ -135,7 +135,7 @@ The format is Min, Max, number of Steps
     atom_modify map array sort 0 0.0
     neigh_modify every 2 delay 10 check yes page 1000000 one 100000
     read_data  md/snap_image_1.dat
-    mass * 55.83 
+    mass * 55.83
     pair_style    snap
     pair_coeff * * md/Fe.snapcoeff md/Fe.snapparam Fe
     run 0

@@ -58,7 +58,8 @@ GenericGatherer(Parser &p, int _nW, int di, int _rank) {
     if(raw.is_open()) raw.close();
     raw.open(raw_dump_file.c_str(),std::ofstream::out);
     if(!raw.is_open()) {
-      std::cout<<"Could not open raw dump file! EXIT"<<std::endl;
+      std::cout<<"Could not open raw dump file! Does the directory";
+      std::cout<<parser->dump_dir<<" Exist? EXIT"<<std::endl;
       initialized = 0;
     }
   }

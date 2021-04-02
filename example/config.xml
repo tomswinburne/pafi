@@ -131,6 +131,7 @@ The format is Min, Max, number of Steps
   -->
   <Input>
     units metal
+    # DUMMY %Temperature%
     atom_style atomic
     atom_modify map array sort 0 0.0
     neigh_modify every 2 delay 10 check yes page 1000000 one 100000
