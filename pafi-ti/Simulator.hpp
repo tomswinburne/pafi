@@ -6,8 +6,8 @@
 class LAMMPS_TI_Simulator : public LAMMPSSimulator {
 
 public:
-  LAMMPS_TI_Simulator(MPI_Comm &instance_comm, Parser &p, int t)
-  : LAMMPSSimulator(instance_comm, p, t) {
+  LAMMPS_TI_Simulator(MPI_Comm &instance_comm, Parser &p, Holder &h, int t)
+  : LAMMPSSimulator(instance_comm, p, h, t) {
     /*
       anything extra to initialize ?
     */

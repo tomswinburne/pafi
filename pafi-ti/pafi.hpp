@@ -15,10 +15,10 @@
 
 // PAFI files
 #include "ConstantsTypes.hpp"
-
 #include "Parser.hpp"
 
-#include "GathererSimulator.hpp"
+#include "Gatherer.hpp"
+#include "Simulator.hpp"
 
 typedef LAMMPS_TI_Simulator Simulator;
 typedef TI_Gatherer Gatherer;
