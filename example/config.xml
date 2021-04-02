@@ -8,9 +8,11 @@ for T in Temperature:
 If Temperature and ReactionCoordinate are not present an error will be raised
 
 The format is Min, Max, number of Steps
+
+'pafi-path-test' will ignore the Temperature scan
 -->
 <Parameters>
-  <ReactionCoordinate>0.0 1.0 9</ReactionCoordinate>
+  <ReactionCoordinate>0.0 1.0 13</ReactionCoordinate>
   <Temperature>50. 100. 2</Temperature>
 </Parameters>
 

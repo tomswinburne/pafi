@@ -17,9 +17,8 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t)
   lmp = new LAMMPS(5,lmparg,*comm);
 
   // reset the system
-  run_commands("clear");
-  made_fix=false;
-  made_compute=false;
+  reset();
+
   run_script("Input");
 
   // these won't change even if we rereun "input"
@@ -81,13 +80,6 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t)
     std::cout<<"PAFI Error: missing USER-MISC package in LAMMPS"<<std::endl;
     if(error_count>0) std::cout<<last_error()<<std::endl;
   }
-
-  data_log.clear();
-  log_fields.clear();
-  // "ResultsString", integrate true/false
-  log_fields.push_back(std::make_pair("aveF",true));
-  log_fields.push_back(std::make_pair("aveFstd",true));
-  log_fields.push_back(std::make_pair("avePsi",false));
 };
 
 /*
@@ -101,7 +93,6 @@ void LAMMPSSimulator::load_config(std::string file_string, double *x) {
   cmd += " add merge";
   run_commands(cmd);
   gather("x",3,x);
-
   if(error_count>0 && local_rank==0) std::cout<<last_error()<<std::endl;
 };
 
@@ -127,8 +118,19 @@ void LAMMPSSimulator::run_commands(std::vector<std::string> strv) {
     #endif
     lammps_command((void *)lmp,(char *)s.c_str());
   }
-  MPI_Barrier(*comm);
+  //MPI_Barrier(*comm);
   log_error(strv);
+};
+
+void LAMMPSSimulator::run_commands(std::string strv) {
+  run_commands(parser->split_lines(strv));
+};
+
+
+void LAMMPSSimulator::reset() {
+  run_commands("clear");
+  made_fix=false;
+  made_compute=false;
 };
 
 void LAMMPSSimulator::log_error(std::string lc) {
@@ -186,10 +188,6 @@ std::string LAMMPSSimulator::last_error(){
   res += std::to_string(error_count)+" errors\n\tlast message:\n";
   res += last_error_message+"\n\tfrom commands:\n"+last_command+"\n";
   return res;
-};
-
-void LAMMPSSimulator::run_commands(std::string strv) {
-  run_commands(parser->split_lines(strv));
 };
 
 /*
@@ -284,99 +282,13 @@ void LAMMPSSimulator::rescale_cell(double T) {
 
 };
 
-
-void LAMMPSSimulator::fill_results(double r, double *ens_data, bool end) {
-  int i=0;
-  std::list<std::string> fields;
-  for(auto &res : results) {
-    res.second = ens_data[i++];
-    fields.push_back(res.first);
-  }
-  for(auto field: fields) results[field+"std"] = sqrt(std::fabs(ens_data[i++]));
-
-  data_log.push_back(r);
-  if(end) for(auto f: log_fields) if(results.find(f.first)!=results.end()) {
-    data_log.push_back(results[f.first]);
-  } else if(local_rank==0) {
-    std::cout<<"Field "<<f.first<<" not found!"<<std::endl;
-  }
-};
-
-
-void LAMMPSSimulator::end_of_cycle(std::string res_file, std::vector<double> sample_r) {
-  double barrier=0.;
-  int ssize = data_log.size()/sample_r.size();
-  double d,c;
-
-  splines.clear();
-
-  for(int k=0;k<ssize-1;k++) {
-    spline spl;
-    std::vector<double> data;
-    for(int j=0;j<sample_r.size();j++) {
-      d=0; c=0;
-      for(int i=0;i<data_log.size()/ssize;i++)
-        if(std::fabs(data_log[i*ssize]-sample_r[j])<0.01) {
-          d += data_log[i*ssize+1];
-          c += 1.0;
-        }
-      if(c>0.5) d/= c;
-      if(k==0) d *= -1.0;
-      data.push_back(d);
-    }
-    spl.set_points(sample_r,data);
-    splines.push_back(spl);
-  }
-  barrier=0;
-
-
-  std::ofstream out;
-  int i;
-
-  out.open(res_file.c_str(),std::ofstream::out);
-
-  out<<"# r ";
-  for(auto f: log_fields) if(results.find(f.first)!=results.end()) {
-    out<<f.first<<" ";
-    if(f.second) out<<"(int) ";
-  }
-  out<<std::endl;
-
-  // choose integration parameters
-  double diff_r = sample_r[sample_r.size()-1] - sample_r[0];
-  double dr = diff_r / sample_r.size() / 10.0;
-
-  std::vector<double> bar(ssize,0.),max(ssize,0.);
-
-  for(double r=sample_r[0];r<=sample_r[0]+diff_r;r+=dr) {
-
-    out<<r<<" ";
-    i=0;
-    for(auto f: log_fields) if(results.find(f.first)!=results.end()) {
-      if(f.second) bar[i] += dr/2.0 * splines[i](r);
-      else bar[i] = splines[i](r);
-      max[i] = std::max(bar[i],max[i]);
-      out<<bar[i]<<" ";
-      if(f.second) bar[i] += dr/2.0 * splines[i](r);
-      else bar[i] = splines[i](r);
-      max[i] = std::max(bar[i],max[i]);
-      i++;
-    }
-    out<<std::endl;
-  }
-  barrier=max[0];
-  std::cout<<"Run complete; est. barrier: "<<barrier<<"eV"<<std::endl;
-
-};
-
-
 /*
   Main sample run. Results vector should have thermalization temperature,
   sample temperature <f>, <f^2>, <psi> and <x-u>.n, and max_jump
 */
 
 
-void LAMMPSSimulator::sample(std::map<std::string,double> params, double *dev) {
+void LAMMPSSimulator::sample(Holder params, double *dev) {
 
   error_count = 0;
   last_error_message="";

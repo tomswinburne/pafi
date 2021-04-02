@@ -136,14 +136,13 @@ void Parser::overwrite_xml(int nProcs) {
   configuration["DumpFolder"] = "./dumps";
   configuration["OverDamped"] = "1";
   configuration["Friction"] = "0.1";
-  configuration["LogLammps"] = "0";
-  configuration["MaxJump"] = "0.1";
+  configuration["MaxJump"] = "1.0";
   configuration["ReSampleThresh"] = "0.5";
-  configuration["maxExtraRepeats"] = "1";
+  configuration["maxExtraRepeats"] = "0";
   configuration["PostDump"] = "1";
   configuration["PreMin"] = "1";
-  configuration["WriteDev"] = "1";
-
+  configuration["WriteDev"] = "0";
+  parameters["Temperature"] = std::make_tuple(0.,0.,1);
 };
 
 // remove leading and trailing whitespaces - avoids RapidXML parsing bug

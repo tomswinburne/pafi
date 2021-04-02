@@ -1,195 +1,146 @@
 #include "pafi.hpp"
 
 int main(int narg, char **arg) {
+
   MPI_Init(&narg,&arg);
-  int rank, nProcs;
+  int rank, nProcs, i, j;
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   MPI_Comm_size(MPI_COMM_WORLD,&nProcs);
 
-  // Load input file
-  Parser parser("./config.xml",false);
-  parser.CoresPerWorker = nProcs;
+  // ************************ READ CONFIG FILE **********************************
+  Parser parser("./config.xml",true);
 
-
-  // Find fresh dump folder name - no nice solution here as
-  // directory creation requires platform dependent features
-  // which we omit for portability
-  int *int_dump_suffix = new int[1];
-  std::ofstream raw;
-  std::string params_file = parser.dump_dir+"/params_"+std::to_string(int_dump_suffix[0]);
-
-  // try to write to a file with a unique suffix
-
-  //if(rank==0)  std::cout<<parser.welcome_message();
-
-
-  const int nWorkers = nProcs / parser.CoresPerWorker;
-  const int instance = rank / parser.CoresPerWorker;
-  const int local_rank = rank % parser.CoresPerWorker;
-  const int nRes = 7; // TODO remove this
-	const int nRepeats = parser.nRepeats;
-
-  int fileindex=1;
-  std::string cmd;
-  double dr,E_init,nm,E_tot,fs,dF_int=0.0,dF,F_bar=0.0,E_bar=0.0,psi;
-  double *f,*lmp_ptr;
-
-  std::vector<double> dFa,ra,dEa;
-
-  parser.seed(123);
-  MPI_Comm instance_comm;
-  MPI_Comm_split(MPI_COMM_WORLD,0,0,&instance_comm);
-
-  Simulator sim(instance_comm,parser,instance);
-  if(!sim.has_pafi) {
-    if(rank==0)
-      std::cout<<"PAFI Error: missing USER-MISC package in LAMMPS"<<std::endl;
+  if(!parser.xml_success) {
+    if(rank==0) {
+      std::cout<<"\n\n\n*****************************\n\n\n";
+      std::cout<<"Configuration file could not be read!\n";
+      std::cout<<"\n\n\n*****************************\n\n\n";
+    }
     exit(-1);
   }
-  if(sim.error_count>0 && local_rank==0) std::cout<<sim.last_error()<<std::endl;
+  parser.overwrite_xml(nProcs);
+  parser.set_parameters();
+  // ************************ READ CONFIG FILE ***********************************
 
-  auto cell = sim.getCellData();
 
-  if(rank==0) {
-    std::cout<<"Loaded input data of "<<sim.natoms<<" atoms\nSupercell Matrix:\n";
-    for(int i=0;i<3;i++) {
-      std::cout<<"\t";
-      for(int j=0;j<3;j++) std::cout<<sim.pbc.cell[i][j]<<" ";
-      std::cout<<"\n";
+  // ************************ DUMP FOLDER *********************************
+  int dump_index=-1;
+  if(rank==0) parser.find_dump_file(dump_index);
+  MPI_Bcast(&dump_index,1,MPI_INT,0,MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD);
+  if(dump_index<0) {
+    if(rank==0) {
+      std::cout<<"\n\n\n*****************************\n\n\n";
+      std::cout<<"Could not write to output path / find directory! Exiting!\n";
+      std::cout<<"\n\n\n*****************************\n\n\n";
     }
-    std::cout<<"\n\n";
+    exit(-1);
   }
+  // ************************ DUMP FOLDER *********************************
+
+
+
+  // ******************* SET UP WORKERS ***************************************
+  const int nWorkers = 1;
+  const int instance = 0;
+  const int local_rank = rank;
+  const int min_valid = 0;
+
+  // LAMMPS communicators
+  MPI_Comm instance_comm;
+  MPI_Comm_split(MPI_COMM_WORLD,instance,0,&instance_comm);
+
+  // see GlobalSeed
+  parser.seed(instance);
+
+  Simulator sim(instance_comm,parser,instance);
+  if(!sim.has_pafi) exit(-1);
+  if(rank==0)  std::cout<<parser.welcome_message();
 
   sim.make_path(parser.PathwayConfigurations);
-
-  f = new double[3*sim.natoms];
-
-  if (parser.nPlanes>1) dr = (parser.stopr-parser.startr)/(double)(parser.nPlanes-1);
-  else dr = 0.1;
-  std::vector<double> sample_r;
-  if(parser.spline_path and not parser.match_planes) {
-    for (double r = parser.startr; r <= parser.stopr+0.5*dr; r += dr )
-      sample_r.push_back(r);
-  } else for(auto r: sim.pathway_r) if(r>=0.0 && r<=1.0) sample_r.push_back(r);
+  if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
+  // ******************* SET UP WORKERS ****************************************
 
 
+  // ********************** SAMPLING *******************************************
+
+  // generic - deviation
+  const int vsize = 3 * sim.natoms;
+  double *dev = new double[vsize*(1+(rank==0))];
+
+  int valid[2] = {1,1};
 
   if(rank==0) {
-    std::cout<<"\n\nPath Loaded\n\n";
-    std::cout<<std::setw(17)<<"              r";
-    std::cout<<std::setw(17)<<"          index";
-    std::cout<<std::setw(19)<<"        E - E_0";
-    std::cout<<std::setw(17)<<"         -dF/dr"<<std::endl;
+    std::cout<<"\n\n\n*****************************\n\n\n";
+    std::cout<<"PAFI TEST RUN \n";
+    std::cout<<"\n\n\n*****************************\n\n\n";
   }
 
-  for (auto r : sample_r) {
+  // set up data gatherer
+  Gatherer g(parser,sim.pathway_r,nWorkers,dump_index,rank);
+  MPI_Bcast(&(g.initialized),1,MPI_INT,0,MPI_COMM_WORLD);
+  if(g.initialized==0) exit(-1);
 
-    sim.populate(r,nm,0.0);
+  g.screen_output_header();
+  int fileindex = 0;
+  while(true) {
+    // sample
+    for(i=0;i<vsize;i++) dev[i] = 0.0;
+    sim.sample(g.params(), dev); // sim*(parser, dev)
 
-    sim.run_script("PreRun");  // Stress Fixes
+    g.prepare(sim.results); // allocate memory if not already done
+    for(i=0;i<g.dsize;i++) g.all_data[i]=g.data[i]; // hack for test
+    int total_valid = g.collate(valid+1);
 
-    // pafi fix
-    cmd = "run 0\n"; // to ensure the PreRun script is executed
-    cmd += "run 0\nfix hp all pafi __pafipath 0.0 ";
-    cmd += parser.configuration["Friction"]+" ";
-    cmd += parser.seed_str()+" overdamped 1 com 0\n run 0";
-    sim.run_commands(cmd);
+    double r = g.params()["ReactionCoordinate"];
+    std::string dump_file_name = "dumps/pafipath."+std::to_string(fileindex)+".dat";
+    sim.lammps_dump_path(dump_file_name,r);
 
-    if(parser.preMin) {
-      #ifdef VERBOSE
-      if(rank==0)
-        std::cout<<"LAMMPSSimulator.populate(): minimizing"<<std::endl;
-      #endif
-      cmd = "min_style fire\n minimize 0 0.01 ";
-      cmd += parser.configuration["MinSteps"]+" "+parser.configuration["MinSteps"];
-      sim.run_commands(cmd);
-    }
-
-    cmd = "run 0";
-    sim.run_commands(cmd);
-
-    E_tot = sim.getForceEnergy(f);
-
-
-    fs=0.0;
-    for(int i=0; i<3*sim.natoms; i++) fs += f[i]*f[i];
-    dF = 1.0*(sim.get_fix("hp",1,0));
-    psi = 1.0*(sim.get_fix("hp",1,2));
-
-    if(r==parser.startr) E_init = E_tot;
-
-    ra.push_back(r);
-    dFa.push_back(dF*nm);
-    dEa.push_back(E_tot-E_init);
-
-    if(rank==0) {
-      std::cout<<std::setw(17)<<r<<" ";
-      std::cout<<std::setw(17)<<fileindex<<" ";
-      std::cout<<std::setw(17)<<std::setprecision(5)<<E_tot-E_init<<" ";
-      std::cout<<std::setw(17)<<std::setprecision(5)<<dF*nm<<std::endl;
-    }
-
-    sim.lammps_dump_path("dumps/pafipath."+std::to_string(fileindex)+".data",r);
     fileindex++;
 
-    cmd = "unfix hp";
-    sim.run_commands(cmd);
-    sim.run_script("PostRun");  // Stress Fixes
-  }
+    g.next(); // wipe ens_data
+    MPI_Barrier(MPI_COMM_WORLD);
 
+    if(g.finished()) break;
+  }
+  if(rank==0) {
+    g.close(); // just the dump files
+    std::vector<double> dF,maxjumpr,dE,sample_r;
+    for(auto ens_res : g.all_ens_results) {
+      Holder p = ens_res.first;
+      auto res = ens_res.second;
+      sample_r.push_back(p["ReactionCoordinate"]);
+      dF.push_back(res["aveF"].first);
+      dE.push_back(res["MinEnergy"].first);
+      maxjumpr.push_back(res["MaxJump"].first);
+    }
+    spline Fspl;
+    Fspl.set_points(sample_r,dF);
+    double diff_r = sample_r[sample_r.size()-1] - sample_r[0];
+    double dr = diff_r / sample_r.size() / 10.0;
+    double F_bar = 0., E_bar=0., f=0.;
+    for(auto e: dE) E_bar = std::max(E_bar,e-dE[0]);
+    for(double r=sample_r[0];r<=sample_r[0]+diff_r;r+=dr) {
+      f -= dr/2.0 * Fspl(r);
+      F_bar = std::max(F_bar,f);
+      f -= dr/2.0 * Fspl(r);
+    }
+    std::cout<<"\n\n******************************************************************\n\n";
+    std::cout<<"\tEnergy Barrier ~= "<<E_bar<<"eV, Force Integration Barrier ~= "<<F_bar<<" eV\n";
+    std::cout<<"\tONLY SIMPLE TESTS PERFORMED HERE!\n"
+    "\tPLEASE USE pafi-path-test TO TEST PATHWAY FOR FORCE INTEGRATION\n"
+    "\n******************************************************************\n\n"<<std::endl;
+
+  }
 
   // close down LAMMPS instances
   sim.close();
 
+  MPI_Barrier(MPI_COMM_WORLD);
 
-  spline dFspl,dEspl;
-  dFspl.set_points(ra,dFa);
-  dEspl.set_points(ra,dEa);
-  double dF_dense_int = 0.0,F_bar_dense=0.0,E_bar_dense;
-  for (double r = parser.startr; r <= parser.stopr+0.5*dr/30.; r += dr/30. ) {
-    dF_dense_int -= dFspl(r)/2.0 * dr/30.;
-    F_bar_dense = std::max(F_bar_dense,dF_dense_int);
-    dF_dense_int -= dFspl(r)/2.0 * dr/30.;
-    E_bar_dense = std::max(E_bar_dense,dEspl(r));
-  }
-
-
-  if(rank==0) {
-
-    std::cout<<"\n\n******************************************************************\n\n"
-    "\tONLY SIMPLE TESTS PERFORMED HERE!\n"
-    "\tPLEASE USE pafi-path-test TO TEST PATHWAY FOR FORCE INTEGRATION\n"
-    "\n******************************************************************\n\n"<<std::endl;
-
-    std::cout<<"\n\n\tBARRIER FROM ENERGY: "<<std::setprecision(5)<<E_bar_dense;
-    std::cout<<"eV, FORCE INTEGRATION:"<<std::setprecision(5)<<F_bar_dense<<"eV";
-    std::cout<<"\n\n\tABSOLUTE ERROR: "<<std::setprecision(5)<<std::fabs(F_bar_dense-E_bar_dense)*1000.<<"meV";
-    std::cout<<", RELATIVE ERROR: "<<std::setprecision(5)<<(F_bar_dense/E_bar_dense-1.0)*100.<<"%"<<std::endl;
-
-
-    if(std::fabs(F_bar_dense-E_bar_dense)<=0.003) {
-      std::cout<<"\n\tError < 3meV - verify with pafi-path-test\n";
-    } else if(std::fabs(F_bar_dense-E_bar_dense)<0.01) {
-      std::cout<<"\n\tAbove target error of ~3meV, verify with pafi-path-test\n";
-    } else {
-      std::cout<<"\n\tError > 10meV  - if using this setup, the "
-      "error of "<<F_bar_dense-E_bar_dense<<" eV MUST be propagated to"
-      "PAFI results! verify with pafi-path-test\n";
-    }
-    if(std::fabs(F_bar_dense-E_bar_dense)>=0.001) {
-      std::cout<<"\n\tTo reduce this error: ";
-      std::cout<<"\n\t More NEB images and/or increasing nPlanes in config.xml";
-      std::cout<<"\n\t Try Rediscretize==0/1 to change how images are interpolated\n\n"<<std::endl;
-    }
-
-    std::cout<<std::endl;
-    std::cout<<std::endl;
-    std::cout<<std::endl;
-
-
-  }
-
+  // close down MPI
   MPI_Comm_free(&instance_comm);
+
 
   MPI_Finalize();
 

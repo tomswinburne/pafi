@@ -40,13 +40,15 @@ public:
     Main sample run. Results vector should have thermalization temperature,
     sample temperature <f>, <f^2>, <psi> and <x-u>.n
   */
-  virtual void sample(std::map<std::string,double> params, double *dev);
+  virtual void sample(Holder params, double *dev);
 
   virtual void constrained_average(std::string SampleSteps);
 
+  virtual void reset();
+
   // these should be replaced
-  virtual void fill_results(double r,double *ens_data, bool end=true);
-  virtual void end_of_cycle(std::string res_file,std::vector<double> sample_r);
+  //virtual void fill_results(double r,double *ens_data, bool end=true);
+  //virtual void end_of_cycle(std::string res_file,std::vector<double> sample_r);
 
 
   virtual std::string header(double mass);

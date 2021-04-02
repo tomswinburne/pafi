@@ -48,7 +48,6 @@ int main(int narg, char **arg) {
 
 
   // ******************* SET UP WORKERS ***************************************
-  MPI_Barrier(MPI_COMM_WORLD);
   const int nWorkers = nProcs / parser.CoresPerWorker;
   const int instance = rank / parser.CoresPerWorker;
   const int local_rank = rank % parser.CoresPerWorker;
@@ -89,11 +88,8 @@ int main(int narg, char **arg) {
   // generic - validity
   int *valid = new int[1+nWorkers*(rank==0)];
 
-  // generic - data
-  double *data=NULL,*all_data=NULL;
-  int total_valid, data_size = -1, bool_int_result = 0;
-  Gatherer g;
-  std::map<std::string,double> h;
+
+  int total_valid;
 
   if(rank==0) {
     std::cout<<"\n\nInitialized "<<nWorkers<<" workers "
@@ -101,26 +97,11 @@ int main(int narg, char **arg) {
     std::cout<<"<> == time averages,  av/err over ensemble"<<std::endl;
   }
 
+  // set up data gatherer
+  Gatherer g(parser,sim.pathway_r,nWorkers,dump_index,rank);
+  MPI_Bcast(&(g.initialized),1,MPI_INT,0,MPI_COMM_WORLD);
+  if(g.initialized==0) exit(-1);
 
-  // we want generic structure to go through paramater space, with form
-  /*
-  Standard PAFI has two parameters: r, T
-  could extend to stress for example
-
-  Sweep [ T, r, ]....
-
-  generates dump_suffix, raw_file, dump_file
-  */
-
-  bool_int_result = g.initialize(parser,sim.pathway_r,nWorkers,dump_index,rank);
-  MPI_Bcast(&bool_int_result,1,MPI_INT,0,MPI_COMM_WORLD);
-  if(bool_int_result==0) {
-    if(rank==0) std::cout<<"Could not open raw dump file! EXIT"<<std::endl;
-    exit(-1);
-  }
-
-
-  data_size = -1;
   g.screen_output_header();
 
   while(true) {
@@ -143,19 +124,10 @@ int main(int narg, char **arg) {
       if(MPI_COMM_NULL != ensemble_comm)
         MPI_Reduce(dev,dev+vsize,vsize,MPI_DOUBLE,MPI_SUM,0,ensemble_comm);
 
-      // declare data here once, after first simulation for flexibility
-      if(data_size<0) {
-        data_size = sim.results.size();
-        data = new double[data_size];
-        all_data = new double[data_size*nWorkers];
-        g.prepare(sim.results);
-      }
-
-      i=0; for(auto res: sim.results) data[i++] = res.second;
+      g.prepare(sim.results); // allocate memory if not already done
       if(MPI_COMM_NULL != ensemble_comm)
-        MPI_Gather(data,data_size,MPI_DOUBLE,all_data,data_size,MPI_DOUBLE,0,ensemble_comm);
-
-      total_valid += g.collate(valid+1,all_data);
+        MPI_Gather(g.data,g.dsize,MPI_DOUBLE,g.all_data,g.dsize,MPI_DOUBLE,0,ensemble_comm);
+      total_valid += g.collate(valid+1);
       MPI_Bcast(&total_valid,1,MPI_INT,0,MPI_COMM_WORLD);
 
       if(rank==0 and parser.nRepeats>1) {
@@ -174,6 +146,7 @@ int main(int narg, char **arg) {
     }
     g.next(); // wipe ens_data
     MPI_Barrier(MPI_COMM_WORLD);
+
     if(g.finished()) break;
   }
   if(rank==0) g.close();

@@ -12,7 +12,7 @@
 #include <list>
 
 #include "mpi.h"
-#include "Constants.hpp"
+#include "ConstantsTypes.hpp"
 #include "Parser.hpp"
 #include "Boundary.hpp"
 #include "Spline.hpp"
@@ -70,12 +70,8 @@ public:
   };
 
   MPI_Comm *comm;
-  std::map<std::string,double> results;
-  std::vector<double> data_log;
-  std::vector< std::pair<std::string,bool> > log_fields;
-  double scale[3];
-  double refE,refT,refP;
-  double *x;
+  Holder results;
+  double scale[3],refE,refT,refP, *x;
   int natoms, tag, nknots, out_width, error_count;
   int local_rank, local_size, nlocal, offset;
   MinImage pbc;
