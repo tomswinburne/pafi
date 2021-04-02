@@ -130,6 +130,7 @@ void LAMMPSSimulator::run_commands(std::vector<std::string> strv) {
   if(local_rank==0) std::cout<<"LAMMPSSimulator.run_commands(): "<<std::endl;
   #endif
   for(auto s:strv) {
+    parser->insert_params(s,params);
     #ifdef VERBOSE
     if(local_rank==0) std::cout<<s<<std::endl;
     #endif

@@ -130,6 +130,15 @@ void Parser::set_parameters() {
   write_dev = bool(std::stoi(configuration["WriteDev"]));
 };
 
+void Parser::insert_params(std::string &s, Holder &params) {
+  std::string s_r;
+  for(auto param : params) {
+    std::regex e ("%"+param.first+"%");
+    s_r = std::regex_replace(s,e,std::to_string(param.second));
+    s = s_r;
+  }
+};
+
 void Parser::overwrite_xml(int nProcs) {
   // Default Values
   configuration["CoresPerWorker"]=std::to_string(nProcs);

@@ -11,8 +11,9 @@
 #include <random>
 #include <tuple>
 #include <iterator>
+#include <regex>
 
-
+#include "ConstantsTypes.hpp"
 #include "rapidxml.hpp"
 
 class Parser {
@@ -29,6 +30,8 @@ std::string welcome_message();
 void overwrite_xml(int nProcs);
 
 void set_parameters();
+
+void insert_params(std::string &s, Holder &params);
 
 std::vector<std::string> split_lines(std::string r);
 
