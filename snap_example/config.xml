@@ -1,0 +1,153 @@
+<!-- Which parameters to scan.
+If ReactionCoordinate and Temperature are not present an error will be raised
+The iteration sequence follows the order in this file,
+i.e. a python equivalent of this example would be
+for T in Temperature:
+  for r in ReactionCoordinate:
+    # do simulation
+If Temperature and ReactionCoordinate are not present an error will be raised
+
+The format is Min, Max, number of Steps
+
+'pafi-path-test' will ignore the Temperature scan
+-->
+<Parameters>
+  <ReactionCoordinate>0.0 1.0 13</ReactionCoordinate>
+  <Temperature>50. 100. 2</Temperature>
+</Parameters>
+
+
+<Setup>
+  <!-- Global random number seed used to set worker seeds.
+  If all parameters are left unchanged, simulation results should be
+  identical up to MD integration error for the same GlobalSeed
+  -->
+  <GlobalSeed>137</GlobalSeed>
+
+  <!-- do we dump deviation files? can be large -->
+  <WriteDev>0</WriteDev>
+
+  <!--If FreshSeed==1, a new seed is set for each sampling run.
+    With FreshSeed==0, a worker uses the same seed for all planes.
+    This may reduce error in stochastic gradients... -->
+  <FreshSeed>1</FreshSeed>
+
+  <!-- omit trailing forward slash -->
+  <DumpFolder>./dumps</DumpFolder>
+  
+
+  <!-- We require nprocs % CoresPerWorker==0 -->
+  <CoresPerWorker> 4 </CoresPerWorker>
+
+  <!-- Number of samples per plane per worker -->
+  <nRepeats> 1 </nRepeats>
+
+  <!-- Data gathering steps -->
+  <SampleSteps> 10 </SampleSteps>
+
+  <!-- Steps for thermalization -->
+  <ThermSteps> 10 </ThermSteps>
+
+  <!-- Max steps for optional in-plane minimizations (see below) -->
+  <MinSteps> 10 </MinSteps>
+
+  <!--
+    RELATIVE thermal expansion coefficients along X,Y,Z directions of simulation-
+    X -> X *(1 + LinearThermalExpansionX*T + QuadraticThermalExpansionX*T^2)
+    Y -> X *(1 + LinearThermalExpansionY*T + QuadraticThermalExpansionY*T^2)
+    Z -> X *(1 + LinearThermalExpansionZ*T + QuadraticThermalExpansionZ*T^2)
+  -->
+  <LinearThermalExpansionX>0.0</LinearThermalExpansionX>
+  <QuadraticThermalExpansionX>0.0</QuadraticThermalExpansionX>
+  <LinearThermalExpansionY>0.0</LinearThermalExpansionY>
+  <QuadraticThermalExpansionY>0.0</QuadraticThermalExpansionY>
+  <LinearThermalExpansionZ>0.0</LinearThermalExpansionZ>
+  <QuadraticThermalExpansionZ>0.0</QuadraticThermalExpansionZ>
+
+
+  <!-- perform overdamped/Brownian or Langevin dynamics on hyperplane -->
+  <OverDamped> 1 </OverDamped>
+
+  <!--
+  Friction parameter as used by MD engine (here LAMMPS : 1/strength)
+  Typical 'units metal' value : 0.1 == 100 time steps decay time
+  If OverDamped=1, we set a strong friction i.e. < 0.1, e.g. 0.05
+  -->
+  <Friction> 0.05 </Friction>
+
+  <!-- 0/1 Output LAMMPS logfiles for error checking purposes -->
+  <LogLammps> 0 </LogLammps>
+
+  <!--
+   0 : (Default) Output time-and-ensemble averaged in-plane deviation from reference pathway. Can indicate finite temperature path but will have sampling noise
+   1 : Output ensemble averaged in-plane deviation following in-plane minimization post-run. No noise but will lose some/all features of path
+  -->
+  <PostDump> 0 </PostDump>
+
+  <!--
+  Perform an in-plane minimization before thermalization/sampling.
+  If pathway is a well-converged NEB/MEP this should not produce any change
+  -->
+  <PreMin> 0 </PreMin>
+
+  <!-- If == 0 ignore ReactionCoordinate parameter,
+  sample only at provided pathway configurations. Test feature -->
+  <Rediscretize>1</Rediscretize>
+
+  <!-- Maximum Atomic Displacement between local in-plane minima
+  before and after sampling run which can still be considered "in basin"
+  Check for shallow metastability on hyperplane
+  -->
+  <MaxJump> 0.4 </MaxJump>
+
+  <!-- Resample a batch if less than this proportion are "in-basin" -->
+  <ReSampleThresh> 0.8 </ReSampleThresh>
+
+  <!-- How many resample attempts -->
+  <maxExtraRepeats> 1 </maxExtraRepeats>
+
+  <!--
+  Sequential list of pathway configurations,
+  produced from e.g. a NEB configuration.
+  Loaded via LAMMPS read_data (see Scripts/Input below)
+  -->
+  <PathwayConfigurations>
+    md/snap_image_1.dat
+    md/snap_image_2.dat
+    md/snap_image_3.dat
+    md/snap_image_4.dat
+    md/snap_image_5.dat
+    md/snap_image_6.dat
+    md/snap_image_7.dat
+    md/snap_image_8.dat
+    md/snap_image_9.dat
+  </PathwayConfigurations>
+
+</Setup>
+
+<Scripts>
+  <!-- LAMMPS script to read in the first pathway
+      configuration and load the potential
+  -->
+  <Input>
+    units metal
+    atom_style atomic
+    atom_modify map array sort 0 0.0
+    neigh_modify every 2 delay 10 check yes page 1000000 one 100000
+    read_data  md/snap_image_1.dat
+    mass * 55.83 
+    pair_style    snap
+    pair_coeff * * md/Fe.snapcoeff md/Fe.snapparam Fe
+    run 0
+    thermo 10
+    run 0
+  </Input>
+
+  <!-- Apply any fixes e.g. external stresses before thermalization/sampling -->
+  <PreRun>
+  </PreRun>
+
+  <!-- Turn off these same fixes after each sampling run -->
+  <PostRun>
+  </PostRun>
+</Scripts>

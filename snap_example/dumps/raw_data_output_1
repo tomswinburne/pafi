@@ -1,0 +1,10 @@
+# 11: ReactionCoordinate 12: Temperature 13: MaxDev  14: MaxJump  15: MinEnergy  16: Valid  17: aveF  18: aveFstd  19: avePsi  20: dXTangent  21: postT  22: preT  23: stdF  
+0 50 0.131151 0.183578 5.0905 1 0.13604 0 1 2.31967e-15 37.387 32.294 0.00519911 
+# 11: ReactionCoordinate 12: Temperature 13: MaxDev  14: MaxJump  15: MinEnergy  16: Valid  17: aveF  18: aveFstd  19: avePsi  20: dXTangent  21: postT  22: preT  23: stdF  
+0.0833333 50 0.143918 0.163109 5.09829 1 -0.080722 0 1.07926 5.89112e-16 38.8347 34.5516 0.0017528 
+# 11: ReactionCoordinate 12: Temperature 13: MaxDev  14: MaxJump  15: MinEnergy  16: Valid  17: aveF  18: aveFstd  19: avePsi  20: dXTangent  21: postT  22: preT  23: stdF  
+0.166667 50 0.0959097 0.154874 5.15246 1 -0.942344 0 0.906982 1.2719e-15 40.7442 34.1377 0.00264046 
+# 11: ReactionCoordinate 12: Temperature 13: MaxDev  14: MaxJump  15: MinEnergy  16: Valid  17: aveF  18: aveFstd  19: avePsi  20: dXTangent  21: postT  22: preT  23: stdF  
+0.25 50 0.118285 0.162481 5.23132 1 -1.25825 0 0.880869 9.26342e-16 38.4959 30.4407 0.00132538 
+# 11: ReactionCoordinate 12: Temperature 13: MaxDev  14: MaxJump  15: MinEnergy  16: Valid  17: aveF  18: aveFstd  19: avePsi  20: dXTangent  21: postT  22: preT  23: stdF  
+0.333333 50 0.113938 0.15701 5.30222 1 -1.12256 0 0.893989 2.11289e-15 39.0609 32.4283 0.00295658 
