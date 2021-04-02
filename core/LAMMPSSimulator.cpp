@@ -1,7 +1,7 @@
 #include "LAMMPSSimulator.hpp"
 
 LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t)
-  : GeneralSimulator::GeneralSimulator(instance_comm, p, t) {
+  : GenericSimulator::GenericSimulator(instance_comm, p, t) {
   // set up LAMMPS
   char str1[32];
   char **lmparg = new char*[5];
@@ -19,14 +19,30 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t)
   // reset the system
   reset();
 
+  // run input script
   run_script("Input");
+  natoms=0;
+  species=NULL;
+  q=NULL;
+  image=NULL;
+  id=NULL;
+  lt=NULL; // for scattering
 
   // these won't change even if we rereun "input"
+  fill_lammps_vectors();
+
+};
+
+void LAMMPSSimulator::fill_lammps_vectors() {
 
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): Ran input script"<<std::endl;
   #endif
-  natoms = *((int *) lammps_extract_global(lmp,(char *) "natoms"));
+  int new_natoms = *((int *) lammps_extract_global(lmp,(char *) "natoms"));
+  if(natoms>0 and new_natoms!=natoms and local_rank==0) {
+    std::cout<<"LAMMPSSimulator(): Atom count changed on reload!!"<<std::endl;
+  }
+  natoms = new_natoms;
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): natoms: "<<natoms<<std::endl;
   #endif
@@ -45,17 +61,17 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t)
     std::cout<<"LAMMPSSimulator(): has_pafi: "<<has_pafi<<std::endl;
   #endif
 
-  id = new int[natoms];
+  if(id==NULL) id = new int[natoms];
   gather("id",1,id);
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered id"<<std::endl;
   #endif
 
-  // get cell info TODO - allow to vary?
+  // get cell info TODO - allow to vary? can always redo....
   pbc.load(getCellData());
 
   // Get type / image info
-  species = new int[natoms];
+  if(species==NULL) species = new int[natoms];
   gather("type",1,species);
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered type"<<std::endl;
@@ -63,15 +79,15 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, int t)
 
   s_flag=true;
 
-  image = new int[natoms];
+  if(image==NULL) image = new int[natoms];
   gather("image",1,image);
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered image"<<std::endl;
   #endif
 
-  x = new double[3*natoms]; // mainly for declaration
-  lt = new double[natoms];
-  gather("image",1,image);
+  if(x==NULL) x = new double[3*natoms]; // mainly for declaration
+  if(lt==NULL) lt = new double[natoms];
+  gather("x",1,x);
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered x"<<std::endl;
   #endif
@@ -506,7 +522,7 @@ void LAMMPSSimulator::constrained_average(std::string SampleSteps) {
 
 
 void LAMMPSSimulator::close() {
-  GeneralSimulator::close();
+  GenericSimulator::close();
   delete [] id;
   delete [] species;
   delete [] image;

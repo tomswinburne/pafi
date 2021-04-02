@@ -18,11 +18,11 @@
 #include "Spline.hpp"
 
 
-class GeneralSimulator {
+class GenericSimulator {
 
 public:
 
-  GeneralSimulator(MPI_Comm &instance_comm, Parser &p, int t);
+  GenericSimulator(MPI_Comm &instance_comm, Parser &p, int t);
 
   virtual void load_config(std::string file_string,double *x){};
 

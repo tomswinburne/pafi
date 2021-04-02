@@ -18,8 +18,7 @@
 
 #include "Parser.hpp"
 
-#include "LAMMPSSimulator.hpp"
-#include "GenericGatherer.hpp"
+#include "GathererSimulator.hpp"
 
-typedef LAMMPSSimulator Simulator;
-typedef GenericGatherer Gatherer;
+typedef LAMMPS_TI_Simulator Simulator;
+typedef TI_Gatherer Gatherer;

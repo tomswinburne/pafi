@@ -1,14 +1,14 @@
 #ifndef LSIM_H
 #define LSIM_H
 
-#include "GeneralSimulator.hpp"
+#include "GenericSimulator.hpp"
 
 #include "lammps/lammps.h"
 #include "lammps/library.h"
 
 using namespace LAMMPS_NS;
 
-class LAMMPSSimulator : public GeneralSimulator {
+class LAMMPSSimulator : public GenericSimulator {
 
 public:
   LAMMPSSimulator(MPI_Comm &instance_comm, Parser &p, int t);
@@ -41,6 +41,8 @@ public:
     sample temperature <f>, <f^2>, <psi> and <x-u>.n
   */
   virtual void sample(Holder params, double *dev);
+
+  virtual void fill_lammps_vectors();
 
   virtual void constrained_average(std::string SampleSteps);
 

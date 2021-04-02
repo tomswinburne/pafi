@@ -22,8 +22,10 @@ if(DEBUG)
 	add_definitions(-g -DVERBOSE)
 endif(DEBUG)
 file(GLOB src_files "core/*")
+file(GLOB ti_files "pafi-ti/*")
 
 add_executable(pafi ${src_files} pafi/pafi.cpp pafi/pafi.hpp)
+add_executable(pafi-ti ${src_files} pafi/pafi.cpp ${ti_files})
 add_executable(pafi-lammps-preparation ${src_files} pafi/pafi-lammps-preparation.cpp pafi/pafi.hpp)
 add_executable(pafi-path-test ${src_files} pafi/pafi-path-test.cpp pafi/pafi.hpp)
 

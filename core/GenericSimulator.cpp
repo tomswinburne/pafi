@@ -1,6 +1,6 @@
-#include "GeneralSimulator.hpp"
+#include "GenericSimulator.hpp"
 
-GeneralSimulator::GeneralSimulator(MPI_Comm &instance_comm, Parser &p, int t) {
+GenericSimulator::GenericSimulator(MPI_Comm &instance_comm, Parser &p, int t) {
   tag = t;
   comm = &instance_comm;
   MPI_Comm_rank(*comm,&local_rank);
@@ -17,7 +17,7 @@ GeneralSimulator::GeneralSimulator(MPI_Comm &instance_comm, Parser &p, int t) {
 
 };
 
-void GeneralSimulator::write(std::string fn, double r) {
+void GenericSimulator::write(std::string fn, double r) {
   std::ofstream out;
   out.open(fn.c_str(),std::ofstream::out);
   double ncom[]={0.,0.,0.};
@@ -44,7 +44,7 @@ void GeneralSimulator::write(std::string fn, double r) {
   out.close();
 };
 
-void GeneralSimulator::write_dev(std::string fn, double r, double *dev) {
+void GenericSimulator::write_dev(std::string fn, double r, double *dev) {
   std::ofstream out;
   out.open(fn.c_str(),std::ofstream::out);
   out<<"# PAFI DUMP FILE. Reference path u(r) is a Nx3 vector.\n";
@@ -59,7 +59,7 @@ void GeneralSimulator::write_dev(std::string fn, double r, double *dev) {
 };
 
 
-void GeneralSimulator::expansion(double T, double *newscale) {
+void GenericSimulator::expansion(double T, double *newscale) {
   double coeff;
 
   newscale[0] = 1.0;
@@ -82,7 +82,7 @@ void GeneralSimulator::expansion(double T, double *newscale) {
   //std::cout<<scale[0]<<" "<<scale[1]<<" "<<scale[2]<<std::endl;
 };
 
-void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
+void GenericSimulator::make_path(std::vector<std::string> knot_list) {
   /*
     TODO: parallel i/o and splining
     Only really a problem with memory limitations, say 2GB / core.
@@ -95,7 +95,7 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
 
   if(nlocal==0) {
     if(local_rank==0)
-      std::cout<<"GeneralSimulator::make_path : Not initialized!"<<std::endl;
+      std::cout<<"GenericSimulator::make_path : Not initialized!"<<std::endl;
     return ;
   }
 
@@ -148,10 +148,10 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list) {
     pathway[i].set_points(r,xs,parser->spline_path);
   }
   delete [] knots; // clear memory
-  
+
 };
 
-double GeneralSimulator::path(int i, double r, int d, double s) {
+double GenericSimulator::path(int i, double r, int d, double s) {
 
   if(parser->spline_path or d==0) return pathway[i].deriv(d,r) * s;
   double dr = 1.0 / pathway_r.size();
@@ -160,7 +160,7 @@ double GeneralSimulator::path(int i, double r, int d, double s) {
   else return (pathway[i].deriv(0,r+dr)+pathway[i].deriv(0,r-dr)-2*val) * s/dr/dr;
 };
 
-void GeneralSimulator::evaluate(std::vector<double> &results) {
+void GenericSimulator::evaluate(std::vector<double> &results) {
   // Rescale, establish hp fix
   getEnergy();
 };
