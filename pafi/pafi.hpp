@@ -17,7 +17,10 @@
 
 // PAFI files
 #include "Constants.hpp"
+
 #include "Parser.hpp"
-#include "Spline.hpp"
-#include "CustomTypes.hpp"
-#include "CustomSimulator.hpp"
+
+#include "CustomClasses.hpp"
+
+typedef CustomSimulator Simulator;
+typedef CustomGatherer Gatherer;

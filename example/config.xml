@@ -32,7 +32,7 @@ The format is Min, Max, number of Steps
 
   <!-- omit trailing forward slash -->
   <DumpFolder>./dumps</DumpFolder>
-
+  
 
   <!-- We require nprocs % CoresPerWorker==0 -->
   <CoresPerWorker> 2 </CoresPerWorker>
