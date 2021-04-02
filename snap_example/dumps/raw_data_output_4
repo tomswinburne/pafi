@@ -1,0 +1,3 @@
+# -2: ReactionCoordinate -1: Temperature 0: MaxDev  1: MaxJump  2: MinEnergy  3: Valid  4: aveF  5: aveFstd  6: avePsi  7: dXTangent  8: postT  9: preT  10: stdF  
+0 50 0.121887 0.160443 5.0905 1 0.438445 0 1 7.17482e-16 37.3386 33.5178 0.00200022 
+0.0833333 50 0.129071 0.147923 5.09829 1 -0.412339 0 0.972255 2.20865e-15 39.0364 33.3535 0.00101776 

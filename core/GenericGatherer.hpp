@@ -86,26 +86,37 @@ virtual void set_params() {
 }
 
 virtual void prepare(Holder &sim_results) {
-  int j=0, i = -(params.size());
 
-  if(dsize==0) dsize = sim_results.size();
-  if(ens_data==NULL) {
-    ens_data = new double[dsize*2+1];
-    for(j=0;j<2*dsize+1;j++) ens_data[j] = 0.0;
+  int j=0, i=0;
+
+  if(dsize==0) {
+
+    dsize = sim_results.size(); // constant for a given simulation
+
+    data = new double[dsize];
+
+    if (rank==0 and raw.is_open()) {
+      // data holders
+
+      ens_data = new double[dsize*2+1];
+      for(j=0;j<2*dsize+1;j++) ens_data[j] = 0.0;
+
+      all_data = new double[dsize*nWorkers];
+      for(j=0;j<dsize*nWorkers;j++) all_data[j] = 0.0;
+
+      for(auto res: sim_results)
+        ens_results[res.first] = *(new std::pair<double,double>);
+
+      raw<<"# ";
+      i = -params.size();
+      for(auto par: params) raw<<i++<<": "<<par.first<<" ";
+      for(auto res: sim_results) raw<<i++<<": "<<res.first<<"  ";
+      raw<<std::endl;
+    }
+
   }
-  if(data==NULL) data = new double[dsize];
-  i=0; for(auto res: sim_results) data[i++] = res.second;
 
-  if(!raw.is_open() or rank>0) return;
-  if(all_data==NULL) all_data = new double[dsize*nWorkers];
-
-  raw<<"# ";
-  for(auto par: params) raw<<i++<<": "<<par.first<<" ";
-  for(auto res: sim_results) {
-    raw<<i++<<": "<<res.first<<"  ";
-    ens_results[res.first] = *(new std::pair<double,double>);
-  }
-  raw<<std::endl;
+  i=0; for(auto res: sim_results) data[i++] = res.second; // fill
 
 };
 
@@ -164,10 +175,10 @@ virtual void next() {
       // axis complete - trigger iteration...
       s.second = 0;
       if(rank==0) {
-        std::cout<<"\n"<<s.first<<" : ";
+        std::cout<<s.first<<" : ";
         std::cout<<*(sample_axes[s.first].begin())<<" -> ";
         std::cout<<*std::prev(sample_axes[s.first].end());
-        std::cout<<" iteration complete"<<std::endl;
+        std::cout<<" complete"<<std::endl;
       }
 
     } else {

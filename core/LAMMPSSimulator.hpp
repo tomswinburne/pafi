@@ -5,6 +5,8 @@
 
 #include "lammps/lammps.h"
 #include "lammps/library.h"
+//#include "lammps/modify.h"
+
 
 using namespace LAMMPS_NS;
 
@@ -44,7 +46,7 @@ public:
 
   virtual void fill_lammps_vectors();
 
-  virtual void constrained_average(std::string SampleSteps);
+  virtual void constrained_average();
 
   virtual void reset();
 

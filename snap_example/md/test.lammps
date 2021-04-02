@@ -1,0 +1,13 @@
+units metal
+    atom_style atomic
+    atom_modify map array sort 0 0.0
+    neigh_modify every 2 delay 10 check yes page 1000000 one 100000
+    read_data  snap_image_1.dat
+    pair_style    snap
+    pair_coeff * * Fe.snapcoeff Fe.snapparam Fe
+    run 0
+    thermo 1
+    compute b all sna/atom 4.7 0.99363 6 0.5 1.0
+    compute tb all reduce ave c_b[*]
+    fix ab all ave/time 1 10 10 c_tb[*]
+    run 10

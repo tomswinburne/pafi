@@ -118,8 +118,10 @@ void LAMMPSSimulator::load_config(std::string file_string, double *x) {
 */
 void LAMMPSSimulator::run_script(std::string sn){
   std::vector<std::string> strv = parser->Script(sn);
-  strv.push_back("run 0");
-  run_commands(strv);
+  if(strv.size()>0) {
+    strv.push_back("run 0");
+    run_commands(strv);
+  }
 };
 
 /*
@@ -388,7 +390,7 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   run_commands(cmd);
 
   // run SampleSteps and add to results
-  constrained_average(SampleSteps);
+  constrained_average();
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
   sampleT = (*lmp_ptr-refE)/natoms/1.5/BOLTZ;
@@ -516,8 +518,8 @@ std::array<double,9> LAMMPSSimulator::getCellData() {
   return cell;
 };
 
-void LAMMPSSimulator::constrained_average(std::string SampleSteps) {
-  std::string cmd = "run "+SampleSteps;
+void LAMMPSSimulator::constrained_average() {
+  std::string cmd = "run "+parser->configuration["SampleSteps"];
   run_commands(cmd);
 };
 

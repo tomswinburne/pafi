@@ -26,10 +26,10 @@ file(GLOB src_files "core/*")
 file(GLOB ti_files "pafi-ti/*")
 
 add_executable(pafi ${src_files} pafi/pafi.cpp pafi/pafi.hpp)
-add_executable(pafi-ti ${src_files} pafi/pafi.cpp ${ti_files})
+add_executable(pafi-ti ${src_files} ${ti_files} pafi-ti/pafi-ti.cpp pafi-ti/pafi-ti.hpp )
 
-add_executable(pafi-lammps-preparation ${src_files} pafi/pafi-lammps-preparation.cpp pafi/pafi.hpp)
-add_executable(pafi-path-test ${src_files} pafi/pafi-path-test.cpp pafi/pafi.hpp)
+add_executable(pafi-lammps-preparation ${src_files} pafi-test/pafi-lammps-preparation.cpp pafi-test/pafi.hpp)
+add_executable(pafi-path-test ${src_files} pafi-test/pafi-path-test.cpp pafi-test/pafi.hpp)
 
 
 target_link_libraries(pafi lammps_mpi)

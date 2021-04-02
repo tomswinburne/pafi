@@ -13,12 +13,18 @@ The format is Min, Max, number of Steps
 -->
 <Parameters>
   <Lambda>0.0 1.0 2</Lambda>
-  <ReactionCoordinate>0.0 1.0 13</ReactionCoordinate>
+  <ReactionCoordinate>0.0 1.0 3</ReactionCoordinate>
   <Temperature>50. 100. 2</Temperature>
 </Parameters>
 
 
 <Setup>
+  <!--
+  list names of global fixes extracted during sampling- name, size
+  these should be relfected in <Pre/PostSample>
+  -->
+  <SampleFixes>ab 30</SampleFixes>
+
   <!-- Global random number seed used to set worker seeds.
   If all parameters are left unchanged, simulation results should be
   identical up to MD integration error for the same GlobalSeed
@@ -35,7 +41,7 @@ The format is Min, Max, number of Steps
 
   <!-- omit trailing forward slash -->
   <DumpFolder>./dumps</DumpFolder>
-  
+
 
   <!-- We require nprocs % CoresPerWorker==0 -->
   <CoresPerWorker> 2 </CoresPerWorker>
@@ -132,7 +138,6 @@ The format is Min, Max, number of Steps
   -->
   <Input>
     units metal
-    # DUMMY %Temperature%
     atom_style atomic
     atom_modify map array sort 0 0.0
     neigh_modify every 2 delay 10 check yes page 1000000 one 100000
@@ -142,13 +147,28 @@ The format is Min, Max, number of Steps
     run 0
     thermo 10
     run 0
+
   </Input>
 
   <!-- Apply any fixes e.g. external stresses before thermalization/sampling -->
   <PreRun>
+    compute b all sna/atom 4.7 0.99363 6 0.5 1.0
+    compute tb all reduce ave c_b[*]
   </PreRun>
+
+  <!-- fixes only applied for sampling run. these can be extracted using the
+  SampleFixes tag in Configuration -->
+  <PreSample>
+    fix ab all ave/time 1 10 10 c_tb[*]
+  </PreSample>
+
+  <PostSample>
+    unfix ab
+  </PostSample>
 
   <!-- Turn off these same fixes after each sampling run -->
   <PostRun>
+    uncompute b
+    uncompute tb
   </PostRun>
 </Scripts>

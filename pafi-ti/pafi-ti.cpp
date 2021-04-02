@@ -1,4 +1,4 @@
-#include "pafi.hpp"
+#include "pafi-ti.hpp"
 
 int main(int narg, char **arg) {
 

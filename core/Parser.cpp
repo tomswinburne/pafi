@@ -137,6 +137,11 @@ void Parser::insert_params(std::string &s, Holder &params) {
     s_r = std::regex_replace(s,e,std::to_string(param.second));
     s = s_r;
   }
+  for(auto config : configuration) {
+    std::regex e ("%"+config.first+"%");
+    s_r = std::regex_replace(s,e,rtws(config.second));
+    s = s_r;
+  }
 };
 
 void Parser::overwrite_xml(int nProcs) {
@@ -211,8 +216,8 @@ std::string Parser::seed_str() {
 };
 
 std::vector<std::string> Parser::Script(std::string sn) {
-	//configuration["Temperature"] = std::to_string(T);
-	return split_lines(scripts[sn]);
+	if(scripts.find(sn)==scripts.end()) return *(new std::vector<std::string>);
+	else return split_lines(scripts[sn]);
 };
 
 // Pointless :)
