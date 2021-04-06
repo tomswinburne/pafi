@@ -1,14 +1,33 @@
-#include "pafi-test.hpp"
+#include <iostream>
+#include <sstream>
+#include <iomanip>
 
-int main(int narg, char **arg) {
+#include <mpi.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <vector>
+#include <string>
+#include <array>
+#include <map>
+#include <list>
+#include <cmath>
 
-  MPI_Init(&narg,&arg);
+// PAFI files
+#include "ConstantsTypes.hpp"
+#include "Parser.hpp"
+#include "Spline.hpp"
+
+template <class SimulatorTemplate,class GathererTemplate>
+void test(MPI_Comm &world,std::string parser_file,bool lammps_prep) {
+
   int rank, nProcs, i, j;
-  MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-  MPI_Comm_size(MPI_COMM_WORLD,&nProcs);
+
+  MPI_Comm_rank(world,&rank);
+  MPI_Comm_size(world,&nProcs);
 
   // ************************ READ CONFIG FILE **********************************
-  Parser parser("./config.xml",true);
+  Parser parser(parser_file,false);
 
   if(!parser.xml_success) {
     if(rank==0) {
@@ -26,12 +45,13 @@ int main(int narg, char **arg) {
   // ************************ DUMP FOLDER *********************************
   int dump_index=-1;
   if(rank==0) parser.find_dump_file(dump_index);
-  MPI_Bcast(&dump_index,1,MPI_INT,0,MPI_COMM_WORLD);
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Bcast(&dump_index,1,MPI_INT,0,world);
+  MPI_Barrier(world);
   if(dump_index<0) {
     if(rank==0) {
       std::cout<<"\n\n\n*****************************\n\n\n";
-      std::cout<<"Could not write to output path / find directory! Exiting!\n";
+      std::cout<<"PAFI could not write to output path : does the directory ";
+      std::cout<<parser.dump_dir<<" exist? Exiting!\n";
       std::cout<<"\n\n\n*****************************\n\n\n";
     }
     exit(-1);
@@ -53,18 +73,19 @@ int main(int narg, char **arg) {
   // see GlobalSeed
   parser.seed(instance);
 
-
   // set up data gatherer
-  Gatherer g(parser,nWorkers,dump_index,rank);
-  MPI_Bcast(&(g.initialized),1,MPI_INT,0,MPI_COMM_WORLD);
+  GathererTemplate g(parser,nWorkers,dump_index,rank);
+  MPI_Bcast(&(g.initialized),1,MPI_INT,0,world);
   if(g.initialized==0) exit(-1);
 
-  Simulator sim(instance_comm,parser,g.params,instance);
+  SimulatorTemplate sim(instance_comm,parser,g.params,instance);
   if(!sim.has_pafi) exit(-1);
   if(rank==0)  std::cout<<parser.welcome_message();
 
   sim.make_path(parser.PathwayConfigurations);
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
+  g.special_r_overwrite(sim.pathway_r);
+
   // ******************* SET UP WORKERS ****************************************
 
 
@@ -86,6 +107,8 @@ int main(int narg, char **arg) {
   g.screen_output_header();
 
   int fileindex = 0;
+  std::string dump_file_name;
+
   while(true) {
     // sample
     for(i=0;i<vsize;i++) dev[i] = 0.0;
@@ -95,14 +118,18 @@ int main(int narg, char **arg) {
     for(i=0;i<g.dsize;i++) g.all_data[i]=g.data[i]; // hack for test
     int total_valid = g.collate(valid+1);
 
-    double r = g.params["ReactionCoordinate"];
-    std::string dump_file_name = "dumps/pafipath."+std::to_string(fileindex)+".dat";
-    sim.lammps_dump_path(dump_file_name,r);
-
-    fileindex++;
+    if(lammps_prep) {
+      dump_file_name = "dumps/pafipath."+std::to_string(fileindex)+".dat";
+      sim.lammps_dump_path(dump_file_name,g.params["ReactionCoordinate"]);
+      fileindex++;
+    } else {
+      if(rank==0 and parser.write_dev) {
+        sim.write_dev(g.dev_file,g.params["ReactionCoordinate"],dev+vsize);
+      }
+    }
 
     g.next(); // wipe ens_data
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(world);
 
     if(g.finished()) break;
   }
@@ -139,12 +166,8 @@ int main(int narg, char **arg) {
   // close down LAMMPS instances
   sim.close();
 
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(world);
 
   // close down MPI
   MPI_Comm_free(&instance_comm);
-
-
-  MPI_Finalize();
-
-}
+};

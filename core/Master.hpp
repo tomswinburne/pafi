@@ -1,3 +1,22 @@
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+
+#include <mpi.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <vector>
+#include <string>
+#include <array>
+#include <map>
+#include <list>
+#include <cmath>
+
+// PAFI files
+#include "ConstantsTypes.hpp"
+
+#include "Parser.hpp"
 
 template <class SimulatorTemplate,class GathererTemplate>
 void run(MPI_Comm &world,std::string parser_file) {
@@ -49,10 +68,10 @@ void run(MPI_Comm &world,std::string parser_file) {
 
 
   // ******************* SET UP WORKERS ***************************************
-  const int nWorkers = nProcs / parser.CoresPerWorker;
-  const int instance = rank / parser.CoresPerWorker;
-  const int local_rank = rank % parser.CoresPerWorker;
-  const int min_valid = int(parser.redo_thresh*nWorkers*parser.nRepeats);
+  int nWorkers = nProcs / parser.CoresPerWorker;
+  int instance = rank / parser.CoresPerWorker;
+  int local_rank = rank % parser.CoresPerWorker;
+  int min_valid = int(parser.redo_thresh*nWorkers*parser.nRepeats);
 
   // LAMMPS communicators
   MPI_Comm instance_comm;
@@ -78,8 +97,6 @@ void run(MPI_Comm &world,std::string parser_file) {
   GathererTemplate g(parser,nWorkers,dump_index,rank);
   MPI_Bcast(&(g.initialized),1,MPI_INT,0,world);
   if(g.initialized==0) exit(-1);
-
-
 
   SimulatorTemplate sim(instance_comm,parser,g.params,instance);
   if(!sim.has_pafi) exit(-1);

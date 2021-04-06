@@ -17,20 +17,21 @@ include_directories(${CMAKE_INCLUDE_PATH})
 link_directories(${CMAKE_LIBRARY_PATH})
 
 # include VERBOSE for debugging output
-add_definitions(-std=c++11 -O3 -DLAMMPS_EXCEPTIONS -DLAMMPS_LIB_MPI)# -DVERBOSE)
+add_definitions(-std=c++11 -O3 -DLAMMPS_EXCEPTIONS -DLAMMPS_LIB_MPI)
 if(DEBUG)
 	add_definitions(-g -DVERBOSE)
 endif(DEBUG)
-file(GLOB src_files "core/*")
-file(GLOB std_files "pafi/*")
-file(GLOB ti_files "pafi-ti/*")
-add_executable(pafi ${src_files} ${std_files})
-add_executable(pafi-ti ${src_files} ${ti_files})
 
-add_executable(pafi-lammps-preparation ${src_files} pafi-test/pafi-lammps-preparation.cpp pafi-test/pafi-test.hpp)
-add_executable(pafi-path-test ${src_files} pafi-test/pafi-path-test.cpp pafi-test/pafi-test.hpp)
+file(GLOB src_files "core/*")
+
+add_executable(pafi ${src_files} pafi-main/pafi.cpp)
+add_executable(pafi-lammps-preparation ${src_files} pafi-main/pafi-lammps-preparation.cpp)
+add_executable(pafi-path-test ${src_files} pafi-main/pafi-path-test.cpp)
 
 target_link_libraries(pafi lammps_mpi)
-target_link_libraries(pafi-ti lammps_mpi)
 target_link_libraries(pafi-lammps-preparation lammps_mpi)
 target_link_libraries(pafi-path-test lammps_mpi)
+
+# custom pafi example
+add_executable(pafi-custom ${src_files} pafi-custom/pafi.cpp)
+target_link_libraries(pafi-custom lammps_mpi)

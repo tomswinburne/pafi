@@ -3,9 +3,13 @@
 
 #include "GenericGatherer.hpp"
 
-class LambdaGatherer : public GenericGatherer {
+/*
+  Gatherer collates simulation results and writes output files
+  See comments below for details
+*/
+class CustomGatherer : public GenericGatherer {
 public:
-  LambdaGatherer(Parser &p, int _nW, int di, int _rank) :
+  CustomGatherer(Parser &p, int _nW, int di, int _rank) :
     GenericGatherer(p, _nW, di, _rank){
       field_width=15; // narrower print out (more fields)
     };
@@ -17,6 +21,9 @@ public:
       but this function will output for any rank
       boolean argument : linebreak at end of output.
       If false, other arguments can be appended.
+
+      Standard PAFI equivalent:
+      GenericGatherer::screen_output_header(true);
     */
     GenericGatherer::screen_output_header(false);
     if(rank>0) return; // only print for rank==0
@@ -30,6 +37,9 @@ public:
       but this function will output for any rank
       boolean argument : linebreak at end of output.
       If false, other arguments can be appended.
+
+      Standard PAFI equivalent:
+      GenericGatherer::screen_output_line(true);
      */
     GenericGatherer::screen_output_line(false);
     if(rank>0) return; // only print for rank==0
