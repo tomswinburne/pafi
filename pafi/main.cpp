@@ -15,11 +15,15 @@
 
 // PAFI files
 #include "ConstantsTypes.hpp"
-
 #include "Parser.hpp"
+#include "Master.hpp"
 
-#include "LAMMPSSimulator.hpp"
-#include "GenericGatherer.hpp"
+#include "StandardSimulator.hpp"
+#include "StandardGatherer.hpp"
 
-typedef LAMMPSSimulator Simulator;
-typedef GenericGatherer Gatherer;
+int main(int narg, char **arg) {
+MPI_Init(&narg,&arg);
+  MPI_Comm world=MPI_COMM_WORLD;
+  run<StandardSimulator,StandardGatherer>(world,"./config.xml");
+  MPI_Finalize();
+};

@@ -22,6 +22,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, Holder &h,
 
   // run input script
   run_script("Input");
+  
   natoms=0;
   species=NULL;
   q=NULL;
@@ -29,9 +30,15 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, Holder &h,
   id=NULL;
   lt=NULL; // for scattering
 
-  // these won't change even if we rereun "input"
+  // these won't change size even if we rereun "input"
   fill_lammps_vectors();
 
+};
+
+void LAMMPSSimulator::reset() {
+  run_commands("clear");
+  made_fix=false;
+  made_compute=false;
 };
 
 void LAMMPSSimulator::fill_lammps_vectors() {
@@ -146,12 +153,6 @@ void LAMMPSSimulator::run_commands(std::string strv) {
   run_commands(parser->split_lines(strv));
 };
 
-
-void LAMMPSSimulator::reset() {
-  run_commands("clear");
-  made_fix=false;
-  made_compute=false;
-};
 
 void LAMMPSSimulator::log_error(std::string lc) {
   if(bool(lammps_has_error(lmp))) {

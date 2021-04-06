@@ -15,7 +15,6 @@
 
 // PAFI files
 #include "ConstantsTypes.hpp"
-
 #include "Parser.hpp"
 
 #include "LAMMPSSimulator.hpp"

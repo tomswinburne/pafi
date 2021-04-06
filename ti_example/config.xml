@@ -44,7 +44,7 @@ The format is Min, Max, number of Steps
 
 
   <!-- We require nprocs % CoresPerWorker==0 -->
-  <CoresPerWorker> 2 </CoresPerWorker>
+  <CoresPerWorker> 4 </CoresPerWorker>
 
   <!-- Number of samples per plane per worker -->
   <nRepeats> 1 </nRepeats>

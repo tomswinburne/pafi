@@ -1,14 +1,14 @@
-#include "pafi-ti.hpp"
 
-int main(int narg, char **arg) {
+template <class SimulatorTemplate,class GathererTemplate>
+void run(MPI_Comm &world,std::string parser_file) {
 
-  MPI_Init(&narg,&arg);
   int rank, nProcs, i, j;
-  MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-  MPI_Comm_size(MPI_COMM_WORLD,&nProcs);
+
+  MPI_Comm_rank(world,&rank);
+  MPI_Comm_size(world,&nProcs);
 
   // ************************ READ CONFIG FILE **********************************
-  Parser parser("./config.xml",false);
+  Parser parser(parser_file,false);
 
   if(!parser.xml_success) {
     if(rank==0) {
@@ -33,8 +33,8 @@ int main(int narg, char **arg) {
   // ************************ DUMP FOLDER *********************************
   int dump_index=-1;
   if(rank==0) parser.find_dump_file(dump_index);
-  MPI_Bcast(&dump_index,1,MPI_INT,0,MPI_COMM_WORLD);
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Bcast(&dump_index,1,MPI_INT,0,world);
+  MPI_Barrier(world);
   if(dump_index<0) {
     if(rank==0) {
       std::cout<<"\n\n\n*****************************\n\n\n";
@@ -56,29 +56,32 @@ int main(int narg, char **arg) {
 
   // LAMMPS communicators
   MPI_Comm instance_comm;
-  MPI_Comm_split(MPI_COMM_WORLD,instance,0,&instance_comm);
+  MPI_Group world_group, ensemble_group;
+  MPI_Comm ensemble_comm;
+
+  MPI_Comm_split(world,instance,0,&instance_comm);
 
   // local_rank==0 communicators - so verbose!
   int *masters = new int[nWorkers];
   for(i=0;i<nWorkers;i++) masters[i] = parser.CoresPerWorker*i;
   const int *cmasters = masters;
-  MPI_Group world_group, ensemble_group;
-  MPI_Comm ensemble_comm;
-  MPI_Comm_group(MPI_COMM_WORLD, &world_group);
+  MPI_Comm_group(world, &world_group);
   MPI_Group_incl(world_group, nWorkers, cmasters, &ensemble_group);
-  MPI_Comm_create_group(MPI_COMM_WORLD, ensemble_group, 0, &ensemble_comm);
+  MPI_Comm_create_group(world, ensemble_group, 0, &ensemble_comm);
+
+
 
   // see GlobalSeed
   parser.seed(instance);
 
   // set up data gatherer
-  Gatherer g(parser,nWorkers,dump_index,rank);
-  MPI_Bcast(&(g.initialized),1,MPI_INT,0,MPI_COMM_WORLD);
+  GathererTemplate g(parser,nWorkers,dump_index,rank);
+  MPI_Bcast(&(g.initialized),1,MPI_INT,0,world);
   if(g.initialized==0) exit(-1);
 
 
 
-  Simulator sim(instance_comm,parser,g.params,instance);
+  SimulatorTemplate sim(instance_comm,parser,g.params,instance);
   if(!sim.has_pafi) exit(-1);
   if(rank==0)  std::cout<<parser.welcome_message();
 
@@ -134,7 +137,7 @@ int main(int narg, char **arg) {
       if(MPI_COMM_NULL != ensemble_comm)
         MPI_Gather(g.data,g.dsize,MPI_DOUBLE,g.all_data,g.dsize,MPI_DOUBLE,0,ensemble_comm);
       total_valid += g.collate(valid+1);
-      MPI_Bcast(&total_valid,1,MPI_INT,0,MPI_COMM_WORLD);
+      MPI_Bcast(&total_valid,1,MPI_INT,0,world);
 
       if(rank==0 and parser.nRepeats>1) {
           std::cout<<"Repeat "<<repeat<<"/"<<parser.nRepeats<<", Validity ";
@@ -151,7 +154,7 @@ int main(int narg, char **arg) {
       sim.write_dev(g.dev_file,g.params["ReactionCoordinate"],dev+vsize);
     }
     g.next(); // wipe ens_data
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(world);
 
     if(g.finished()) break;
   }
@@ -160,15 +163,11 @@ int main(int narg, char **arg) {
   // close down LAMMPS instances
   sim.close();
 
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(world);
 
   // close down MPI
   MPI_Comm_free(&instance_comm);
   if(MPI_COMM_NULL != ensemble_comm) MPI_Comm_free(&ensemble_comm);
   MPI_Group_free(&world_group);
   MPI_Group_free(&ensemble_group);
-
-
-  MPI_Finalize();
-
 };

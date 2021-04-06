@@ -26,7 +26,7 @@ GenericGatherer(Parser &p, int _nW, int di, int _rank) {
   data=NULL;
   all_data=NULL;
   nWorkers = _nW;
-  fw=18;
+  field_width=18;
 
   sweep_order.clear();
 
@@ -198,14 +198,14 @@ virtual void screen_output_header(bool end=true) {
   if(rank>0) return;
   std::cout<<"\nStarting T="<<params["Temperature"]<<"K run\n";
   std::cout<<std::setw(35)<<"r";
-  std::cout<<std::setw(fw)<<"av(<Tpre>)";
-  std::cout<<std::setw(fw)<<"av(<Tpost>)";
-  std::cout<<std::setw(fw)<<"av(<dF/dr>)";
-  std::cout<<std::setw(fw)<<"err(<dF/dr>)";
-  std::cout<<std::setw(fw)<<"av(|(<X>-U).N|)";
-  std::cout<<std::setw(fw)<<"av(<N_true>.N)";
-  std::cout<<std::setw(fw)<<"Max Jump";
-  std::cout<<std::setw(fw)<<"% Valid";
+  std::cout<<std::setw(field_width)<<"av(<Tpre>)";
+  std::cout<<std::setw(field_width)<<"av(<Tpost>)";
+  std::cout<<std::setw(field_width)<<"av(<dF/dr>)";
+  std::cout<<std::setw(field_width)<<"err(<dF/dr>)";
+  std::cout<<std::setw(field_width)<<"av(|(<X>-U).N|)";
+  std::cout<<std::setw(field_width)<<"av(<N_true>.N)";
+  std::cout<<std::setw(field_width)<<"Max Jump";
+  std::cout<<std::setw(field_width)<<"% Valid";
   if(end) std::cout<<std::endl;
 };
 
@@ -213,14 +213,14 @@ virtual void screen_output_line(bool end=true) {
   if(rank>0) return;
   // screen output
   std::cout<<std::setw(35)<<params["ReactionCoordinate"];//"r"
-  std::cout<<std::setw(fw)<<ens_results["preT"].first;//"av(<Tpre>)"
-  std::cout<<std::setw(fw)<<ens_results["postT"].first;//"av(<Tpost>)"
-  std::cout<<std::setw(fw)<<ens_results["aveF"].first;//"av(<dF/dr>)"
-  std::cout<<std::setw(fw)<<ens_results["aveF"].second;//"err(<dF/dr>)"
-  std::cout<<std::setw(fw)<<ens_results["dXTangent"].first;//"av(|<X>-U).(dU/dr)|)"
-  std::cout<<std::setw(fw)<<ens_results["avePsi"].first;//"av(Psi)"
-  std::cout<<std::setw(fw)<<ens_results["MaxJump"].first;// max jump
-  std::cout<<std::setw(fw)<<ens_results["Valid"].first*100.0;// ratio of jumps
+  std::cout<<std::setw(field_width)<<ens_results["preT"].first;//"av(<Tpre>)"
+  std::cout<<std::setw(field_width)<<ens_results["postT"].first;//"av(<Tpost>)"
+  std::cout<<std::setw(field_width)<<ens_results["aveF"].first;//"av(<dF/dr>)"
+  std::cout<<std::setw(field_width)<<ens_results["aveF"].second;//"err(<dF/dr>)"
+  std::cout<<std::setw(field_width)<<ens_results["dXTangent"].first;//"av(|<X>-U).(dU/dr)|)"
+  std::cout<<std::setw(field_width)<<ens_results["avePsi"].first;//"av(Psi)"
+  std::cout<<std::setw(field_width)<<ens_results["MaxJump"].first;// max jump
+  std::cout<<std::setw(field_width)<<ens_results["Valid"].first*100.0;// ratio of jumps
   if(end) std::cout<<std::endl;
 };
 
@@ -236,7 +236,7 @@ void close() {
   // perform any integrations here....
 };
 
-int dsize,nWorkers,dump_index,rank,fw,initialized;
+int dsize,nWorkers,dump_index,rank,field_width,initialized;
 Holder params;
 Parser *parser;
 std::ofstream raw;

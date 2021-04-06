@@ -1,4 +1,4 @@
-#include "pafi.hpp"
+#include "pafi-test.hpp"
 
 int main(int narg, char **arg) {
 
@@ -53,7 +53,13 @@ int main(int narg, char **arg) {
   // see GlobalSeed
   parser.seed(instance);
 
-  Simulator sim(instance_comm,parser,instance);
+
+  // set up data gatherer
+  Gatherer g(parser,nWorkers,dump_index,rank);
+  MPI_Bcast(&(g.initialized),1,MPI_INT,0,MPI_COMM_WORLD);
+  if(g.initialized==0) exit(-1);
+
+  Simulator sim(instance_comm,parser,g.params,instance);
   if(!sim.has_pafi) exit(-1);
   if(rank==0)  std::cout<<parser.welcome_message();
 
@@ -76,12 +82,9 @@ int main(int narg, char **arg) {
     std::cout<<"\n\n\n*****************************\n\n\n";
   }
 
-  // set up data gatherer
-  Gatherer g(parser,sim.pathway_r,nWorkers,dump_index,rank);
-  MPI_Bcast(&(g.initialized),1,MPI_INT,0,MPI_COMM_WORLD);
-  if(g.initialized==0) exit(-1);
 
   g.screen_output_header();
+
   int fileindex = 0;
   while(true) {
     // sample

@@ -16,9 +16,14 @@
 // PAFI files
 #include "ConstantsTypes.hpp"
 #include "Parser.hpp"
+#include "Master.hpp"
 
-#include "Gatherer.hpp"
-#include "Simulator.hpp"
+#include "LambdaSimulator.hpp"
+#include "LambdaGatherer.hpp"
 
-typedef LAMMPS_TI_Simulator Simulator;
-typedef TI_Gatherer Gatherer;
+int main(int narg, char **arg) {
+MPI_Init(&narg,&arg);
+  MPI_Comm world=MPI_COMM_WORLD;
+  run<LambdaSimulator,LambdaGatherer>(world,"./config.xml");
+  MPI_Finalize();
+};
