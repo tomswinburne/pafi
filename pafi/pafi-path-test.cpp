@@ -418,7 +418,7 @@ int main(int narg, char **arg) {
     }
     if(std::fabs(F_bar_dense-E_bar_dense)>=0.001) {
       std::cout<<"\t\nTo reduce this error: ";
-      std::cout<<""\n\t\t More NEB images and/or increasing nPlanes in config.xml\n\n"<<std::endl;
+      std::cout<<"\n\t\t More NEB images and/or increasing nPlanes in config.xml\n\n"<<std::endl;
     }
 
     if(warning) std::cout<<"\nPathway checks failed / warnings generated! See above\n"<<std::endl;
