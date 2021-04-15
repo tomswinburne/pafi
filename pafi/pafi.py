@@ -16,6 +16,8 @@ from scipy.interpolate import interp1d
 import pandas as pd 
 import pathlib
 
+kb = 8.617e-5
+
 class Profile():
     """Class for handling (free) energy profiles.
     
@@ -161,9 +163,12 @@ class PafiResult():
         idata[:,1]-=idata[0][1]
         return idata
 
-    def plot(self):
+    def plot(self, ax=None, color=None):
         
-        fig, ax = plt.subplots()
+        if ax is None:
+            fig, ax = plt.subplots()
+        if color is None:
+            color="C0"
         discrete = self.discrete_profile.data
         splined = self.splined_profile.data
 
@@ -174,7 +179,7 @@ class PafiResult():
             ax.plot(profile[:,0],
                         profile[:,1],
                         style, 
-                        color=f'C{i}',
+                        color=color,
                         label=label)
 
             ax.fill_between(profile[:,0],
@@ -187,3 +192,33 @@ class PafiResult():
         ax.set_xlabel("Temperature [K]")      
         ax.legend(loc="best")  
         return ax
+
+def free_energy_vs_temperature(flist, harmonic_until_T=100, ymin=-0.05):
+
+    fig, ax = plt.subplots(1,2, figsize=(8,4),dpi=144,sharey=True)
+
+    barriers = []
+    for i, file in enumerate(flist):
+        r = PafiResult(file)
+        a = r.plot(ax[0], color=f'C{i}')
+        barriers.append(r.bar)
+
+    bar = np.array(barriers)
+    bar = bar[np.argsort(bar[:, 0])]
+
+    # Fit a linear regression on the domain below harmonic_until_T K
+    harmonic_regime = bar[np.where((bar[:,0]<=harmonic_until_T))]
+    p = np.polyfit(harmonic_regime[:,0], harmonic_regime[:,1],1)
+
+    ax[1].plot(bar[:,0], bar[:,1], "-o")
+    ax[1].fill_between(bar[:,0],bar[:,1]-bar[:,2],bar[:,1]+bar[:,2],facecolor='0.93')
+    ax[1].fill_between(bar[:,0],bar[:,3]-bar[:,4],bar[:,3]+bar[:,4],facecolor='0.93')
+    # harmonic domain
+    ax[1].plot(bar[:4,0],p[1]+p[0]*bar[:4,0],'k--', label=r'$\Delta U_0=%2.3geV,\Delta S_0=%2.3g{\rm k_B}$' % (p[1], -p[0]/kb))
+    ax[1].set_xlabel("Temperature [K]")
+    ax[1].legend(loc='best')
+    ax[1].set_ylim(ymin=ymin)
+    plt.subplots_adjust(wspace=0)
+    plt.tight_layout()
+        
+    return ax
