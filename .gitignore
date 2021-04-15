@@ -15,6 +15,10 @@ example/*
 lib/*
 notes.py
 
+# Python
+pafi/__pycache__
+*.pyc
+
 # Prerequisites
 */*.d
 
