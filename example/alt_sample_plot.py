@@ -19,7 +19,7 @@ from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 
 
-discretization_error_estimate = 0.015 # estimate in eV, divided by 2
+discretization_error_estimate = 0.005 # estimate in eV, divided by 2
 
 
 
@@ -56,15 +56,16 @@ def remesh(data,density = 10):
     spl_data[:,2] = interp1d(data[:,0], data[:,2],kind='linear')(spl_data[:,0])
     return spl_data
 
-def integrate(data):
+def integrate(data,find_first_min=False):
     idata = np.zeros(data.shape)
     idata[:,0] = data[:,0]
     idata[1:,1] = -cumtrapz(data[:,1],data[:,0])
-    idata[1:,2] = cumtrapz(data[:,2],data[:,0]) +  discretization_error_estimate
-    run_min =  np.minimum.accumulate(idata[:,1])
-    run_min_shift =  np.minimum.accumulate(np.append(idata[1:,1],idata[-1][1]))
-    if (run_min == run_min_shift).sum()>0:
-        idata = idata[run_min == run_min_shift,:]
+    idata[1:,2] = cumtrapz(data[:,2],data[:,0]) +  discretization_error_estimate\
+    if find_first_min:
+        run_min =  np.minimum.accumulate(idata[:,1])
+        run_min_shift =  np.minimum.accumulate(np.append(idata[1:,1],idata[-1][1]))
+        if (run_min == run_min_shift).sum()>0:
+            idata = idata[run_min == run_min_shift,:]
     idata[:,1]-=idata[0][1]
     return idata, idata[:,1].max(), idata[0][2] + idata[idata[:,1].argmax()][2]
 
