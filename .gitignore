@@ -18,6 +18,8 @@ notes.py
 # Python
 pafi/__pycache__
 *.pyc
+dist
+*.egg-info
 
 # Prerequisites
 */*.d
@@ -47,3 +49,4 @@ pafi/__pycache__
 */*.exe
 */*.out
 */*.app
+

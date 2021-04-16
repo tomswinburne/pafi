@@ -76,3 +76,63 @@ LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64  -DLAMMPS_EXCEPTIONS
    cmake ..
    make # or try make -j4 for parallel make using 4 cores
 ```
+
+## Install Python post processing package
+
+Pafi is distributed with a Python package that enables easy visualization of the results.
+To install the python package, you need to install `python` and `pip`.
+Then, go to the main directory and do: 
+
+```bash
+   pip install -e .
+```
+
+This way, the package will be installed in developer mode, meaning that any change of the python file(s) `pafi/*.py` or any git pull of a newer version will take effect immediately.
+If you want to have to re-install the package manually each time instead, still from the main directory:
+
+```python
+   pip install build #
+   python -m build   # to build the package
+   pip install .     # run it each time you want to (re)install it 
+```
+
+The `pafi` package is now importable from python, at any location. 
+
+For plotting the results of a simulation:
+
+```python
+import pafi
+import matplotlib.pyplot as plt
+
+p = pafi.PafiResult('raw_ensemble_output_0K_0')
+ax = p.plot()
+plt.show()
+```
+
+It also allows plotting the results of a series of simulations conducted at different temperatures:
+
+```python
+import pafi
+import matplotlib.pyplot as plt
+import glob
+
+fl = glob.glob('raw_ensemble_output_*K_0')
+ax = pafi.free_energy_vs_temperature(fl, harmonic_until_T=100)
+plt.show()
+```
+
+A command line tool is also available.
+
+To display the result of a simulation in a new matplotlib GUI window :
+
+```bash
+pafi_plot example/raw_ensemble_output_0K_0
+```
+
+To save the graph to pdf or png format (does not open the GUI):
+
+```bash
+pafi_plot example/raw_ensemble_output_0K_0 graph.pdf
+or
+pafi_plot example/raw_ensemble_output_0K_0 graph.png
+```
