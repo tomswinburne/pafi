@@ -196,12 +196,13 @@ class PafiResult():
 def free_energy_vs_temperature(flist, harmonic_until_T=100, ymin=-0.05):
 
     fig, ax = plt.subplots(1,2, figsize=(8,4),dpi=144,sharey=True)
+    
+    data = [PafiResult(file) for file in flist]
+    data.sort(key=lambda x: x.temperature)
+    barriers = [x.bar for x in data]
 
-    barriers = []
-    for i, file in enumerate(flist):
-        r = PafiResult(file)
+    for i, r in enumerate(data):
         a = r.plot(ax[0], color=f'C{i}')
-        barriers.append(r.bar)
 
     bar = np.array(barriers)
     bar = bar[np.argsort(bar[:, 0])]
