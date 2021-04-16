@@ -2,8 +2,6 @@
   <!-- omit trailing forward slash -->
   <DumpFolder>./dumps</DumpFolder>
 
-
-
   <!-- LowTemperature to HighTemperature in TemperatureSteps steps -->
   <LowTemperature> 200 </LowTemperature>
   <HighTemperature> 800 </HighTemperature>
@@ -16,13 +14,13 @@
   <nRepeats> 1 </nRepeats>
 
   <!-- Data gathering steps -->
-  <SampleSteps> 2000 </SampleSteps>
+  <SampleSteps> 1000 </SampleSteps>
 
   <!-- Steps for thermalization -->
   <ThermSteps> 1000 </ThermSteps>
 
   <!-- Max steps for optional in-plane minimizations (see below) -->
-  <MinSteps> 2000 </MinSteps>
+  <MinSteps> 1000 </MinSteps>
 
   <!--
     RELATIVE thermal expansion coefficients along X,Y,Z directions of simulation-
@@ -44,9 +42,9 @@
   <!--
   Friction parameter as used by MD engine (here LAMMPS : 1/strength)
   Typical 'units metal' value : 0.1 == 100 time steps decay time
-  If OverDamped=1, we set a strong friction i.e. < 0.1, e.g. 0.05
+  We set a strong friction << 0.1, e.g. 0.01 for Overdamped=0, 0.001 for Overdamped=1
   -->
-  <Friction> 0.05 </Friction>
+  <Friction> 0.005 </Friction>
 
   <!-- 0/1 Output LAMMPS logfiles for error checking purposes -->
   <LogLammps> 0 </LogLammps>

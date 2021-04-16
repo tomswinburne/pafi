@@ -168,6 +168,10 @@ int main(int narg, char **arg) {
       std::cout<<"opening dump file "<<fn<<std::endl;
       raw.open(fn.c_str(),std::ofstream::out);
       std::cout<<"\nStarting T="+Tstr+"K run\n\n";
+      if(std::stoi(params.parameters["OverDamped"])==1) {
+        std::cout<<"CAUTION : when OverDamped==1 Tpre/post are estimated from "
+        "equipartition. This will be less accurate at high temperature.\n\n";
+      }
     }
 
     for(int i=0;i<nWorkers;i++) valid[i]=0;
@@ -222,7 +226,7 @@ int main(int narg, char **arg) {
           local_res[instance*nRes + 1] = results["postT"];
           local_res[instance*nRes + 2] = results["aveF"];
           local_res[instance*nRes + 3] = results["stdF"];
-          local_res[instance*nRes + 4] = results["aveP"];
+          local_res[instance*nRes + 4] = results["avePsi"];
           local_res[instance*nRes + 5] = results["TdX"];
           local_res[instance*nRes + 6] = results["MaxDev"];
           local_res[instance*nRes + 7] = results["MaxJump"];

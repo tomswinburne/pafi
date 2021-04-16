@@ -65,8 +65,8 @@ public:
   void expansion(double T,double *newscale);
 
   double scale[3];
-  double refE,refT,refP;
   int natoms, tag, nknots, nres;
+  double MinEnergy;
   MinImage pbc;
   Parser *params;
   std::vector<spline> pathway;
