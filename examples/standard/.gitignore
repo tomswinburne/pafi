@@ -1,1 +1,3 @@
 dumps/*
+!dumps/*_[0,1].csv
+.ipynb_checkpoints/*

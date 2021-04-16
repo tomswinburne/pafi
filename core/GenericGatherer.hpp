@@ -52,7 +52,7 @@ GenericGatherer(Parser &p, int _nW, int di, int _rank) {
     initialized = 0;
   }
 
-  raw_dump_file = parser->dump_dir+"raw_data_output_"+std::to_string(dump_index)+".csv";
+  raw_dump_file = parser->dump_dir+"pafi_data_output_"+std::to_string(dump_index)+".csv";
   if(rank==0 and initialized==1) {
     if(raw.is_open()) raw.close();
     raw.open(raw_dump_file.c_str(),std::ofstream::out);
@@ -173,7 +173,7 @@ virtual int collate(int *valid) {
 };
 
 virtual void next() {
-
+  bool header=false;
   screen_output_line();
 
   for(auto &s : sweep_order) {
@@ -189,12 +189,13 @@ virtual void next() {
       }
 
     } else {
-      if(s.first=="Temperature" ) screen_output_header();
+      if(s.first=="Temperature" ) header=true;
       break;
     }
 
   }
   set_params();
+  if(header) screen_output_header();
   // wipe ens_data if master node
   if(rank==0) {
     for(int j=0;j<2*dsize+1;j++) ens_data[j] = 0.0;
@@ -204,6 +205,10 @@ virtual void next() {
 virtual void screen_output_header(bool end=true) {
   if(rank>0) return;
   std::cout<<"\nStarting T="<<params["Temperature"]<<"K run\n";
+
+  if(params["Temperature"]<0.01)
+    std::cout<<"T=0K, setting SampleSteps, ThermSteps to 1\n";
+
   if(std::stoi(parser->configuration["OverDamped"])==1) {
     std::cout<<"CAUTION : when OverDamped==1 Tpre/post are estimated from "
     "equipartition. This will be less accurate at high temperature.\n\n";

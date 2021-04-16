@@ -9,13 +9,15 @@ for T in Temperature:
 
 If Temperature and ReactionCoordinate are not present an error will be raised
 
+It Temperature==0, ThermSteps, SampleSteps will be set to 1
+
 The format is Min, Max, number of Steps
 
 'pafi-path-test' will ignore the Temperature scan
 -->
 <Parameters>
   <ReactionCoordinate>0.0 1.0 9</ReactionCoordinate>
-  <Temperature>200. 400. 2</Temperature>
+  <Temperature>0. 800. 5</Temperature> <!-- steps of 200K -->
 </Parameters>
 
 
@@ -67,7 +69,7 @@ The format is Min, Max, number of Steps
 
 
   <!-- perform overdamped/Brownian or Langevin dynamics on hyperplane -->
-  <OverDamped> 1 </OverDamped>
+  <OverDamped> 0 </OverDamped>
 
   <!--
   Friction parameter as used by MD engine (here LAMMPS : 1/strength)

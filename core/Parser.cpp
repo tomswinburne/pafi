@@ -292,14 +292,16 @@ void Parser::find_dump_file(int &suffix) {
   std::ifstream test;
   std::string params_file;
   for (suffix=0; suffix < 100; suffix++) {
-    params_file = dump_dir+"params_"+std::to_string(suffix);
+    params_file = dump_dir+"params_"+std::to_string(suffix)+".csv";
     test.open(params_file.c_str(),std::ifstream::in);
     if(test.is_open()) {
       test.close();
     } else {
       raw.open(params_file.c_str(),std::ofstream::out);
       if(raw.is_open()) {
-        raw<<welcome_message();
+        for(auto s: configuration) if(s.first!="PathwayConfigurations") {
+          raw<<s.first+","+s.second+"\n";
+        }
         raw.close();
         return;
       }
