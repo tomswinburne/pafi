@@ -35,37 +35,15 @@ public:
       9: preT : equipartition temperature before sample run
       10: stdF : Time variance of PAFI free energy gradient
     */
-
-    double *lmp_ptr;
-    auto v = parser->split_line(parser->configuration["SampleFixes"]);
-
-    int nfixes = v.size()/2;
-    LAMMPSSimulator::run_script("PreSample");
+    /* do something before e.g.
+    LAMMPSSimulator::run_script("CustomScript")
+    */
     std::string cmd = "run "+parser->configuration["SampleSteps"];
     LAMMPSSimulator::run_commands(cmd);
-
-    // need to have one for each worker....
-
-    for(int j=0;j<nfixes;j++) {
-
-      int f_s = std::stoi(v[2*j+1]); // number of fields from SampleFixes
-
-      if(f_s==0) continue;
-
-      if(f_s==1) { // returns a scalar
-        lmp_ptr = (double *) lammps_extract_fix(lmp,&*v[2*j].begin(),0,0,0,0);
-        results["f_"+v[2*j]+"_0"] = *lmp_ptr;
-        lammps_free(lmp_ptr);
-      } else { // returns a vector
-        for(int i=0;i<f_s;i++) {
-          lmp_ptr = (double *) lammps_extract_fix(lmp,&*v[2*j].begin(),0,1,i,0);
-          results["f_"+v[2*j]+"_"+std::to_string(i)] = *lmp_ptr;
-          lammps_free(lmp_ptr);
-        }
-      }
-      
-    }
-    LAMMPSSimulator::run_script("PostSample");
+    /* extract anything ?*/
+    /* do something after e.g.
+    LAMMPSSimulator::run_script("CustomPostScript")
+    */
   };
 };
 

@@ -1,10 +1,12 @@
 <!-- Which parameters to scan.
 If ReactionCoordinate and Temperature are not present an error will be raised
 The iteration sequence follows the order in this file,
+
 i.e. a python equivalent of this example would be
 for T in Temperature:
   for r in ReactionCoordinate:
     # do simulation
+
 If Temperature and ReactionCoordinate are not present an error will be raised
 
 The format is Min, Max, number of Steps
@@ -12,14 +14,14 @@ The format is Min, Max, number of Steps
 'pafi-path-test' will ignore the Temperature scan
 -->
 <Parameters>
-  <ReactionCoordinate>0.0 1.0 13</ReactionCoordinate>
-  <Temperature>10. 20. 2</Temperature>
+  <ReactionCoordinate>0.0 1.0 9</ReactionCoordinate>
+  <Temperature>200. 400. 2</Temperature>
 </Parameters>
 
 
 <Setup>
   <!-- MUST include trailing forward slash -->
-  <DumpFolder>./</DumpFolder>
+  <DumpFolder>./dumps/</DumpFolder>
 
   <!-- Global random number seed used to set worker seeds.
   If all parameters are left unchanged, simulation results should be
@@ -32,25 +34,23 @@ The format is Min, Max, number of Steps
 
   <!--If FreshSeed==1, a new seed is set for each sampling run.
     With FreshSeed==0, a worker uses the same seed for all planes.
-    This may reduce error in stochastic gradients... -->
+    This may reduce error in stochastic gradients. -->
   <FreshSeed>1</FreshSeed>
 
-
-
   <!-- We require nprocs % CoresPerWorker==0 -->
-  <CoresPerWorker> 2 </CoresPerWorker>
+  <CoresPerWorker> 1 </CoresPerWorker>
 
   <!-- Number of samples per plane per worker -->
   <nRepeats> 1 </nRepeats>
 
   <!-- Data gathering steps -->
-  <SampleSteps> 20 </SampleSteps>
+  <SampleSteps> 1000 </SampleSteps>
 
   <!-- Steps for thermalization -->
-  <ThermSteps> 10 </ThermSteps>
+  <ThermSteps> 1000 </ThermSteps>
 
   <!-- Max steps for optional in-plane minimizations (see below) -->
-  <MinSteps> 20 </MinSteps>
+  <MinSteps> 1000 </MinSteps>
 
   <!--
     RELATIVE thermal expansion coefficients along X,Y,Z directions of simulation-
@@ -72,9 +72,9 @@ The format is Min, Max, number of Steps
   <!--
   Friction parameter as used by MD engine (here LAMMPS : 1/strength)
   Typical 'units metal' value : 0.1 == 100 time steps decay time
-  If OverDamped=1, we set a strong friction i.e. < 0.1, e.g. 0.05
+  If OverDamped=1, we set a strong friction i.e. < 0.1, e.g. 0.01
   -->
-  <Friction> 0.05 </Friction>
+  <Friction> 0.01 </Friction>
 
   <!-- 0/1 Output LAMMPS logfiles for error checking purposes -->
   <LogLammps> 0 </LogLammps>
@@ -132,7 +132,6 @@ The format is Min, Max, number of Steps
   -->
   <Input>
     units metal
-    # DUMMY %Temperature%
     atom_style atomic
     atom_modify map array sort 0 0.0
     neigh_modify every 2 delay 10 check yes page 1000000 one 100000

@@ -1,5 +1,4 @@
 #include "Tester.hpp"
-
 #include "LAMMPSSimulator.hpp"
 #include "GenericGatherer.hpp"
 

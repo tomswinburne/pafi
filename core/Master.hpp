@@ -153,6 +153,8 @@ void run(MPI_Comm &world,std::string parser_file) {
       for(i=0;i<vsize;i++) dev[i] = 0.0;
 
       // need to distribute parameters....?
+      if(g.params["Temperature"]<0.01 and rank==0)
+        std::cout<<"T=0K, setting SampleSteps and ThermSteps to 1\n";
       sim.sample(g.params, dev); // sim*(parser, dev)
 
       error_count=sim.error_count;

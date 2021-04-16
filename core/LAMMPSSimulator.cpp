@@ -337,10 +337,17 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
 
   double r = params["ReactionCoordinate"];
   double T = params["Temperature"];
+  std::string SampleSteps = parser->configuration["SampleSteps"];
+  std::string ThermSteps = parser->configuration["ThermSteps"];
+  std::string ThermWindow = parser->configuration["ThermWindow"];
   int overdamped = std::stoi(parser->configuration["OverDamped"]);
 
-
-
+  if (T<0.01) {
+    SampleSteps="1";
+    ThermSteps="1";
+    ThermWindow="1";
+  }
+  
   populate(r,norm_mag,0.0);
   run_script("PreRun");  // Stress Fixes
   populate(r,norm_mag,T);
@@ -373,11 +380,10 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   lammps_free(lmp_ptr);
 
   cmd = "reset_timestep 0\n";
-  cmd += "fix ae all ave/time 1 "+parser->configuration["ThermWindow"]+" ";
-  cmd += parser->configuration["ThermSteps"]+" ";
+  cmd += "fix ae all ave/time 1 "+ThermWindow+" "+ThermSteps+" ";
   if(overdamped==1) cmd += "c_pe\n";
   else cmd += "c_thermo_temp\n";
-  cmd += "run "+parser->configuration["ThermSteps"];
+  cmd += "run "+ThermSteps;
   run_commands(cmd);
 
   // pre temperature
@@ -391,7 +397,7 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
 
 
   // time averages for sampling TODO: groupname for ave/atom
-  std::string SampleSteps = parser->configuration["SampleSteps"];
+
   cmd = "reset_timestep 0\n";
   cmd += "fix ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" ";
   if(overdamped==1) cmd += "c_pe\n";
