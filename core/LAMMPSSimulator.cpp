@@ -267,7 +267,7 @@ void LAMMPSSimulator::sample(double r, double T,
   error_count = 0;
   last_error_message="";
   results.clear();
-  double a_disp=0.0,max_disp = 0.0;
+  double a_disp=0.0,max_disp = 0.0, mean_disp=0.0;
   std::string cmd;
   double norm_mag, sampleT, dm;
   double *lmp_ptr,vol;
@@ -382,13 +382,15 @@ void LAMMPSSimulator::sample(double r, double T,
     run_commands("uncompute pafi_dx");
   }
   max_disp = 0.0;
+  mean_disp = 0.0;
   for(int i=0;i<natoms;i++) {
     a_disp = 0.0;
     for(int j=0;j<3;j++) a_disp += dev[3*i+j]*dev[3*i+j];
+    mean_disp += a_disp / natoms;
     max_disp = std::max(a_disp,max_disp);
   }
-  results["MaxJump"] = max_disp;
-
+  results["MaxJump"] = sqrt(max_disp)-sqrt(mean_disp);
+  
   // reset
   run_commands("unfix ae\nunfix af\nunfix hp");
 
