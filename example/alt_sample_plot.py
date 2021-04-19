@@ -21,6 +21,8 @@ from scipy.interpolate import interp1d
 
 discretization_error_estimate = 0.005 # estimate in eV, divided by 2
 
+# wildcard for raw dump files
+fl = glob.glob("dumps/raw*");
 
 
 # read in file line-by-line, returning ave and std for data with max displacement <= disp_thresh
@@ -60,7 +62,7 @@ def integrate(data,find_first_min=False):
     idata = np.zeros(data.shape)
     idata[:,0] = data[:,0]
     idata[1:,1] = -cumtrapz(data[:,1],data[:,0])
-    idata[1:,2] = cumtrapz(data[:,2],data[:,0]) +  discretization_error_estimate\
+    idata[1:,2] = cumtrapz(data[:,2],data[:,0]) +  discretization_error_estimate
     if find_first_min:
         run_min =  np.minimum.accumulate(idata[:,1])
         run_min_shift =  np.minimum.accumulate(np.append(idata[1:,1],idata[-1][1]))
@@ -71,9 +73,6 @@ def integrate(data,find_first_min=False):
 
 
 
-# file list- here we take epoch 5
-fl = glob.glob("50/dumps/raw*");
-print(fl)
 # temperatures
 T = np.r_[[int(f.split("_")[-2][:-1]) for f in fl]];
 
