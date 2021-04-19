@@ -30,7 +30,7 @@ Parser::Parser(std::string file, bool test) {
   parameters["MaxJump"] = "0.1";
   parameters["ReSampleThresh"] = "0.5";
   parameters["maxExtraRepeats"] = "1";
-  parameters["PostDump"] = "0";
+  parameters["postMin"] = "0";
   parameters["PreMin"] = "1";
   parameters["SplinePath"] = "1";
   parameters["MatchPlanes"] = "0";
@@ -106,7 +106,7 @@ void Parser::set_parameters() {
   maxjump_thresh = std::stod(parameters["MaxJump"]);
   redo_thresh = std::stod(parameters["ReSampleThresh"]);
   maxExtraRepeats = std::stoi(parameters["maxExtraRepeats"]);
-  postDump = bool(std::stoi(parameters["PostDump"]));
+  postMin = bool(std::stoi(parameters["postMin"]));
   preMin = bool(std::stoi(parameters["PreMin"]));
   spline_path = bool(std::stoi(parameters["SplinePath"]));
   match_planes = !bool(std::stoi(parameters["Rediscretize"]));
@@ -132,7 +132,7 @@ void Parser::overwrite_xml(int nProcs) {
   parameters["MaxJump"] = "0.1";
   parameters["ReSampleThresh"] = "0.5";
   parameters["maxExtraRepeats"] = "1";
-  //parameters["PostDump"] = "1";
+  //parameters["postMin"] = "1";
   //parameters["PreMin"] = "1";
 };
 

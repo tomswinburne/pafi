@@ -331,7 +331,7 @@ void LAMMPSSimulator::sample(double r, double T,
   if(overdamped==1) cmd += "c_pe\n";
   else cmd += "c_thermo_temp\n";
 
-  if(!params->postDump) {
+  if(!params->postMin) {
     cmd += "compute pafi_dx all displace/atom\n";
     cmd += "fix pafi_ap all ave/atom 1 "+SampleSteps+" "+SampleSteps;
     cmd+= " c_pafi_dx[1] c_pafi_dx[2] c_pafi_dx[3]\n";
@@ -368,7 +368,7 @@ void LAMMPSSimulator::sample(double r, double T,
 
   // post minmization - max jump
 
-  if(params->postDump) {
+  if(params->postMin) {
     cmd = "min_style fire\n minimize 0 0.01 ";
     cmd += params->parameters["MinSteps"]+" "+params->parameters["MinSteps"];
     run_commands(cmd);

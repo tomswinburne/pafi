@@ -53,7 +53,7 @@
    0 : (Default) Output time-and-ensemble averaged in-plane deviation from reference pathway. Can indicate finite temperature path but will have sampling noise
    1 : Output ensemble averaged in-plane deviation following in-plane minimization post-run. No noise but will lose some/all features of path
   -->
-  <PostDump> 0 </PostDump>
+  <postMin> 0 </postMin>
 
   <!--
   Perform an in-plane minimization before thermalization/sampling.
