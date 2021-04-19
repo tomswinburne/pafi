@@ -332,7 +332,9 @@ void LAMMPSSimulator::sample(double r, double T,
   else cmd += "c_thermo_temp\n";
 
   if(!params->postDump) {
-    cmd += "fix ap all ave/atom 1 "+SampleSteps+" "+SampleSteps+" x y z\n";
+    cmd += "compute pafi_dx all displace/atom\n";
+    cmd += "fix pafi_ap all ave/atom 1 "+SampleSteps+" "+SampleSteps;
+    cmd+= " c_pafi_dx[1] c_pafi_dx[2] c_pafi_dx[3]\n";
   }
 
   cmd += "fix af all ave/time 1 "+SampleSteps+" "+SampleSteps;
@@ -365,36 +367,27 @@ void LAMMPSSimulator::sample(double r, double T,
   lammps_free(lmp_ptr);
 
   // post minmization - max jump
-  if(params->preMin) {
+
+  if(params->postDump) {
     cmd = "min_style fire\n minimize 0 0.01 ";
     cmd += params->parameters["MinSteps"]+" "+params->parameters["MinSteps"];
     run_commands(cmd);
+    gather("x",3,dev);
+    for(int i=0;i<3*natoms;i++) dev[i] -= path(i,r,0,scale[i%3]);
+    pbc.wrap(dev,3*natoms);
+  } else {
+    run_commands("reset_timestep "+SampleSteps); // for fix calculation
+    gather("f_pafi_ap",3,dev);
+    run_commands("unfix pafi_ap");
+    run_commands("uncompute pafi_dx");
   }
-  gather("x",3,dev);
-  for(int i=0;i<3*natoms;i++) dev[i] -= path(i,r,0,scale[i%3]);
-  pbc.wrap(dev,3*natoms);
+  max_disp = 0.0;
   for(int i=0;i<natoms;i++) {
     a_disp = 0.0;
     for(int j=0;j<3;j++) a_disp += dev[3*i+j]*dev[3*i+j];
     max_disp = std::max(a_disp,max_disp);
-    if(!params->postDump) for(int j=0;j<3;j++) dev[3*i+j] = 0.0;
   }
-  results["MaxJump"] = sqrt(max_disp);
-
-  // deviation average
-  run_commands("reset_timestep "+SampleSteps); // for fix calculation
-  if(!params->postDump) {
-    gather("f_ap",3,dev);
-    for(int i=0;i<3*natoms;i++) dev[i] = dev[i]/scale[i%3]-path(i,r,0,1.0);
-    pbc.wrap(dev,3*natoms);
-    dm = 0.0;
-    for(int i=0;i<3*natoms;i++) {
-      dev[i] *= scale[i%3];
-      dm = std::max(dm,sqrt(dev[i] * dev[i]));
-    }
-    results["MaxDev"] = dm;
-    run_commands("unfix ap");
-  } else results["MaxDev"] = sqrt(max_disp);
+  results["MaxJump"] = max_disp;
 
   // reset
   run_commands("unfix ae\nunfix af\nunfix hp");
