@@ -2,11 +2,11 @@
 cmake_minimum_required(VERSION 3.5)
 
 
-set(DEBUG 1)
+set(DEBUG 0)
 
 set(PREFIX "$ENV{PREFIX}") # example value
-set(CMAKE_CXX_COMPILER /usr/local/bin/mpicxx) # example value
-set(CMAKE_C_COMPILER /usr/local/bin/mpicc) # example value
+set(CMAKE_CXX_COMPILER mpicxx) # example value
+set(CMAKE_C_COMPILER mpicc) # example value
 set(CMAKE_INCLUDE_PATH ${PREFIX}/include) # location of copied lammps header directory (lammps/*.h)
 set(CMAKE_LIBRARY_PATH ${PREFIX}/lib) # location of liblammps_mpi.a
 

@@ -69,7 +69,7 @@ void LAMMPSSimulator::fill_lammps_vectors() {
     std::cout<<"LAMMPSSimulator(): has_pafi: "<<has_pafi<<std::endl;
   #endif
 
-  if(id==NULL) id = new int[natoms];
+  id = new int[natoms];
   gather("id",1,id);
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered id"<<std::endl;
@@ -79,7 +79,7 @@ void LAMMPSSimulator::fill_lammps_vectors() {
   pbc.load(getCellData());
 
   // Get type / image info
-  if(species==NULL) species = new int[natoms];
+  species = new int[natoms];
   gather("type",1,species);
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered type"<<std::endl;
@@ -87,14 +87,16 @@ void LAMMPSSimulator::fill_lammps_vectors() {
 
   s_flag=true;
 
-  if(image==NULL) image = new int[natoms];
+  image = new int[natoms];
   gather("image",1,image);
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered image"<<std::endl;
   #endif
 
-  if(x==NULL) x = new double[3*natoms]; // mainly for declaration
-  if(lt==NULL) lt = new double[natoms];
+
+  x = new double[3*natoms]; // mainly for declaration
+  lt = new double[natoms];
+
   gather("x",1,x);
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered x"<<std::endl;

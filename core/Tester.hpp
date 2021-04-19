@@ -115,7 +115,7 @@ void test(MPI_Comm &world,std::string parser_file,bool lammps_prep) {
     sim.sample(g.params, dev); // sim*(parser, dev)
 
     g.prepare(sim.results); // allocate memory if not already done
-    for(i=0;i<g.dsize;i++) g.all_data[i]=g.data[i]; // hack for test
+    if(rank==0) for(i=0;i<g.dsize;i++) g.all_data[i]=g.data[i]; // hack for test
     int total_valid = g.collate(valid+1);
 
     if(lammps_prep) {
