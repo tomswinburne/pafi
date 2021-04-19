@@ -5,6 +5,7 @@
 # test data
 build/*
 mbuild/*
+obuild/*
 examples/*
 run/*
 # dev data

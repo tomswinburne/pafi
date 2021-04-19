@@ -365,9 +365,11 @@ void LAMMPSSimulator::sample(double r, double T,
   lammps_free(lmp_ptr);
 
   // post minmization - max jump
-  cmd = "min_style fire\n minimize 0 0.01 ";
-  cmd += params->parameters["MinSteps"]+" "+params->parameters["MinSteps"];
-  run_commands(cmd);
+  if(params->preMin) {
+    cmd = "min_style fire\n minimize 0 0.01 ";
+    cmd += params->parameters["MinSteps"]+" "+params->parameters["MinSteps"];
+    run_commands(cmd);
+  }
   gather("x",3,dev);
   for(int i=0;i<3*natoms;i++) dev[i] -= path(i,r,0,scale[i%3]);
   pbc.wrap(dev,3*natoms);

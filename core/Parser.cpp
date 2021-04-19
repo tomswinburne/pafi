@@ -132,8 +132,8 @@ void Parser::overwrite_xml(int nProcs) {
   parameters["MaxJump"] = "0.1";
   parameters["ReSampleThresh"] = "0.5";
   parameters["maxExtraRepeats"] = "1";
-  parameters["PostDump"] = "1";
-  parameters["PreMin"] = "1";
+  //parameters["PostDump"] = "1";
+  //parameters["PreMin"] = "1";
 };
 
 // remove leading and trailing whitespaces - avoids RapidXML parsing bug
