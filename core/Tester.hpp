@@ -147,19 +147,94 @@ void test(MPI_Comm &world,std::string parser_file,bool lammps_prep) {
     spline Fspl;
     Fspl.set_points(sample_r,dF);
     double diff_r = sample_r[sample_r.size()-1] - sample_r[0];
-    double dr = diff_r / sample_r.size() / 10.0;
+    double dr = diff_r / sample_r.size() / 20.0;
     double F_bar = 0., E_bar=0., f=0.;
+
     for(auto e: dE) E_bar = std::max(E_bar,e-dE[0]);
     for(double r=sample_r[0];r<=sample_r[0]+diff_r;r+=dr) {
-      f -= dr/2.0 * Fspl(r);
+      f += dr/2.0 * Fspl(r);
       F_bar = std::max(F_bar,f);
-      f -= dr/2.0 * Fspl(r);
+      f += dr/2.0 * Fspl(r);
     }
     std::cout<<"\n\n******************************************************************\n\n";
-    std::cout<<"\tEnergy Barrier ~= "<<E_bar<<"eV, Force Integration Barrier ~= "<<F_bar<<" eV\n";
-    std::cout<<"\tONLY SIMPLE TESTS PERFORMED HERE!\n"
-    "\tPLEASE USE pafi-path-test TO TEST PATHWAY FOR FORCE INTEGRATION\n"
-    "\n******************************************************************\n\n"<<std::endl;
+
+    if(lammps_prep) {
+      std::cout<<"\tEnergy Barrier ~= "<<E_bar<<"eV, Force integration Barrier ~= "<<F_bar<<" eV\n";
+      std::cout<<"\tONLY SIMPLE TESTS PERFORMED HERE!\n"
+      "\tPLEASE USE pafi-path-test TO TEST PATHWAY FOR FORCE INTEGRATION\n"
+      "\n******************************************************************\n\n"<<std::endl;
+    } else {
+
+      std::cout<<"Absolute Forces and differences between knots: \n";
+
+
+      double _dF,_ddF,ddF[2] = {0.,0.},F=0.;
+      bool warning=false;
+      int i=0;
+      for (;i<dF.size()-1;i++) {
+        _ddF = std::fabs(dF[i+1]-dF[i]);
+        _dF = -(dF[i]+dF[i+1])/2. * (sample_r[i+1]-sample_r[i]);
+
+        std::cout<<"\n\t Knot "<<i+1<<": r = "<<sample_r[i]<<" |dF| = "<<std::fabs(dF[i])<<" , F = "<<F<<"\n";
+        std::cout<<"\n\t\t   Max | X_postmin - X | = "<<maxjumpr[i];
+        if(maxjumpr[i]>0.02) {
+          warning = true;
+          std::cout<<" !! This should be zero for a properly discretized minimum energy path!\n"
+          " Values greater than ~0.02 should be considered risky;"
+          " Perhaps consider more integration points here. WARNING";
+        }
+
+        std::cout<<"\n\t\t        | dF_next - dF | = "<<_ddF;
+        std::cout<<"\n\t\t Approx |  F_next - F  | = "<<_dF;
+        std::cout<<"\n\t\t        |  r_next - r  | = "<<sample_r[i+1]-sample_r[i]<<"\n";
+
+        if(_ddF<0.02 && std::fabs(dF[i])<0.02) {
+          warning = true;
+          std::cout<<"Very flat segment! "
+          "Perhaps remove knot "<<i+1<<" or "<<i+2<<"?\n. FAIL";
+        }
+        double rel_dF = (_dF/F_bar*sample_r.size()/2.0); // =1 for triangle barrier
+        if(rel_dF>5.0) {
+          warning = true;
+          std::cout<<"Large free energy change! "
+          "Consider more integration points here. FAIL";
+        }
+
+        ddF[0] += _ddF/double(dF.size()-1);
+        ddF[1] += _ddF*_ddF/double(dF.size()-1);
+
+        F += -(dF[i]+dF[i+1])/2. * (sample_r[i+1]-sample_r[i]);
+        std::cout<<"\n -------- \n";
+      }
+      ddF[1] -= ddF[0]*ddF[0];
+      std::cout<<"\n\t Knot "<<i+1<<": r = "<<sample_r[i]<<" |dF| = "<<std::fabs(dF[i])<<" , F = "<<F<<"\n";
+      std::cout<<"\n\t\t   Max | X_postmin - X | = "<<maxjumpr[i];
+      std::cout<<"\n -------- \n";
+      std::cout<<"\n\n\tAverage, Std in d|dF|:"<<ddF[0]<<" , "<<sqrt(ddF[1])<<std::endl;
+
+
+
+      std::cout<<"\n\n--------------- integration checks at zero temperature -----\n";
+      std::cout<<"\n\tEnergy Barrier: "<<std::setprecision(5)<<E_bar;
+      std::cout<<" eV, Force integration Barrier: "<<std::setprecision(5)<<F_bar<<" eV";
+      std::cout<<"\n\n\tAbsolute error of: "<<std::setprecision(5)<<std::fabs(F_bar-E_bar)*1000.<<" meV ";
+      double pc_prec = (F_bar/E_bar-1.0)*100.;
+      std::cout<<" ("<<std::setprecision(5)<<pc_prec<<"%)"<<std::endl;
+      if(std::fabs(pc_prec)<=2) {
+        std::cout<<"\n\tError < 2% - within likely potential accuracy, OK for sampling!\n";
+      } else {
+        warning=true;
+        std::cout<<"\n\tError > 2%, could be too high...\n";
+      }
+      if(std::fabs(pc_prec)>=0.5) {
+        std::cout<<"\t\n\tTo reduce this error: ";
+        std::cout<<"\n\t\t More NEB images and/or increasing nPlanes in config.xml\n\n"<<std::endl;
+      }
+
+      if(warning) std::cout<<"\nPathway checks failed / warnings generated! See above\n"<<std::endl;
+      else std::cout<<"\nPathway checks passed!\n"<<std::endl;
+    }
+
 
   }
 

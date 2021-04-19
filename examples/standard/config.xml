@@ -17,7 +17,7 @@ The format is Min, Max, number of Steps
 -->
 <Parameters>
   <ReactionCoordinate>0.0 1.0 9</ReactionCoordinate>
-  <Temperature>0. 800. 5</Temperature> <!-- steps of 200K -->
+  <Temperature>100. 800. 5</Temperature> <!-- steps of 200K -->
 </Parameters>
 
 

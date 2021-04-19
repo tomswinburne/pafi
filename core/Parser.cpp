@@ -180,7 +180,6 @@ void Parser::overwrite_xml(int nProcs) {
   configuration["ThermSteps"] = "1";
   configuration["ThermWindow"] = "1";
   configuration["nRepeats"] = "1";
-  configuration["DumpFolder"] = "./";
   configuration["OverDamped"] = "1";
   configuration["Friction"] = "0.1";
   configuration["MaxJump"] = "1.0";
