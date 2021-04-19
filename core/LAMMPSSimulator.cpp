@@ -347,7 +347,7 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
     ThermSteps="1";
     ThermWindow="1";
   }
-  
+
   populate(r,norm_mag,0.0);
   run_script("PreRun");  // Stress Fixes
   populate(r,norm_mag,T);
@@ -436,8 +436,10 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   lammps_free(lmp_ptr);
 
   // post minmization - max jump
-  cmd = "min_style fire\n minimize 0 0.001 ";
-  cmd += parser->configuration["MinSteps"]+" "+parser->configuration["MinSteps"];
+  if(parser->preMin) {
+    cmd = "min_style fire\n minimize 0 0.001 ";
+    cmd += parser->configuration["MinSteps"]+" "+parser->configuration["MinSteps"];
+  }
   run_commands(cmd);
   gather("x",3,dev);
   for(int i=0;i<3*natoms;i++) dev[i] -= path(i,r,0,scale[i%3]);

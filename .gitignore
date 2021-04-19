@@ -4,6 +4,7 @@
 
 # test data
 build/*
+obuild/*
 
 build-verbose/*
 run/*

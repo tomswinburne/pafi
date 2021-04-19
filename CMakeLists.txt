@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 
-set(DEBUG 0)
+set(DEBUG 1)
 
 set(PREFIX "$ENV{PREFIX}") # example value
 set(CMAKE_CXX_COMPILER /usr/local/bin/mpicxx) # example value
@@ -36,4 +36,7 @@ target_link_libraries(pafi-path-test lammps_mpi)
 
 # custom pafi example
 add_executable(pafi-custom ${src_files} pafi-custom/pafi.cpp)
+add_executable(pafi-custom-path-test ${src_files} pafi-custom/pafi-path-test.cpp)
+
 target_link_libraries(pafi-custom lammps_mpi)
+target_link_libraries(pafi-custom-path-test lammps_mpi)

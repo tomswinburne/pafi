@@ -38,8 +38,10 @@ public:
     /* do something before e.g.
     LAMMPSSimulator::run_script("CustomScript")
     */
+    LAMMPSSimulator::run_script("PreSample");
     std::string cmd = "run "+parser->configuration["SampleSteps"];
     LAMMPSSimulator::run_commands(cmd);
+    LAMMPSSimulator::run_script("PostSample");
     /* extract anything ?*/
     /* do something after e.g.
     LAMMPSSimulator::run_script("CustomPostScript")

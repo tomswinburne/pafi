@@ -186,8 +186,6 @@ void Parser::overwrite_xml(int nProcs) {
   configuration["MaxJump"] = "1.0";
   configuration["ReSampleThresh"] = "0.5";
   configuration["maxExtraRepeats"] = "0";
-  configuration["PostDump"] = "1";
-  configuration["PreMin"] = "1";
   configuration["WriteDev"] = "0";
   parameters["Temperature"] = std::make_tuple(0.,0.,1);
 };
