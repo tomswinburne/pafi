@@ -34,6 +34,7 @@ Parser::Parser(std::string file, bool test) {
   parameters["PreMin"] = "1";
   parameters["SplinePath"] = "1";
   parameters["MatchPlanes"] = "0";
+  parameters["FixOrder"] = "0";
 
 
   seeded = false;

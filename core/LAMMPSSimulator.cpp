@@ -270,23 +270,25 @@ void LAMMPSSimulator::sample(double r, double T,
   double a_disp=0.0,max_disp = 0.0, mean_disp=0.0;
   std::string cmd;
   double norm_mag, sampleT, dm;
-  double *lmp_ptr,vol;
+  double *lmp_ptr;
 
   std::string od_str = params->parameters["OverDamped"];
   std::string SampleSteps = params->parameters["SampleSteps"];
   std::string ThermSteps = params->parameters["ThermSteps"];
   std::string ThermWindow = params->parameters["ThermWindow"];
   std::string T_str = std::to_string(T);
+  /*
+  0: PreRun - HP - PostRun
+  1: HP - PreRun - PostRun
+  */
+  int fix_order = std::stoi(params->parameters["FixOrder"]);
+
   params->parameters["Temperature"] = T_str;
   int overdamped = std::stoi(od_str);
 
-
-
   populate(r,norm_mag,0.0);
-  run_script("PreRun");  // Stress Fixes
+  if(fix_order==0) run_script("PreRun");  // Stress Fixes
   populate(r,norm_mag,T);
-  vol = lammps_get_thermo(lmp,(char *)"vol"); // get volume
-
 
   // pafi fix
   cmd = "run 0\n"; // to ensure the PreRun script is executed
@@ -294,6 +296,8 @@ void LAMMPSSimulator::sample(double r, double T,
   cmd += params->parameters["Friction"]+" ";
   cmd += params->seed_str()+" overdamped "+od_str+" com 1\nrun 0";
   run_commands(cmd);
+  
+  if(fix_order==1) run_script("PreRun");  // Stress Fixes
 
   if(params->preMin) {
     #ifdef VERBOSE
@@ -343,7 +347,7 @@ void LAMMPSSimulator::sample(double r, double T,
   run_commands(cmd);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
-  if(overdamped==1) sampleT = (*lmp_ptr-MinEnergy)/BOLTZ/1.5/natoms;//nktv2p/natoms*vol/3.0;
+  if(overdamped==1) sampleT = (*lmp_ptr-MinEnergy)/BOLTZ/1.5/natoms;
   else sampleT = *lmp_ptr;
   lammps_free(lmp_ptr);
   results["postT"] = sampleT;
@@ -390,7 +394,7 @@ void LAMMPSSimulator::sample(double r, double T,
     max_disp = std::max(a_disp,max_disp);
   }
   results["MaxJump"] = sqrt(max_disp)-sqrt(mean_disp);
-  
+
   // reset
   run_commands("unfix ae\nunfix af\nunfix hp");
 
