@@ -20,6 +20,12 @@ example/dumps/*
 lib/*
 notes.py
 
+# Python
+pafi/__pycache__
+*.pyc
+dist
+*.egg-info
+
 # Prerequisites
 */*.d
 
@@ -48,3 +54,4 @@ notes.py
 */*.exe
 */*.out
 */*.app
+
