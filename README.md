@@ -15,8 +15,8 @@ swinburne at cinam.univ-mrs.fr
 
 Using PAFI? Please cite [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503)
 > *Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems*   
-> T.D. Swinburne and M.-C. Marinica, Physical Review Letters 120 (13), 135503, 2018
-Please cite the above when publishing results using PAFI
+> T.D. Swinburne and M.-C. Marinica
+> Physical Review Letters 120 (13), 135503, 2018
 
 ## [Installation Instructions](INSTALL.md)
 
