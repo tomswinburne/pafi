@@ -14,18 +14,19 @@
 
 # Installation
 
-## Compile `LAMMPS` with `USER-MISC` package
-1. `PAFI` is now integrated into `LAMMPS` as part of the `USER-MISC` package.
+## Compile `LAMMPS` with `EXTRA-FIX` package
+
+1. `PAFI` is now integrated into `LAMMPS` as part of the `EXTRA-FIX` package, introduced in the 28 July 2021 Patch release. For earlier versions, use the `USER-MISC` package instead.
 You can [download](https://lammps.sandia.gov/download.html) a tarball from the `LAMMPS`
 website or clone the public repository with
 ```bash
 git clone https://github.com/lammps/lammps.git
 ```
 
-2. Install `USER-MISC` and any packages you desire (e.g. replica for `NEB`)
+2. Install `EXTRA-FIX` and any packages you desire (e.g. replica for `NEB`)
 ```bash
 cd /path/to/lammps/src
-make yes-user-misc
+make yes-extra-fix ## yes-user-misc for versions before 28 July 2021 Patch release
 make yes-replica # for NEB calculation
 make yes-package # (e.g. manybody for EAM potentials etc)
 ```
