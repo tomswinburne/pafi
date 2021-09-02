@@ -35,6 +35,7 @@ Parser::Parser(std::string file, bool test) {
   parameters["SplinePath"] = "1";
   parameters["MatchPlanes"] = "0";
   parameters["FixOrder"] = "0";
+  parameters["RealMEPDist"] = "1";
 
 
   seeded = false;
@@ -111,6 +112,7 @@ void Parser::set_parameters() {
   preMin = bool(std::stoi(parameters["PreMin"]));
   spline_path = bool(std::stoi(parameters["SplinePath"]));
   match_planes = !bool(std::stoi(parameters["Rediscretize"]));
+  real_coord = bool(std::stoi(parameters["RealMEPDist"]));
 };
 
 void Parser::overwrite_xml(int nProcs) {

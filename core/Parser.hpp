@@ -47,7 +47,7 @@ double lowT,highT,Friction,startr,stopr,maxjump_thresh,redo_thresh;
 int CoresPerWorker, nPlanes, TSteps, nRepeats, maxExtraRepeats;
 unsigned random_seed;
 std::string dump_dir;
-bool seeded,loglammps,postMin,preMin,xml_success,spline_path,match_planes;
+bool seeded,loglammps,postMin,preMin,xml_success,spline_path,match_planes,real_coord;
 
 private:
   std::mt19937 rng;
