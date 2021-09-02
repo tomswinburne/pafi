@@ -70,7 +70,7 @@ int main(int narg, char **arg) {
     std::cout<<"\n\n";
   }
 
-  sim.make_path(params.PathwayConfigurations);
+  sim.make_path(params.PathwayConfigurations,params.real_coord);
 
   f = new double[3*sim.natoms];
 

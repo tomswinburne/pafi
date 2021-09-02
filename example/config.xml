@@ -87,6 +87,8 @@
   <!-- If==0, turn off cubic spline interpolation. NOT recommended -->
   <SplinePath>1</SplinePath>
 
+  <!-- Use geometric distance for MEP coordinate (Default: 1) -->
+  <RealMEPDist>1</RealMEPDist>
 
 
   <!-- Maximum Atomic Displacement between local in-plane minima

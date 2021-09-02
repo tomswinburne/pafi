@@ -113,7 +113,7 @@ int main(int narg, char **arg) {
     std::cout<<"\n\n";
   }
 
-  sim.make_path(params.PathwayConfigurations);
+  sim.make_path(params.PathwayConfigurations,params.real_coord);
   if(sim.error_count>0 && local_rank==0) std::cout<<sim.last_error()<<std::endl;
 
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
