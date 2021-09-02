@@ -28,10 +28,19 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): Ran input script"<<std::endl;
   #endif
+
+
+
   natoms = *((int *) lammps_extract_global(lmp,(char *) "natoms"));
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): natoms: "<<natoms<<std::endl;
   #endif
+
+  nktv2p = *((double *) lammps_extract_global(lmp,(char *)"nktv2p"));
+  #ifdef VERBOSE
+  if(local_rank==0) std::cout<<"LAMMPSSimulator(): nktv2p: "<<nktv2p<<std::endl;
+  #endif
+
 
   has_pafi = (bool)lammps_config_has_package((char *)"USER-MISC");
   #ifdef VERBOSE
@@ -258,23 +267,37 @@ void LAMMPSSimulator::sample(double r, double T,
   error_count = 0;
   last_error_message="";
   results.clear();
-  double a_disp=0.0,max_disp = 0.0;
+  double a_disp=0.0,max_disp = 0.0, mean_disp=0.0;
   std::string cmd;
   double norm_mag, sampleT, dm;
   double *lmp_ptr;
 
+  std::string od_str = params->parameters["OverDamped"];
+  std::string SampleSteps = params->parameters["SampleSteps"];
+  std::string ThermSteps = params->parameters["ThermSteps"];
+  std::string ThermWindow = params->parameters["ThermWindow"];
+  std::string T_str = std::to_string(T);
+  /*
+  0: PreRun - HP - PostRun
+  1: HP - PreRun - PostRun
+  */
+  int fix_order = std::stoi(params->parameters["FixOrder"]);
+
+  params->parameters["Temperature"] = T_str;
+  int overdamped = std::stoi(od_str);
+
   populate(r,norm_mag,0.0);
-  run_script("PreRun");  // Stress Fixes
+  if(fix_order==0) run_script("PreRun");  // Stress Fixes
   populate(r,norm_mag,T);
 
   // pafi fix
   cmd = "run 0\n"; // to ensure the PreRun script is executed
-  params->parameters["Temperature"] = std::to_string(T);
-  cmd += "fix hp all pafi __pafipath "+params->parameters["Temperature"]+" ";
+  cmd += "fix hp all pafi __pafipath "+T_str+" ";
   cmd += params->parameters["Friction"]+" ";
-  cmd += params->seed_str()+" overdamped ";
-  cmd += params->parameters["OverDamped"]+" com 1\nrun 0";
+  cmd += params->seed_str()+" overdamped "+od_str+" com 1\nrun 0";
   run_commands(cmd);
+  
+  if(fix_order==1) run_script("PreRun");  // Stress Fixes
 
   if(params->preMin) {
     #ifdef VERBOSE
@@ -283,112 +306,97 @@ void LAMMPSSimulator::sample(double r, double T,
     #endif
     cmd = "min_style fire\n minimize 0 0.01 ";
     cmd += params->parameters["MinSteps"]+" "+params->parameters["MinSteps"];
+    cmd += "\nrun 0";
     run_commands(cmd);
   }
+  MinEnergy = getEnergy();
+  results["MinEnergy"] = MinEnergy;
 
   // time average
-  refE = getEnergy();
-  results["refE"] = refE;
-
-  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"hp",0,1,4,0);
-  refP = *lmp_ptr;
-  lammps_free(lmp_ptr);
-
   cmd = "reset_timestep 0\n";
-  cmd += "fix ae all ave/time 1 "+params->parameters["ThermWindow"]+" ";
-  cmd += params->parameters["ThermSteps"]+" c_pe\n";
-  cmd += "fix at all ave/time 1 "+params->parameters["ThermWindow"]+" ";
-  cmd += params->parameters["ThermSteps"]+" f_hp[5]\n";
-  cmd += "run "+params->parameters["ThermSteps"];
+  cmd += "fix ae all ave/time 1 "+ThermWindow+" ";
+  if(overdamped==1) cmd += ThermSteps+" c_pe\n";
+  else cmd += ThermSteps+" c_thermo_temp\n";
+  cmd += "run "+ThermSteps;
   run_commands(cmd);
 
   // pre temperature
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
-  sampleT = (*lmp_ptr-refE)/natoms/1.5/BOLTZ;
+  if(overdamped==1) sampleT = (*lmp_ptr-MinEnergy)/BOLTZ/1.5/natoms;
+  else sampleT = (*lmp_ptr);
   lammps_free(lmp_ptr);
   results["preT"] = sampleT;
-
-  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"at",0,0,0,0);
-  refT = ((*lmp_ptr) - refP) / natoms / BOLTZ / 3.0;
-  lammps_free(lmp_ptr);
-
-
   run_commands("unfix ae\nrun 0");
-  run_commands("unfix at\nrun 0");
 
 
   // time averages for sampling TODO: groupname for ave/atom
-  std::string SampleSteps = params->parameters["SampleSteps"];
   cmd = "reset_timestep 0\n";
-  cmd += "fix ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" c_pe\n";
-  cmd += "fix at all ave/time 1 "+SampleSteps+" "+SampleSteps+" f_hp[5]\n";
-  if(!params->postDump) {
-    cmd += "fix ap all ave/atom 1 "+SampleSteps+" "+SampleSteps+" x y z\n";
+  cmd += "fix ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" ";
+  if(overdamped==1) cmd += "c_pe\n";
+  else cmd += "c_thermo_temp\n";
+
+  if(!params->postMin) {
+    cmd += "compute pafi_dx all displace/atom\n";
+    cmd += "fix pafi_ap all ave/atom 1 "+SampleSteps+" "+SampleSteps;
+    cmd+= " c_pafi_dx[1] c_pafi_dx[2] c_pafi_dx[3]\n";
   }
+
   cmd += "fix af all ave/time 1 "+SampleSteps+" "+SampleSteps;
   cmd += " f_hp[1] f_hp[2] f_hp[3] f_hp[4]\n";
   cmd += "run "+SampleSteps;
   run_commands(cmd);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
-  sampleT = (*lmp_ptr-refE)/natoms/1.5/BOLTZ;
+  if(overdamped==1) sampleT = (*lmp_ptr-MinEnergy)/BOLTZ/1.5/natoms;
+  else sampleT = *lmp_ptr;
   lammps_free(lmp_ptr);
   results["postT"] = sampleT;
 
-  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"at",0,0,0,0);
-  refT = ((*lmp_ptr) - refP) / natoms / BOLTZ / 3.0;
-  lammps_free(lmp_ptr);
-
-
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,0,0);
-  results["aveF"] = *lmp_ptr * norm_mag;
+  results["aveF"] = (*lmp_ptr) * norm_mag;
   lammps_free(lmp_ptr);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,1,0);
-  results["stdF"] = *lmp_ptr * norm_mag * norm_mag;
-  results["stdF"] -= results["aveF"] * results["aveF"];
+  results["stdF"] = (*lmp_ptr) * norm_mag * norm_mag;
   lammps_free(lmp_ptr);
+  results["stdF"] -= results["aveF"] * results["aveF"];
+
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,2,0);
-  results["aveP"] = *lmp_ptr;
+  results["avePsi"] = (*lmp_ptr);
   lammps_free(lmp_ptr);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,3,0);
-  results["TdX"] = *lmp_ptr;
+  results["TdX"] = (*lmp_ptr);
   lammps_free(lmp_ptr);
 
   // post minmization - max jump
-  cmd = "min_style fire\n minimize 0 0.01 ";
-  cmd += params->parameters["MinSteps"]+" "+params->parameters["MinSteps"];
-  run_commands(cmd);
-  gather("x",3,dev);
-  for(int i=0;i<3*natoms;i++) dev[i] -= path(i,r,0,scale[i%3]);
-  pbc.wrap(dev,3*natoms);
+
+  if(params->postMin) {
+    cmd = "min_style fire\n minimize 0 0.01 ";
+    cmd += params->parameters["MinSteps"]+" "+params->parameters["MinSteps"];
+    run_commands(cmd);
+    gather("x",3,dev);
+    for(int i=0;i<3*natoms;i++) dev[i] -= path(i,r,0,scale[i%3]);
+    pbc.wrap(dev,3*natoms);
+  } else {
+    run_commands("reset_timestep "+SampleSteps); // for fix calculation
+    gather("f_pafi_ap",3,dev);
+    run_commands("unfix pafi_ap");
+    run_commands("uncompute pafi_dx");
+  }
+  max_disp = 0.0;
+  mean_disp = 0.0;
   for(int i=0;i<natoms;i++) {
     a_disp = 0.0;
     for(int j=0;j<3;j++) a_disp += dev[3*i+j]*dev[3*i+j];
+    mean_disp += a_disp / natoms;
     max_disp = std::max(a_disp,max_disp);
-    if(!params->postDump) for(int j=0;j<3;j++) dev[3*i+j] = 0.0;
   }
-  results["MaxJump"] = sqrt(max_disp);
-
-  // deviation average
-  run_commands("reset_timestep "+SampleSteps); // for fix calculation
-  if(!params->postDump) {
-    gather("f_ap",3,dev);
-    for(int i=0;i<3*natoms;i++) dev[i] = dev[i]/scale[i%3]-path(i,r,0,1.0);
-    pbc.wrap(dev,3*natoms);
-    dm = 0.0;
-    for(int i=0;i<3*natoms;i++) {
-      dev[i] *= scale[i%3];
-      dm = std::max(dm,sqrt(dev[i] * dev[i]));
-    }
-    results["MaxDev"] = dm;
-    run_commands("unfix ap");
-  } else results["MaxDev"] = sqrt(max_disp);
+  results["MaxJump"] = sqrt(max_disp)-sqrt(mean_disp);
 
   // reset
-  run_commands("unfix ae\nunfix af\nunfix hp\nunfix at");
+  run_commands("unfix ae\nunfix af\nunfix hp");
 
   // Stress Fixes
   run_script("PostRun");

@@ -138,6 +138,7 @@ int main(int narg, char **arg) {
     all_dev = new double[vsize];
     all_dev_sq = new double[vsize];
     all_res = new double[rsize];
+
   }
   std::vector<double> integr, dfer, dfere, psir;
   std::vector<double> valid_res, invalid_res;
@@ -168,10 +169,14 @@ int main(int narg, char **arg) {
       std::cout<<"opening dump file "<<fn<<std::endl;
       raw.open(fn.c_str(),std::ofstream::out);
       std::cout<<"\nStarting T="+Tstr+"K run\n\n";
+      if(std::stoi(params.parameters["OverDamped"])==1) {
+        std::cout<<"CAUTION : when OverDamped==1 Tpre/post are estimated from "
+        "equipartition. This will be less accurate at high temperature.\n\n";
+      }
     }
 
     for(int i=0;i<nWorkers;i++) valid[i]=0;
-    for(int i=0;i<rsize;i++) local_res[i]=0.0;
+    for(int i=0;i<rsize;i++) local_res[i] = 0.0;
     for(int i=0;i<vsize;i++) local_dev[i] = 0.0;
     for(int i=0;i<vsize;i++) local_dev_sq[i] = 0.0;
     results.clear();
@@ -204,16 +209,19 @@ int main(int narg, char **arg) {
       rstr = std::to_string(r);
       for(int i=0;i<rsize;i++) local_res[i] = 0.0;
       for(int i=0;i<vsize;i++) local_dev[i] = 0.0;
+      for(int i=0;i<vsize;i++) local_dev_sq[i] = 0.0;
 
-      // store running average of local_dev in local_dev_sq
+
       total_valid_data=0;
       totalRepeats=0;
       t_max_jump=0.0;
       while (total_valid_data<=int(params.redo_thresh*nWorkers*nRepeats)) {
 
         sim.sample(r, T, results, local_dev);
-        for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i];
+        double aa=0.0;
 
+        for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i];
+        for(int i=0;i<vsize;i++) aa=std::max(aa,local_dev_sq[i]);
         totalRepeats++;
 
         if(local_rank == 0) {
@@ -222,7 +230,7 @@ int main(int narg, char **arg) {
           local_res[instance*nRes + 1] = results["postT"];
           local_res[instance*nRes + 2] = results["aveF"];
           local_res[instance*nRes + 3] = results["stdF"];
-          local_res[instance*nRes + 4] = results["aveP"];
+          local_res[instance*nRes + 4] = results["avePsi"];
           local_res[instance*nRes + 5] = results["TdX"];
           local_res[instance*nRes + 6] = results["MaxDev"];
           local_res[instance*nRes + 7] = results["MaxJump"];
@@ -248,10 +256,11 @@ int main(int narg, char **arg) {
         MPI_Barrier(MPI_COMM_WORLD);
 
         // nullify invalid batches
-        if(valid[instance]==0 && !params.postDump) for(int i=0;i<vsize;i++) {
-          local_dev[i]=0.0;
-          local_dev_sq[i]=0.0;
-        }
+        if(valid[instance]==0 && !params.postMin)
+          for(int i=0;i<vsize;i++) {
+            local_dev[i]=0.0;
+            local_dev_sq[i]=0.0;
+          }
 
         // add all to total
         MPI_Reduce(local_dev,all_dev,vsize,
@@ -277,12 +286,12 @@ int main(int narg, char **arg) {
         total_invalid_data = totalRepeats*nWorkers - total_valid_data;
 
         // deviation vectors
-        if(params.postDump) for(int i=0;i<vsize;i++) {
-          all_dev[i]/=double(totalRepeats*nWorkers);
-          all_dev_sq[i]/=double(totalRepeats*nWorkers);
+        if(params.postMin) for(int i=0;i<vsize;i++) {
+          all_dev[i]/=double(totalRepeats*nProcs);
+          all_dev_sq[i]/=double(totalRepeats*nProcs);
         } else if(total_valid_data>0) for(int i=0;i<vsize;i++) {
-          all_dev[i]/=double(total_valid_data);
-          all_dev_sq[i]/=double(total_valid_data);
+          all_dev[i]/=double(total_valid_data*params.CoresPerWorker);
+          all_dev_sq[i]/=double(total_valid_data*params.CoresPerWorker);
         }
 
         dump_fn = params.dump_dir+"/dev_"+rstr+dump_suffix+".dat";

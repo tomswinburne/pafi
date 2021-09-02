@@ -217,9 +217,9 @@ int main(int narg, char **arg) {
       sim.sample(r, T, results, local_dev);
 
 
-      if(r==sample_r[0]) E_init = results["refE"];
+      if(r==sample_r[0]) E_init = results["MinEnergy"];
 
-      E_max = std::max(results["refE"]-E_init,E_max);
+      E_max = std::max(results["MinEnergy"]-E_init,E_max);
       for(int i=0;i<vsize;i++) local_dev_sq[i] = local_dev[i]*local_dev[i];
 
       totalRepeats++;
@@ -230,7 +230,7 @@ int main(int narg, char **arg) {
         local_res[instance*nRes + 1] = results["postT"];
         local_res[instance*nRes + 2] = results["aveF"];
         local_res[instance*nRes + 3] = results["stdF"];
-        local_res[instance*nRes + 4] = results["aveP"];
+        local_res[instance*nRes + 4] = results["avePsi"];
         local_res[instance*nRes + 5] = results["TdX"];
         local_res[instance*nRes + 6] = results["MaxDev"];
         local_res[instance*nRes + 7] = results["MaxJump"];
@@ -256,7 +256,7 @@ int main(int narg, char **arg) {
       MPI_Barrier(MPI_COMM_WORLD);
 
       // nullify invalid batches
-      if(valid[instance]==0 && !params.postDump) for(int i=0;i<vsize;i++) {
+      if(valid[instance]==0 && !params.postMin) for(int i=0;i<vsize;i++) {
         local_dev[i]=0.0;
         local_dev_sq[i]=0.0;
       }
@@ -284,7 +284,7 @@ int main(int narg, char **arg) {
       total_invalid_data = totalRepeats*nWorkers - total_valid_data;
 
       // deviation vectors
-      if(params.postDump) for(int i=0;i<vsize;i++) {
+      if(params.postMin) for(int i=0;i<vsize;i++) {
         all_dev[i]/=double(totalRepeats*nWorkers);
         all_dev_sq[i]/=double(totalRepeats*nWorkers);
       } else if(total_valid_data>0) for(int i=0;i<vsize;i++) {

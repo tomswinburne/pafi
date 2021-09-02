@@ -72,6 +72,7 @@ public:
 
   // LAMMPS specific
   int *species,*q, *image, *id;
+  double nktv2p;
 private:
   int local_rank;
   LAMMPS *lmp;
