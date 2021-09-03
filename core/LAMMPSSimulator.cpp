@@ -43,6 +43,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
 
 
   has_pafi = (bool)lammps_config_has_package((char *)"USER-MISC");
+  if(!has_pafi) has_pafi = (bool)lammps_config_has_package((char *)"EXTRA-FIX");
   #ifdef VERBOSE
   if(local_rank==0)
     std::cout<<"LAMMPSSimulator(): has_pafi: "<<has_pafi<<std::endl;
