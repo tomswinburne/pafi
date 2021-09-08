@@ -23,13 +23,26 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
 
   lmp = new LAMMPS(5,lmparg,instance_comm);
 
+  int lammps_release_int = lammps_version(lmp); // YYYYMMDD
+  std::string package_name = "USER-MISC";
+  if(lammps_release_int<20201101) {
+    if(local_rank==0)
+      std::cout<<"LAMMPS VERSION TOO OLD! NEED POST 28July2020!"<<std::endl;
+    return;
+  }
+
+  if(lammps_release_int>=20210728) package_name = "EXTRA-FIX";
+
+  #ifdef VERBOSE
+  if(local_rank==0)
+    std::cout<<"LAMMPSSimulator(): version: "<<lammps_release_int<<std::endl;
+  #endif
+
   //lammps_open(5,lmparg,instance_comm,(void **) &lmp);
   run_script("Input");
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): Ran input script"<<std::endl;
   #endif
-
-
 
   natoms = *((int *) lammps_extract_global(lmp,(char *) "natoms"));
   #ifdef VERBOSE
@@ -41,9 +54,12 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): nktv2p: "<<nktv2p<<std::endl;
   #endif
 
+  #ifdef VERBOSE
+  if(local_rank==0)
+    std::cout<<"LAMMPSSimulator(): Searching for "<<package_name<<std::endl;
+  #endif
 
-  has_pafi = (bool)lammps_config_has_package((char *)"USER-MISC");
-  if(!has_pafi) has_pafi = (bool)lammps_config_has_package((char *)"EXTRA-FIX");
+  has_pafi = (bool)lammps_config_has_package(package_name.c_str());
   #ifdef VERBOSE
   if(local_rank==0)
     std::cout<<"LAMMPSSimulator(): has_pafi: "<<has_pafi<<std::endl;
@@ -282,7 +298,13 @@ void LAMMPSSimulator::sample(double r, double T,
   0: PreRun - HP - PostRun
   1: HP - PreRun - PostRun
   */
-  int fix_order = std::stoi(params->parameters["FixOrder"]);
+  int fix_order = 0;
+  if(parser->parameters.find("FixOrder")==parser->parameters.end()) {
+    #ifdef VERBOSE
+    if(local_rank==0)
+      std::cout<<"LAMMPSSimulator: No FixOrder! Defaulting to 0"<<std::endl;
+    #endif
+  } else fix_order = std::stoi(params->parameters["FixOrder"]);
 
   params->parameters["Temperature"] = T_str;
   int overdamped = std::stoi(od_str);
@@ -297,7 +319,7 @@ void LAMMPSSimulator::sample(double r, double T,
   cmd += params->parameters["Friction"]+" ";
   cmd += params->seed_str()+" overdamped "+od_str+" com 1\nrun 0";
   run_commands(cmd);
-  
+
   if(fix_order==1) run_script("PreRun");  // Stress Fixes
 
   if(params->preMin) {
