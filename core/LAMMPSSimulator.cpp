@@ -299,7 +299,7 @@ void LAMMPSSimulator::sample(double r, double T,
   1: HP - PreRun - PostRun
   */
   int fix_order = 0;
-  if(parser->parameters.find("FixOrder")==parser->parameters.end()) {
+  if(params->parameters.find("FixOrder")==params->parameters.end()) {
     #ifdef VERBOSE
     if(local_rank==0)
       std::cout<<"LAMMPSSimulator: No FixOrder! Defaulting to 0"<<std::endl;
