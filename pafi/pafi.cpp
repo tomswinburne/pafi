@@ -301,7 +301,7 @@ int main(int narg, char **arg) {
         std::cout<<total_valid_data<<"/"<<nRepeats*nWorkers<<" ";
         std::cout<<valid_res.size()/nWorkers<<std::endl;
         // raw output
-        raw<<total_valid_data<<" ";
+        raw<<r<<" "<<total_valid_data<<" ";
         for(auto j: raw_dump_indicies)
           for(int i=0;i<total_valid_data;i++) raw<<valid_res[i*nRes+j]<<" ";
         for(auto j: raw_dump_indicies)
