@@ -34,17 +34,15 @@ def raw_parser(file_name,disp_thresh = 0.4):
         return np.zeros((1,3))
 
     r_dFave_dFstd = []
-    r = 0.0
     for line in f.readlines():
         if line[0] != "#":
             fields = np.loadtxt(io.StringIO(line.strip()))
-            n_data = (fields.size-1)//4
+            n_data = (fields.size-2)//4
             n_valid = (fields[-n_data:] < disp_thresh).sum()
             if n_valid>0:
-                r_dFave_dFstd += [[r,fields[1:n_valid+1].mean(),fields[1:n_valid+1].std()/np.sqrt(n_valid)]]
-            r += 1.0 # always increment even if n_valid==0
+                r_dFave_dFstd += [[fields[0],fields[2:n_valid+2].mean(),fields[2:n_valid+2].std()/np.sqrt(n_valid)]]
     r_dFave_dFstd = np.r_[r_dFave_dFstd]
-    r_dFave_dFstd[:,0]/=r_dFave_dFstd[-1][0] # r : 0 -> 1
+    # r_dFave_dFstd[:,0]/=r_dFave_dFstd[-1][0] # r : 0 -> 1
 
     return r_dFave_dFstd
 
