@@ -107,28 +107,58 @@ class PafiResult():
 
         count_data = count_valid = 0
         r_dFave_dFstd = []
-        r = 0.0
-        for line in f.readlines():
-            if line[0] != "#":
-                fields = np.loadtxt(io.StringIO(line.strip()))
-                n_data = (fields.size-1)//4
-                n_valid = (fields[-n_data:] < disp_thresh).sum()
 
-                count_data  += n_data
-                if n_valid>0:
-                    count_valid += n_valid
-                
-                    r_dFave_dFstd += [[r, 
-                                        fields[1:n_valid+1].mean(),
-                                        fields[1:n_valid+1].std()/np.sqrt(n_valid)]]
-                r += 1.0 # always increment even if n_valid==0
-        # print(self.file, " data :", count_data, " valid : ", count_valid, " ({}%)".format(int(count_valid/count_data*100)))
-        
-        r_dFave_dFstd = np.r_[r_dFave_dFstd]
-        r_dFave_dFstd[:,0]/=r_dFave_dFstd[-1][0] # r : 0 -> 1
+        if PafiResult.has_old_data_format(self.file):
+            # reaction coordinate is interpolated (may cause deviations at large T)
+            # needed for backward compatibility
+            r = 0.0
+            for line in f.readlines():
+                if line[0] != "#":
+                    fields = np.loadtxt(io.StringIO(line.strip()))
+                    n_data = (fields.size-1)//4
+                    n_valid = (fields[-n_data:] < disp_thresh).sum()
 
-        return r_dFave_dFstd
+                    count_data  += n_data
+                    if n_valid>0:
+                        count_valid += n_valid
+                    
+                        r_dFave_dFstd += [[r, 
+                                            fields[1:n_valid+1].mean(),
+                                            fields[1:n_valid+1].std()/np.sqrt(n_valid)]]
+                    r += 1.0 # always increment even if n_valid==0
+            # print(self.file, " data :", count_data, " valid : ", count_valid, " ({}%)".format(int(count_valid/count_data*100)))
+            r_dFave_dFstd = np.r_[r_dFave_dFstd]
+            r_dFave_dFstd[:,0]/=r_dFave_dFstd[-1][0] # r : 0 -> 1
+            return r_dFave_dFstd
+        else:
+            # reaction coordinate is read from file
+            for line in f.readlines():
+                if line[0] != "#":
+                    fields = np.loadtxt(io.StringIO(line.strip()))
+                    n_data = (fields.size-2)//4
+                    n_valid = (fields[-n_data:] < disp_thresh).sum()
+
+                    count_data  += n_data
+                    if n_valid>0:
+                        count_valid += n_valid
+                    
+                        r_dFave_dFstd += [[fields[0],
+                                        fields[2:n_valid+2].mean(),
+                                        fields[2:n_valid+2].std()/np.sqrt(n_valid)]]
+
+            # print(self.file, " data :", count_data, " valid : ", count_valid, " ({}%)".format(int(count_valid/count_data*100)))
+            r_dFave_dFstd = np.r_[r_dFave_dFstd]
+            return r_dFave_dFstd
     
+    def has_old_data_format(file):
+        d = np.loadtxt(file, max_rows=1)
+        if (d.shape[0]-1) //4 == (d.shape[0]-1) /4:
+            return True
+        elif (d.shape[0]-2 //4) == (d.shape[0]-2 /4):
+            return False
+        else: 
+            raise RuntimeError(r"File {file} has an unsupported format")
+
     def get_bar(self):
         """This data format is used by some legacy functions"""
         return np.array([self.temperature, 
