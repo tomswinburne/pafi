@@ -1,11 +1,11 @@
 """
-raw_ensemble_output has 1 + 4*nWorker colums:
+raw_ensemble_output has i + 4*nWorker colums. i = 2 since commit 3ca8f884 (20/09/21). For older versions of PAFI, i=1.
 
 Column 0 : Number of workers with max_jump < user threshold at run time
--> nWorker+1 : av(dF), the gradient
--> 2*nWorker+1 : std(dF), the *worker* variance, *not* ensemble error, should not be zero even in infinite time limit!
--> 3*nWorker+1 : av(Psi) = av(dX).dX_0/|dX_0|^2, the tangent projection
--> 4*nWorker+1 : the maximum per-atom jump following the MD
+-> nWorker+i : av(dF), the gradient
+-> 2*nWorker+i : std(dF), the *worker* variance, *not* ensemble error, should not be zero even in infinite time limit!
+-> 3*nWorker+i : av(Psi) = av(dX).dX_0/|dX_0|^2, the tangent projection
+-> 4*nWorker+i : the maximum per-atom jump following the MD
 """
 
 import io
