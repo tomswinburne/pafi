@@ -193,7 +193,7 @@ class PafiResult():
         idata[:,1]-=idata[0][1]
         return idata
 
-    def plot(self, ax=None, color=None):
+    def plot(self, ax=None, color=None, label_prepend=""):
         
         if ax is None:
             fig, ax = plt.subplots()
@@ -205,7 +205,7 @@ class PafiResult():
         for i, profile in enumerate([self.discrete_profile.data, self.splined_profile.data]):
             
             style = ["o", "-"][i]
-            label = [f'{self.temperature}K', ''][i]
+            label = [label_prepend + f'{self.temperature}K', ''][i]
             ax.plot(profile[:,0],
                         profile[:,1],
                         style, 
@@ -223,29 +223,31 @@ class PafiResult():
         ax.legend(loc="best")  
         return ax
 
-def free_energy_vs_temperature(flist, harmonic_until_T=100, ymin=-0.05):
+def free_energy_vs_temperature(flist, ax=None, fit_harmonic=True, harmonic_until_T=100, ymin=-0.05, label_prepend="", start_color_at_index=0):
 
-    fig, ax = plt.subplots(1,2, figsize=(8,4),dpi=144,sharey=True)
+    if (ax is None) or len(ax)!=2:
+        fig, ax = plt.subplots(1,2, figsize=(9,5),dpi=144,sharey=True)
     
     data = [PafiResult(file) for file in flist]
     data.sort(key=lambda x: x.temperature)
-    barriers = [x.bar for x in data]
+    bar = np.array([x.bar for x in data])
 
     for i, r in enumerate(data):
-        a = r.plot(ax[0], color=f'C{i}')
+        a = r.plot(ax[0], color=f'C{i+start_color_at_index}', label_prepend=label_prepend)
 
-    bar = np.array(barriers)
-    bar = bar[np.argsort(bar[:, 0])]
+    # bar = bar[np.argsort(bar[:, 0])]
 
-    # Fit a linear regression on the domain below harmonic_until_T K
-    harmonic_regime = bar[np.where((bar[:,0]<=harmonic_until_T))]
-    p = np.polyfit(harmonic_regime[:,0], harmonic_regime[:,1],1)
+    if fit_harmonic:
+        # Fit a linear regression on the domain below harmonic_until_T K
+        harmonic_regime = bar[np.where((bar[:,0]<=harmonic_until_T))]
+        p = np.polyfit(harmonic_regime[:,0], harmonic_regime[:,1],1)
 
-    ax[1].plot(bar[:,0], bar[:,1], "-o")
+    ax[1].plot(bar[:,0], bar[:,1], "-o", color=f'C{start_color_at_index}', label=label_prepend)
     ax[1].fill_between(bar[:,0],bar[:,1]-bar[:,2],bar[:,1]+bar[:,2],facecolor='0.93')
     ax[1].fill_between(bar[:,0],bar[:,3]-bar[:,4],bar[:,3]+bar[:,4],facecolor='0.93')
-    # harmonic domain
-    ax[1].plot(bar[:4,0],p[1]+p[0]*bar[:4,0],'k--', label=r'$\Delta U_0=%2.3geV,\Delta S_0=%2.3g{\rm k_B}$' % (p[1], -p[0]/kb))
+    if fit_harmonic:
+        # harmonic domain
+        ax[1].plot(bar[:4,0],p[1]+p[0]*bar[:4,0],'--', color=f'C{start_color_at_index}', label=label_prepend + r'$\Delta U_0=%2.3geV,\Delta S_0=%2.3g{\rm k_B}$' % (p[1], -p[0]/kb))
     ax[1].set_xlabel("Temperature [K]")
     ax[1].legend(loc='best')
     ax[1].set_ylim(ymin=ymin)
