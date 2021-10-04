@@ -4,9 +4,9 @@ std::string lammps_int_to_date(int stamp) {
   std::string month_names[12] =
     {"Jan","Feb","Mar","Apr","May","Jun","Jul","Sep","Oct","Nov","Dec"};
 
-  int month_int = int(stamp / 100 - year*100);
-
-  std::string year = std::to_string(int(stamp / 10000));
+  int year_int = int(stamp / 10000);
+  std::string year = std::to_string(year_int);
+  int month_int = int(stamp / 100 - year_int*100);
   std::string month = month_names[month_int];
   std::string day = std::to_string(int(stamp % 100));
 

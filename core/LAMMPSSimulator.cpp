@@ -31,7 +31,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   std::string package_name = "USER-MISC";
   if(lammps_release_int<oldest_lammps_version) {
     if(local_rank==0) {
-      std::cout<<lammps_int_to_date(lammps_release_int)" LAMMPS TOO OLD! ";
+      std::cout<<lammps_int_to_date(lammps_release_int)<<" LAMMPS TOO OLD! ";
       std::cout<<" REQUIRE AT LEAST "<<oldest_lammps<<std::endl;
     }
     return;
@@ -301,7 +301,16 @@ void LAMMPSSimulator::sample(double r, double T,
   std::string SampleSteps = params->parameters["SampleSteps"];
   std::string ThermSteps = params->parameters["ThermSteps"];
   std::string ThermWindow = params->parameters["ThermWindow"];
-  std::string FixPafiGroup = params->parameters["FixPafiGroup"];
+  std::string FixPafiGroup = params->parameters["FixPAFIGroup"];
+
+  if (lammps_has_id(lmp,"group",FixPafiGroup.c_str())==0) {
+    if(local_rank==0) {
+      std::cout<<"LAMMPSSimulator: Group "<<FixPafiGroup<<" not found! ";
+      std::cout<<"Reverting to FixPafiGroup = all"<<std::endl;
+    }
+    FixPafiGroup = "all";
+  };
+
   std::string T_str = std::to_string(T);
   bool overdamped = bool(std::stoi(OverDampedFlag)==1);
   /*

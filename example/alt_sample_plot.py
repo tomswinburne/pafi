@@ -51,7 +51,7 @@ def remesh(data,density = 10):
     spl_data = np.zeros((density*data.shape[0],data.shape[1]))
     r_data = np.linspace(0.,1.,data.shape[0])
     r_spl_data = np.linspace(0.,1.,spl_data.shape[0])
-    spl_data[:,0] = r_spl_data#interp1d(r_data, data[:,0],kind='linear')(r_spl_data)
+    spl_data[:,0] = interp1d(r_data, data[:,0],kind='linear')(r_spl_data)
     spl_data[:,1] = interp1d(data[:,0], data[:,1],kind='linear')(spl_data[:,0])
     spl_data[:,2] = interp1d(data[:,0], data[:,2],kind='linear')(spl_data[:,0])
     return spl_data
