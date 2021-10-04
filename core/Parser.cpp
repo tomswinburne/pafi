@@ -1,5 +1,18 @@
 #include "Parser.hpp"
 
+std::string lammps_int_to_date(int stamp) {
+  std::string month_names[12] =
+    {"Jan","Feb","Mar","Apr","May","Jun","Jul","Sep","Oct","Nov","Dec"};
+
+  int month_int = int(stamp / 100 - year*100);
+
+  std::string year = std::to_string(int(stamp / 10000));
+  std::string month = month_names[month_int];
+  std::string day = std::to_string(int(stamp % 100));
+
+  return day+" "+month+" "+year;
+};
+
 // Loads config file, lammps scripts etc
 
 Parser::Parser(std::string file, bool test) {
@@ -36,6 +49,7 @@ Parser::Parser(std::string file, bool test) {
   parameters["MatchPlanes"] = "0";
   parameters["FixOrder"] = "0";
   parameters["RealMEPDist"] = "1";
+  parameters["FixPAFIGroup"] = "all";
 
 
   seeded = false;
@@ -113,6 +127,7 @@ void Parser::set_parameters() {
   spline_path = bool(std::stoi(parameters["SplinePath"]));
   match_planes = !bool(std::stoi(parameters["Rediscretize"]));
   real_coord = bool(std::stoi(parameters["RealMEPDist"]));
+
 };
 
 void Parser::overwrite_xml(int nProcs) {
@@ -125,7 +140,6 @@ void Parser::overwrite_xml(int nProcs) {
   parameters["ThermSteps"] = "1";
   parameters["ThermWindow"] = "1";
   parameters["nRepeats"] = "1";
-  //parameters["nPlanes"] = "10";
   parameters["DumpFolder"] = "./dumps";
   parameters["OverDamped"] = "1";
   parameters["Friction"] = "0.1";
@@ -135,6 +149,7 @@ void Parser::overwrite_xml(int nProcs) {
   parameters["MaxJump"] = "0.1";
   parameters["ReSampleThresh"] = "0.5";
   parameters["maxExtraRepeats"] = "1";
+
   //parameters["postMin"] = "1";
   //parameters["PreMin"] = "1";
 };

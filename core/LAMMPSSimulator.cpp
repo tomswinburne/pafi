@@ -2,6 +2,10 @@
 
 LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
                                   int t, int nr) {
+
+  int oldest_lammps_version = 20201009; // 9th Oct 2020
+  std::string oldest_lammps = lammps_int_to_date(oldest_lammps_version);
+
   error_count = 0;
   scale[0]=1.0; scale[1]=1.0; scale[2]=1.0;
   last_error_message="";
@@ -25,9 +29,11 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
 
   int lammps_release_int = lammps_version(lmp); // YYYYMMDD
   std::string package_name = "USER-MISC";
-  if(lammps_release_int<20201101) {
-    if(local_rank==0)
-      std::cout<<"LAMMPS VERSION TOO OLD! NEED POST 28July2020!"<<std::endl;
+  if(lammps_release_int<oldest_lammps_version) {
+    if(local_rank==0) {
+      std::cout<<lammps_int_to_date(lammps_release_int)" LAMMPS TOO OLD! ";
+      std::cout<<" REQUIRE AT LEAST "<<oldest_lammps<<std::endl;
+    }
     return;
   }
 
@@ -205,13 +211,13 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
   std::string cmd;
   double ncom[]={0.,0.,0.};
   norm_mag=0.;
-  // check for __pafipath fix and compute
+  // check for pafi_path fix and compute
   if (!made_fix) {
     #ifdef VERBOSE
     if(local_rank==0)
-      std::cout<<"LAMMPSSimulator.populate(): making __pafipath fix"<<std::endl;
+      std::cout<<"LAMMPSSimulator.populate(): making pafi_path fix"<<std::endl;
     #endif
-    cmd = "fix __pafipath all property/atom ";
+    cmd = "fix pafi_path all property/atom ";
     cmd += "d_ux d_uy d_uz d_nx d_ny d_nz d_dnx d_dny d_dnz\nrun 0";
     run_commands(cmd);
     made_fix=true;
@@ -230,8 +236,10 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
     for(int i=0;i<natoms;i++)  lt[i] = pathway[3*i+j].deriv(0,r) * scale[j];
     scatter("d_u"+xyz[j],1,lt);
   }
-
-  for(int i=0;i<natoms;i++) for(int j=0;j<3;j++) t[3*i+j] = pathway[3*i+j].deriv(1,r) * scale[j];
+  // fill path
+  for(int i=0;i<natoms;i++)
+    for(int j=0;j<3;j++)
+      t[3*i+j] = pathway[3*i+j].deriv(1,r) * scale[j];
 
   // Center of mass projection and tangent length
   for(int i=0;i<3*natoms;i++) ncom[i%3] += t[i]/(double)natoms;
@@ -242,7 +250,8 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
   for(int j=0;j<3;j++) {
     for(int i=0;i<natoms;i++)  lt[i] = t[3*i+j];
     scatter("d_n"+xyz[j],1,lt);
-    for(int i=0;i<natoms;i++)  lt[i] = pathway[3*i+j].deriv(2,r) * scale[j] / norm_mag / norm_mag;
+    for(int i=0;i<natoms;i++)
+      lt[i] = pathway[3*i+j].deriv(2,r) * scale[j] / norm_mag / norm_mag;
     scatter("d_dn"+xyz[j],1,lt);
   }
 
@@ -252,9 +261,9 @@ void LAMMPSSimulator::populate(double r, double &norm_mag, double T) {
     #ifdef VERBOSE
     if(local_rank==0)
       std::cout<<
-      "LAMMPSSimulator.populate(): making __pafipath compute"<<std::endl;
+      "LAMMPSSimulator.populate(): making pafi_path compute"<<std::endl;
     #endif
-    cmd = "compute __pafipath all property/atom ";
+    cmd = "compute pafi_path all property/atom ";
     cmd += "d_ux d_uy d_uz d_nx d_ny d_nz d_dnx d_dny d_dnz\nrun 0";
     run_commands(cmd);
     made_compute=true;
@@ -288,12 +297,13 @@ void LAMMPSSimulator::sample(double r, double T,
   std::string cmd;
   double norm_mag, sampleT, dm;
   double *lmp_ptr;
-
-  std::string od_str = params->parameters["OverDamped"];
+  std::string OverDampedFlag = params->parameters["OverDamped"];
   std::string SampleSteps = params->parameters["SampleSteps"];
   std::string ThermSteps = params->parameters["ThermSteps"];
   std::string ThermWindow = params->parameters["ThermWindow"];
+  std::string FixPafiGroup = params->parameters["FixPafiGroup"];
   std::string T_str = std::to_string(T);
+  bool overdamped = bool(std::stoi(OverDampedFlag)==1);
   /*
   0: PreRun - HP - PostRun
   1: HP - PreRun - PostRun
@@ -307,7 +317,6 @@ void LAMMPSSimulator::sample(double r, double T,
   } else fix_order = std::stoi(params->parameters["FixOrder"]);
 
   params->parameters["Temperature"] = T_str;
-  int overdamped = std::stoi(od_str);
 
   populate(r,norm_mag,0.0);
   if(fix_order==0) run_script("PreRun");  // Stress Fixes
@@ -315,9 +324,9 @@ void LAMMPSSimulator::sample(double r, double T,
 
   // pafi fix
   cmd = "run 0\n"; // to ensure the PreRun script is executed
-  cmd += "fix hp all pafi __pafipath "+T_str+" ";
+  cmd += "fix pafi_hp " + FixPafiGroup + " pafi pafi_path "+T_str+" ";
   cmd += params->parameters["Friction"]+" ";
-  cmd += params->seed_str()+" overdamped "+od_str+" com 1\nrun 0";
+  cmd += params->seed_str()+" overdamped "+OverDampedFlag+" com 1\nrun 0";
   run_commands(cmd);
 
   if(fix_order==1) run_script("PreRun");  // Stress Fixes
@@ -337,25 +346,25 @@ void LAMMPSSimulator::sample(double r, double T,
 
   // time average
   cmd = "reset_timestep 0\n";
-  cmd += "fix ae all ave/time 1 "+ThermWindow+" ";
-  if(overdamped==1) cmd += ThermSteps+" c_pe\n";
+  cmd += "fix pafi_ae all ave/time 1 "+ThermWindow+" ";
+  if(overdamped) cmd += ThermSteps+" c_pe\n";
   else cmd += ThermSteps+" c_thermo_temp\n";
   cmd += "run "+ThermSteps;
   run_commands(cmd);
 
   // pre temperature
-  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
-  if(overdamped==1) sampleT = (*lmp_ptr-MinEnergy)/BOLTZ/1.5/natoms;
+  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"pafi_ae",0,0,0,0);
+  if(overdamped) sampleT = (*lmp_ptr-MinEnergy)/BOLTZ/1.5/natoms;
   else sampleT = (*lmp_ptr);
   lammps_free(lmp_ptr);
   results["preT"] = sampleT;
-  run_commands("unfix ae\nrun 0");
+  run_commands("unfix pafi_ae\nrun 0");
 
 
   // time averages for sampling TODO: groupname for ave/atom
   cmd = "reset_timestep 0\n";
-  cmd += "fix ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" ";
-  if(overdamped==1) cmd += "c_pe\n";
+  cmd += "fix pafi_ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" ";
+  if(overdamped) cmd += "c_pe\n";
   else cmd += "c_thermo_temp\n";
 
   if(!params->postMin) {
@@ -364,32 +373,32 @@ void LAMMPSSimulator::sample(double r, double T,
     cmd+= " c_pafi_dx[1] c_pafi_dx[2] c_pafi_dx[3]\n";
   }
 
-  cmd += "fix af all ave/time 1 "+SampleSteps+" "+SampleSteps;
-  cmd += " f_hp[1] f_hp[2] f_hp[3] f_hp[4]\n";
+  cmd += "fix pafi_af all ave/time 1 "+SampleSteps+" "+SampleSteps;
+  cmd += " f_pafi_hp[1] f_pafi_hp[2] f_pafi_hp[3] f_pafi_hp[4]\n";
   cmd += "run "+SampleSteps;
   run_commands(cmd);
 
-  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
-  if(overdamped==1) sampleT = (*lmp_ptr-MinEnergy)/BOLTZ/1.5/natoms;
+  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"pafi_ae",0,0,0,0);
+  if(overdamped) sampleT = (*lmp_ptr-MinEnergy)/BOLTZ/1.5/natoms;
   else sampleT = *lmp_ptr;
   lammps_free(lmp_ptr);
   results["postT"] = sampleT;
 
-  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,0,0);
+  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"pafi_af",0,1,0,0);
   results["aveF"] = (*lmp_ptr) * norm_mag;
   lammps_free(lmp_ptr);
 
-  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,1,0);
+  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"pafi_af",0,1,1,0);
   results["stdF"] = (*lmp_ptr) * norm_mag * norm_mag;
   lammps_free(lmp_ptr);
   results["stdF"] -= results["aveF"] * results["aveF"];
 
 
-  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,2,0);
+  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"pafi_af",0,1,2,0);
   results["avePsi"] = (*lmp_ptr);
   lammps_free(lmp_ptr);
 
-  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,3,0);
+  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"pafi_af",0,1,3,0);
   results["TdX"] = (*lmp_ptr);
   lammps_free(lmp_ptr);
 
@@ -419,7 +428,7 @@ void LAMMPSSimulator::sample(double r, double T,
   results["MaxJump"] = sqrt(max_disp)-sqrt(mean_disp);
 
   // reset
-  run_commands("unfix ae\nunfix af\nunfix hp");
+  run_commands("unfix pafi_ae\nunfix pafi_af\nunfix pafi_hp");
 
   // Stress Fixes
   run_script("PostRun");

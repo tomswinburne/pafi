@@ -90,7 +90,7 @@ for ii,i_f in enumerate(T.argsort()):
 
     axs[0].plot(r_Fave_Fstd[:,0],
                 r_Fave_Fstd[:,1],
-                'C%d%s' % (ii,'o--'),label='%dK' % T[i_f])
+                f'C{ii%9}o--',label='%dK' % T[i_f])
 
     axs[0].fill_between(r_Fave_Fstd[:,0],
             r_Fave_Fstd[:,1]-r_Fave_Fstd[:,2],
@@ -99,7 +99,7 @@ for ii,i_f in enumerate(T.argsort()):
 
     axs[0].plot(r_Fave_Fstd_remesh[:,0],
                 r_Fave_Fstd_remesh[:,1],
-                'C%d%s' % (ii,'-'),label='%dK (Splined)' % T[i_f])
+                f'C{ii%9}-',label='%dK (Splined)' % T[i_f])
 
     axs[0].fill_between(r_Fave_Fstd_remesh[:,0],
             r_Fave_Fstd_remesh[:,1]-r_Fave_Fstd_remesh[:,2],

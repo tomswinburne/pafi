@@ -68,7 +68,11 @@
   -->
   <FixOrder> 0 </FixOrder>
 
-
+  <!--
+  Group of atoms to which hyperplane fix and thermalization will be applied
+  will raise error if group does not exist. Experimental feature. Default: all
+  -->
+  <FixPAFIGroup>all</FixPAFIGroup>
 
 
 
