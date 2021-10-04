@@ -51,7 +51,7 @@ def remesh(data,density = 10):
     spl_data = np.zeros((density*data.shape[0],data.shape[1]))
     r_data = np.linspace(0.,1.,data.shape[0])
     r_spl_data = np.linspace(0.,1.,spl_data.shape[0])
-    spl_data[:,0] = r_spl_data#interp1d(r_data, data[:,0],kind='linear')(r_spl_data)
+    spl_data[:,0] = interp1d(r_data, data[:,0],kind='linear')(r_spl_data)
     spl_data[:,1] = interp1d(data[:,0], data[:,1],kind='linear')(spl_data[:,0])
     spl_data[:,2] = interp1d(data[:,0], data[:,2],kind='linear')(spl_data[:,0])
     return spl_data
@@ -90,7 +90,7 @@ for ii,i_f in enumerate(T.argsort()):
 
     axs[0].plot(r_Fave_Fstd[:,0],
                 r_Fave_Fstd[:,1],
-                'C%d%s' % (ii,'o--'),label='%dK' % T[i_f])
+                f'C{ii%9}o--',label='%dK' % T[i_f])
 
     axs[0].fill_between(r_Fave_Fstd[:,0],
             r_Fave_Fstd[:,1]-r_Fave_Fstd[:,2],
@@ -99,7 +99,7 @@ for ii,i_f in enumerate(T.argsort()):
 
     axs[0].plot(r_Fave_Fstd_remesh[:,0],
                 r_Fave_Fstd_remesh[:,1],
-                'C%d%s' % (ii,'-'),label='%dK (Splined)' % T[i_f])
+                f'C{ii%9}-',label='%dK (Splined)' % T[i_f])
 
     axs[0].fill_between(r_Fave_Fstd_remesh[:,0],
             r_Fave_Fstd_remesh[:,1]-r_Fave_Fstd_remesh[:,2],

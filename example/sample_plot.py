@@ -1,4 +1,4 @@
-""" 
+"""
 Sample plotting of PAFI data
 (c) TD Swinburne 2019
 swinburne@cinam.univ-mrs.fr
@@ -20,15 +20,15 @@ except ImportError:
 
 
 
-""" 
-KEY PARAMETERS- 
-looks for file of form dumps/free_energy_profile_TTTK_EEE, 
+"""
+KEY PARAMETERS-
+looks for file of form dumps/free_energy_profile_TTTK_EEE,
 where TTT=temperature in K and EEE=suffix
 """
 
 epoch = 6 # EEE
 Tlist = [100,200,300,400,500] # TTT
-file_prefix = "dumps/free_energy_profile" 
+file_prefix = "dumps/free_energy_profile"
 plot_title = "SIA dumbell in EAM bcc Fe"
 output_file = "PAFI_SIA_Fe.pdf"
 
@@ -45,13 +45,16 @@ if has_inset:
 inset_data =[]
 
 for i,T in enumerate(Tlist):
-  fn = file_prefix+"_%dK_%d" % (T,epoch)
+  fn = file_prefix+f"_{T}K_{epoch}"
   data = np.loadtxt(fn)
   cF = cumtrapz(-data[:,2],x=data[:,0])
   F = data[:,1]
   eb = cumtrapz(data[:,3],x=data[:,0])
-  ax.fill_between(data[:-1,0],y1=F[:-1]-eb,y2=F[:-1]+eb,color='C'+str(i),alpha=0.5)
-  ax.plot(data[:-1,0],data[:-1,1],'C'+str(i)+'-',label="%dK" % T,lw=2)
+
+  ax.fill_between(data[:-1,0], F[:-1]-eb, F[:-1]+eb, color=f'C{i}', alpha=0.5)
+
+  ax.plot(data[:-1,0],data[:-1,1], f'C{i%9}-', label=f"{T}K", lw=2)
+
   inset_data.append([T,F.max(),eb[F[:-1].argmax()]])
 
 

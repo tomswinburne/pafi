@@ -11,6 +11,7 @@
 
 #include "rapidxml.hpp"
 
+std::string lammps_int_to_date(int stamp);
 
 class Parser {
 public:
