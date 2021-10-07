@@ -32,8 +32,8 @@ endif(DEBUG)
 file(GLOB src_files "core/*")
 
 add_executable(pafi ${src_files} pafi/pafi.cpp pafi/pafi.hpp)
-add_executable(pafi-lammps-preparation ${src_files} utils/pafi-lammps-preparation.cpp pafi/pafi.hpp)
-add_executable(pafi-path-test ${src_files} tests/pafi-path-test.cpp pafi/pafi.hpp)
+add_executable(pafi-lammps-preparation ${src_files} utils/pafi-lammps-preparation.cpp utils/pafi-lammps-preparation.hpp)
+add_executable(pafi-path-test ${src_files} tests/pafi-path-test.cpp tests/pafi-path-test.hpp)
 
 
 target_link_libraries(pafi ${LAMMPS_LIBRARIES})

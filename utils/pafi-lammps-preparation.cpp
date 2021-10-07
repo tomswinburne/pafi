@@ -1,4 +1,4 @@
-#include "pafi.hpp"
+#include "pafi-lammps-preparation.hpp"
 
 int main(int narg, char **arg) {
   MPI_Init(&narg,&arg);
