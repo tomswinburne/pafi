@@ -148,16 +148,17 @@ class PafiResult():
 
             # print(self.file, " data :", count_data, " valid : ", count_valid, " ({}%)".format(int(count_valid/count_data*100)))
             r_dFave_dFstd = np.r_[r_dFave_dFstd]
+            # print(r_dFave_dFstd)
             return r_dFave_dFstd
     
     def has_old_data_format(file):
         d = np.loadtxt(file, max_rows=1)
         if (d.shape[0]-1) //4 == (d.shape[0]-1) /4:
             return True
-        elif (d.shape[0]-2 //4) == (d.shape[0]-2 /4):
+        elif (d.shape[0]-2) //4 == (d.shape[0]-2) /4:
             return False
         else: 
-            raise RuntimeError(r"File {file} has an unsupported format")
+            raise RuntimeError(f"File {file} has an unsupported format")
 
     def get_bar(self):
         """This data format is used by some legacy functions"""
@@ -181,15 +182,26 @@ class PafiResult():
         spl_data[:,2] = interp1d(data[:,0], data[:,2],kind='linear',fill_value="extrapolate")(spl_data[:,0])
         return spl_data
 
+    def selector(data):
+        """Start the path at the energy minimum (can be different from the initial state)"""
+
+        select = data
+        if np.argmax(data[:, 1])!=0:
+            select = data[np.argmin(data[:np.argmax(data[:, 1]), 1]):, :]
+        else:
+            run_min =  np.minimum.accumulate(data[:,1])
+            run_min_shift =  np.minimum.accumulate(np.append(data[1:,1],data[-1][1]))
+
+            if (run_min == run_min_shift).sum()>2:
+                select = data[run_min == run_min_shift,:]
+        return select
+
     def integrate(data, discretization_error_estimate=0.015):
         idata = np.zeros(data.shape)
         idata[:,0] = data[:,0]
-        idata[1:,1] = -cumtrapz(data[:,1],data[:,0])
-        idata[1:,2] = cumtrapz(data[:,2],data[:,0]) +  discretization_error_estimate
-        run_min =  np.minimum.accumulate(idata[:,1])
-        run_min_shift =  np.minimum.accumulate(np.append(idata[1:,1],idata[-1][1]))
-        if (run_min == run_min_shift).sum()>0:
-            idata = idata[run_min == run_min_shift,:]
+        idata[1:,1] = -cumtrapz(data[:,1],data[:,0]) # free energy
+        idata[1:,2] = cumtrapz(data[:,2],data[:,0]) +  discretization_error_estimate # stdev
+        idata = PafiResult.selector(idata)
         idata[:,1]-=idata[0][1]
         return idata
 
@@ -219,8 +231,8 @@ class PafiResult():
 
         ax.set_xlabel("Reaction Coordinate")
         ax.set_ylabel("Free energy of activation [eV]")
-        ax.set_xlabel("Temperature [K]")      
         ax.legend(loc="best")  
+        plt.tight_layout()
         return ax
 
 def free_energy_vs_temperature(flist, ax=None, fit_harmonic=True, harmonic_until_T=100, ymin=-0.05, label_prepend="", start_color_at_index=0):
