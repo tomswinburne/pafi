@@ -1,11 +1,11 @@
 """
-raw_ensemble_output has 1 + 4*nWorker colums:
+raw_ensemble_output has i + 4*nWorker colums. i = 2 since commit 3ca8f884 (20/09/21). For older versions of PAFI, i=1.
 
 Column 0 : Number of workers with max_jump < user threshold at run time
--> nWorker+1 : av(dF), the gradient
--> 2*nWorker+1 : std(dF), the *worker* variance, *not* ensemble error, should not be zero even in infinite time limit!
--> 3*nWorker+1 : av(Psi) = av(dX).dX_0/|dX_0|^2, the tangent projection
--> 4*nWorker+1 : the maximum per-atom jump following the MD
+-> nWorker+i : av(dF), the gradient
+-> 2*nWorker+i : std(dF), the *worker* variance, *not* ensemble error, should not be zero even in infinite time limit!
+-> 3*nWorker+i : av(Psi) = av(dX).dX_0/|dX_0|^2, the tangent projection
+-> 4*nWorker+i : the maximum per-atom jump following the MD
 """
 
 import io
@@ -80,10 +80,15 @@ class PafiResult():
         >>> plt.show()
     """
 
-    def __init__(self, file, temperature=None):
+    def __init__(self, file, logfile=None, temperature=None):
         assert (isinstance(file, str)) or (isinstance(file, pathlib.Path)) ,"`file` must be str or pathlib.Path object."
-
+        
         self.file = file
+
+        self.r_coord = None
+        if logfile is not None:
+            self.r_coord = self.log_parser(logfile)
+        
         if temperature is not None:
             self.temperature = temperature
         else:
@@ -109,29 +114,52 @@ class PafiResult():
         r_dFave_dFstd = []
 
         if PafiResult.has_old_data_format(self.file):
-            # reaction coordinate is interpolated (may cause deviations at large T)
-            # needed for backward compatibility
-            r = 0.0
-            for line in f.readlines():
-                if line[0] != "#":
-                    fields = np.loadtxt(io.StringIO(line.strip()))
-                    n_data = (fields.size-1)//4
-                    n_valid = (fields[-n_data:] < disp_thresh).sum()
+            if self.r_coord is not None:
+                # Use rcoord from logfile
+                print('Use rcoord from logfile')
+                for line, r_c in zip(f.readlines(), self.r_coord):
+                    if line[0] != "#":
+                        fields = np.loadtxt(io.StringIO(line.strip()))
+                        n_data = (fields.size-1)//4
+                        n_valid = (fields[-n_data:] < disp_thresh).sum()
 
-                    count_data  += n_data
-                    if n_valid>0:
-                        count_valid += n_valid
-                    
-                        r_dFave_dFstd += [[r, 
-                                            fields[1:n_valid+1].mean(),
-                                            fields[1:n_valid+1].std()/np.sqrt(n_valid)]]
-                    r += 1.0 # always increment even if n_valid==0
-            # print(self.file, " data :", count_data, " valid : ", count_valid, " ({}%)".format(int(count_valid/count_data*100)))
-            r_dFave_dFstd = np.r_[r_dFave_dFstd]
-            r_dFave_dFstd[:,0]/=r_dFave_dFstd[-1][0] # r : 0 -> 1
-            return r_dFave_dFstd
+                        count_data  += n_data
+                        if n_valid>0:
+                            count_valid += n_valid
+                        
+                            r_dFave_dFstd += [[r_c, 
+                                                fields[1:n_valid+1].mean(),
+                                                fields[1:n_valid+1].std()/np.sqrt(n_valid)]]
+                # print(self.file, " data :", count_data, " valid : ", count_valid, " ({}%)".format(int(count_valid/count_data*100)))
+                r_dFave_dFstd = np.r_[r_dFave_dFstd]
+                r_dFave_dFstd[:,0]/=r_dFave_dFstd[-1][0] # r : 0 -> 1
+                return r_dFave_dFstd, len(r_dFave_dFstd)
+            else:
+                # reaction coordinate is interpolated (may cause deviations at large T)
+                # needed for backward compatibility
+                print('reaction coordinate is interpolated (may cause deviations at high T)')
+                r = 0.0
+                for line in f.readlines():
+                    if line[0] != "#":
+                        fields = np.loadtxt(io.StringIO(line.strip()))
+                        n_data = (fields.size-1)//4
+                        n_valid = (fields[-n_data:] < disp_thresh).sum()
+
+                        count_data  += n_data
+                        if n_valid>0:
+                            count_valid += n_valid
+                        
+                            r_dFave_dFstd += [[r, 
+                                                fields[1:n_valid+1].mean(),
+                                                fields[1:n_valid+1].std()/np.sqrt(n_valid)]]
+                        r += 1.0 # always increment even if n_valid==0
+                # print(self.file, " data :", count_data, " valid : ", count_valid, " ({}%)".format(int(count_valid/count_data*100)))
+                r_dFave_dFstd = np.r_[r_dFave_dFstd]
+                r_dFave_dFstd[:,0]/=r_dFave_dFstd[-1][0] # r : 0 -> 1
+                return r_dFave_dFstd, len(r_dFave_dFstd)
         else:
             # reaction coordinate is read from file
+            print("Reaction coordinate is read from raw file")
             for line in f.readlines():
                 if line[0] != "#":
                     fields = np.loadtxt(io.StringIO(line.strip()))
@@ -148,9 +176,16 @@ class PafiResult():
 
             # print(self.file, " data :", count_data, " valid : ", count_valid, " ({}%)".format(int(count_valid/count_data*100)))
             r_dFave_dFstd = np.r_[r_dFave_dFstd]
-            # print(r_dFave_dFstd)
             return r_dFave_dFstd
-    
+
+    def log_parser(self, logfile):
+        import re
+        with open(logfile, "r") as f:
+            content = f.read()
+            res = re.findall("""##.+\n[\s\t]*([\d\.]+)""", content)
+            R_coord = np.r_[[float(r) for r in res]]
+        return R_coord
+
     def has_old_data_format(file):
         d = np.loadtxt(file, max_rows=1)
         if (d.shape[0]-1) //4 == (d.shape[0]-1) /4:
@@ -219,12 +254,11 @@ class PafiResult():
                     facecolor='0.8')
 
         ax.set_xlabel("Reaction Coordinate")
-        ax.set_ylabel("Free energy of activation [eV]")
+        ax.set_ylabel("Gibbs energy profile (eV)")
         ax.legend(loc="best")  
-        plt.tight_layout()
         return ax
 
-def free_energy_vs_temperature(flist, ax=None, fit_harmonic=True, harmonic_until_T=100, ymin=-0.05, label_prepend="", start_color_at_index=0):
+def free_energy_vs_temperature(flist, ax=None, fit_harmonic=True, harmonic_until_T=100, ymin=-0.05, label_prepend="", start_color_at_index=0, return_poly=False):
 
     if (ax is None) or len(ax)!=2:
         fig, ax = plt.subplots(1,2, figsize=(9,5),dpi=144,sharey=True)
@@ -243,16 +277,18 @@ def free_energy_vs_temperature(flist, ax=None, fit_harmonic=True, harmonic_until
         harmonic_regime = bar[np.where((bar[:,0]<=harmonic_until_T))]
         p = np.polyfit(harmonic_regime[:,0], harmonic_regime[:,1],1)
 
-    ax[1].plot(bar[:,0], bar[:,1], "-o", color=f'C{start_color_at_index}', label=label_prepend)
+    ax[1].plot(bar[:,0], bar[:,3], "-o", color=f'C{start_color_at_index}', label=label_prepend)
     ax[1].fill_between(bar[:,0],bar[:,1]-bar[:,2],bar[:,1]+bar[:,2],facecolor='0.93')
     ax[1].fill_between(bar[:,0],bar[:,3]-bar[:,4],bar[:,3]+bar[:,4],facecolor='0.93')
     if fit_harmonic:
         # harmonic domain
         ax[1].plot(bar[:4,0],p[1]+p[0]*bar[:4,0],'--', color=f'C{start_color_at_index}', label=label_prepend + r'$\Delta U_0=%2.3geV,\Delta S_0=%2.3g{\rm k_B}$' % (p[1], -p[0]/kb))
-    ax[1].set_xlabel("Temperature [K]")
+    ax[1].set_xlabel("Temperature (K)")
+    ax[1].set_ylabel("Gibbs energy of activation (eV)")
     ax[1].legend(loc='best')
     ax[1].set_ylim(ymin=ymin)
     plt.subplots_adjust(wspace=0)
     plt.tight_layout()
-        
-    return ax
+    
+    if return_poly: return ax, p
+    else: return ax
