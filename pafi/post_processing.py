@@ -177,31 +177,20 @@ class PafiResult():
         spl_data = np.zeros((density*data.shape[0],data.shape[1]))
         r_data = np.linspace(0.,1.,data.shape[0])
         r_spl_data = np.linspace(0.,1.,spl_data.shape[0])
-        spl_data[:,0] = r_spl_data
+        spl_data[:,0] = interp1d(r_data, data[:,0],kind='linear')(r_spl_data)
         spl_data[:,1] = interp1d(data[:,0], data[:,1],kind='linear',fill_value="extrapolate")(spl_data[:,0])
         spl_data[:,2] = interp1d(data[:,0], data[:,2],kind='linear',fill_value="extrapolate")(spl_data[:,0])
         return spl_data
 
-    def selector(data):
-        """Start the path at the energy minimum (can be different from the initial state)"""
-
-        select = data
-        if np.argmax(data[:, 1])!=0:
-            select = data[np.argmin(data[:np.argmax(data[:, 1]), 1]):, :]
-        else:
-            run_min =  np.minimum.accumulate(data[:,1])
-            run_min_shift =  np.minimum.accumulate(np.append(data[1:,1],data[-1][1]))
-
-            if (run_min == run_min_shift).sum()>2:
-                select = data[run_min == run_min_shift,:]
-        return select
-
     def integrate(data, discretization_error_estimate=0.015):
         idata = np.zeros(data.shape)
         idata[:,0] = data[:,0]
-        idata[1:,1] = -cumtrapz(data[:,1],data[:,0]) # free energy
-        idata[1:,2] = cumtrapz(data[:,2],data[:,0]) +  discretization_error_estimate # stdev
-        idata = PafiResult.selector(idata)
+        idata[1:,1] = -cumtrapz(data[:,1],data[:,0])
+        idata[1:,2] = cumtrapz(data[:,2],data[:,0]) +  discretization_error_estimate
+        run_min =  np.minimum.accumulate(idata[:,1])
+        run_min_shift =  np.minimum.accumulate(np.append(idata[1:,1],idata[-1][1]))
+        if (run_min == run_min_shift).sum()>0:
+            idata = idata[run_min == run_min_shift,:]
         idata[:,1]-=idata[0][1]
         return idata
 
