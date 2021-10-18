@@ -3,6 +3,8 @@ touch pafi
 rm pafi
 ln -s ../../build/pafi pafi
 
+NP=1
+
 # create dump folder
 mkdir -p dumps
 
