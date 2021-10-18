@@ -12,9 +12,7 @@ run/*
 example/*
 
 !example/Fe_SIA_path.tar.gz
-
 !example/path_test/config.xml
-
 !example/path_test/run.sh
 
 !example/sample_plot.py
