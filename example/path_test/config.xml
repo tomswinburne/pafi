@@ -137,15 +137,14 @@
     read_data  ../Fe_SIA_path/image_1.dat
     pair_style    eam/fs
     pair_coeff * * ../Fe_SIA_path/Fe.eam.fs Fe
-    run 0
-    region b block 0.0 10. 0.0 10. 0.0 units box
-    group mobile region b
+    region b block 5 15 5 15 5 15 units box
     thermo 10
     run 0
   </Input>
 
   <!-- Apply any fixes e.g. external stresses before thermalization/sampling -->
   <PreRun>
+    group mobile region b
   </PreRun>
 
   <!-- Turn off these same fixes after each sampling run -->
