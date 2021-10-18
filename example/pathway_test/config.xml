@@ -3,9 +3,9 @@
   <DumpFolder>./dumps</DumpFolder>
 
   <!-- LowTemperature to HighTemperature in TemperatureSteps steps -->
-  <LowTemperature> 200 </LowTemperature>
-  <HighTemperature> 800 </HighTemperature>
-  <TemperatureSteps> 4 </TemperatureSteps>
+  <LowTemperature> 0 </LowTemperature>
+  <HighTemperature> 0 </HighTemperature>
+  <TemperatureSteps> 1 </TemperatureSteps>
 
   <!-- We require nprocs % CoresPerWorker==0 -->
   <CoresPerWorker> 1 </CoresPerWorker>
@@ -14,13 +14,13 @@
   <nRepeats> 1 </nRepeats>
 
   <!-- Data gathering steps -->
-  <SampleSteps> 1000 </SampleSteps>
+  <SampleSteps> 1 </SampleSteps>
 
   <!-- Steps for thermalization -->
-  <ThermSteps> 1000 </ThermSteps>
+  <ThermSteps> 1 </ThermSteps>
 
   <!-- Max steps for optional in-plane minimizations (see below) -->
-  <MinSteps> 1000 </MinSteps>
+  <MinSteps> 1 </MinSteps>
 
   <!--
     RELATIVE thermal expansion coefficients along X,Y,Z directions of simulation-
@@ -70,11 +70,11 @@
 
   <!--
   Group of atoms to which hyperplane fix and thermalization will be applied
-  will raise error if group does not exist. Experimental feature. Default: all
+  will raise error if group does not exist. Experimental feature.
+  Default: all
+  Uncomment this line to test FixPAFIGroup functionality (see below)
   -->
-  <FixPAFIGroup>all</FixPAFIGroup>
-
-
+  <!--<FixPAFIGroup>pafi_fix_group</FixPAFIGroup>-->
 
   <!-- If == 0 ignore NPlanes, Start Coordinate and StopCoordinate;
   sample only at provided pathway configurations. Test feature -->
@@ -86,14 +86,11 @@
   <StartCoordinate> 0.0 </StartCoordinate>
   <StopCoordinate> 1.0 </StopCoordinate>
 
-
-
   <!-- If==0, turn off cubic spline interpolation. NOT recommended -->
   <SplinePath>1</SplinePath>
 
   <!-- Use geometric distance for MEP coordinate (Default: 1) -->
   <RealMEPDist>1</RealMEPDist>
-
 
   <!-- Maximum Atomic Displacement between local in-plane minima
   before and after sampling run which can still be considered "in basin"
@@ -113,40 +110,47 @@
   Loaded via LAMMPS read_data (see Scripts/Input below)
   -->
   <PathwayConfigurations>
-    md/image_1.dat
-    md/image_2.dat
-    md/image_3.dat
-    md/image_4.dat
-    md/image_5.dat
-    md/image_6.dat
-    md/image_7.dat
-    md/image_8.dat
-    md/image_9.dat
+    ../Fe_SIA_path/image_1.dat
+    ../Fe_SIA_path/image_2.dat
+    ../Fe_SIA_path/image_3.dat
+    ../Fe_SIA_path/image_4.dat
+    ../Fe_SIA_path/image_5.dat
+    ../Fe_SIA_path/image_6.dat
+    ../Fe_SIA_path/image_7.dat
+    ../Fe_SIA_path/image_8.dat
+    ../Fe_SIA_path/image_9.dat
   </PathwayConfigurations>
 
 </PAFI>
 <Scripts>
   <!-- LAMMPS script to read in the first pathway
       configuration and load the potential
+      pafi_fix_region : a region covering the entire cell
+      to test FixPAFIGroup functionality
   -->
   <Input>
     units metal
     atom_style atomic
     atom_modify map array sort 0 0.0
     neigh_modify every 2 delay 10 check yes page 1000000 one 100000
-    read_data  md/image_1.dat
+    read_data  ../Fe_SIA_path/image_1.dat
     pair_style    eam/fs
-    pair_coeff * * md/Fe.eam.fs Fe
-    run 0
+    pair_coeff * * ../Fe_SIA_path/Fe.eam.fs Fe
+    # Uncomment to test FixPAFIGroup functionality
+    # region pafi_fix_region block INF INF INF INF INF INF units box
     thermo 10
     run 0
   </Input>
 
-  <!-- Apply any fixes e.g. external stresses before thermalization/sampling -->
+  <!--
+  Apply any fixes e.g. external stresses before thermalization/sampling
+  -->
   <PreRun>
+    # Uncomment to test FixPAFIGroup functionality
+    # group pafi_fix_group region pafi_fix_region
   </PreRun>
 
-  <!-- Turn off these same fixes after each sampling run -->
+  <!-- Turn off any fixes established in PreRun after each sampling run -->
   <PostRun>
   </PostRun>
 </Scripts>

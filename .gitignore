@@ -6,9 +6,10 @@
 build/*
 
 # test data
-example/*
-!example/Fe_SIA_path.tar.gz
-!example/path_test/config.xml
+example/path_test/dumps/*
 !example/path_test/run.sh
-!example/sample_plot.py
-!example/alt_sample_plot.py
+!example/path_test/config.xml
+
+example/sample_run/dumps/*
+!example/sample_run/run.sh
+!example/sample_run/config.xml
