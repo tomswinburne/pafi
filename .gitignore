@@ -10,10 +10,13 @@ examples/*
 run/*
 # dev data
 example/*
-!example/Fe*
-example/dumps/*
-!example/dumps/params_0
-!example/config.xml
+
+!example/Fe_SIA_path.tar.gz
+
+!example/path_test/config.xml
+
+!example/path_test/run.sh
+
 !example/sample_plot.py
 !example/alt_sample_plot.py
 
