@@ -1,0 +1,156 @@
+<PAFI>
+  <!-- omit trailing forward slash -->
+  <DumpFolder>./dumps</DumpFolder>
+
+  <!-- LowTemperature to HighTemperature in TemperatureSteps steps -->
+  <LowTemperature> 0 </LowTemperature>
+  <HighTemperature> 0 </HighTemperature>
+  <TemperatureSteps> 1 </TemperatureSteps>
+
+  <!-- We require nprocs % CoresPerWorker==0 -->
+  <CoresPerWorker> 1 </CoresPerWorker>
+
+  <!-- Number of samples per plane per worker -->
+  <nRepeats> 1 </nRepeats>
+
+  <!-- Data gathering steps -->
+  <SampleSteps> 1 </SampleSteps>
+
+  <!-- Steps for thermalization -->
+  <ThermSteps> 1 </ThermSteps>
+
+  <!-- Max steps for optional in-plane minimizations (see below) -->
+  <MinSteps> 1 </MinSteps>
+
+  <!--
+    RELATIVE thermal expansion coefficients along X,Y,Z directions of simulation-
+    X -> X *(1 + LinearThermalExpansionX*T + QuadraticThermalExpansionX*T^2)
+    Y -> X *(1 + LinearThermalExpansionY*T + QuadraticThermalExpansionY*T^2)
+    Z -> X *(1 + LinearThermalExpansionZ*T + QuadraticThermalExpansionZ*T^2)
+  -->
+  <LinearThermalExpansionX>0.0</LinearThermalExpansionX>
+  <QuadraticThermalExpansionX>0.0</QuadraticThermalExpansionX>
+  <LinearThermalExpansionY>0.0</LinearThermalExpansionY>
+  <QuadraticThermalExpansionY>0.0</QuadraticThermalExpansionY>
+  <LinearThermalExpansionZ>0.0</LinearThermalExpansionZ>
+  <QuadraticThermalExpansionZ>0.0</QuadraticThermalExpansionZ>
+
+
+  <!-- perform overdamped/Brownian or Langevin dynamics on hyperplane -->
+  <OverDamped> 1 </OverDamped>
+
+  <!--
+  Friction parameter as used by MD engine (here LAMMPS : 1/strength)
+  Typical 'units metal' value : 0.1 == 100 time steps decay time
+  We set a strong friction << 0.1, e.g. 0.01 for Overdamped=0, 0.001 for Overdamped=1
+  -->
+  <Friction> 0.005 </Friction>
+
+  <!-- 0/1 Output LAMMPS logfiles for error checking purposes -->
+  <LogLammps> 0 </LogLammps>
+
+  <!--
+   0 : (Default) Output time-and-ensemble averaged in-plane deviation from reference pathway. Can indicate finite temperature path but will have sampling noise
+   1 : Output ensemble averaged in-plane deviation following in-plane minimization post-run. No noise but will lose some/all features of path
+  -->
+  <postMin> 0 </postMin>
+
+  <!--
+  Perform an in-plane minimization before thermalization/sampling.
+  If pathway is a well-converged NEB/MEP this should not produce any change
+  -->
+  <PreMin> 1 </PreMin>
+
+  <!--
+  Change order in which Pre/Post run fixes are applied
+  0: PreRun - hyperplane constraints - PostRun (standard)
+  1: hyperplane constraints - PreRun - PostRun
+  -->
+  <FixOrder> 0 </FixOrder>
+
+  <!--
+  Group of atoms to which hyperplane fix and thermalization will be applied
+  will raise error if group does not exist. Experimental feature.
+  Default: all
+  Uncomment this line to test FixPAFIGroup functionality (see below)
+  -->
+  <!--<FixPAFIGroup>pafi_fix_group</FixPAFIGroup>-->
+
+  <!-- If == 0 ignore NPlanes, Start Coordinate and StopCoordinate;
+  sample only at provided pathway configurations. Test feature -->
+  <Rediscretize>1</Rediscretize>
+
+  <!-- If Rediscretize==1, sample on nPlanes equally spaced
+  planes in [StartCoordinate,StopCoordinate], a subset of [0,1] -->
+  <nPlanes> 11 </nPlanes>
+  <StartCoordinate> 0.0 </StartCoordinate>
+  <StopCoordinate> 1.0 </StopCoordinate>
+
+  <!-- If==0, turn off cubic spline interpolation. NOT recommended -->
+  <SplinePath>1</SplinePath>
+
+  <!-- Use geometric distance for MEP coordinate (Default: 1) -->
+  <RealMEPDist>1</RealMEPDist>
+
+  <!-- Maximum Atomic Displacement between local in-plane minima
+  before and after sampling run which can still be considered "in basin"
+  Check for shallow metastability on hyperplane
+  -->
+  <MaxJump> 0.4 </MaxJump>
+
+  <!-- Resample a batch if less than this proportion are "in-basin" -->
+  <ReSampleThresh> 0.8 </ReSampleThresh>
+
+  <!-- How many resample attempts -->
+  <maxExtraRepeats> 1 </maxExtraRepeats>
+
+  <!--
+  Sequential list of pathway configurations,
+  produced from e.g. a NEB configuration.
+  Loaded via LAMMPS read_data (see Scripts/Input below)
+  -->
+  <PathwayConfigurations>
+    ../Fe_SIA_path/image_1.dat
+    ../Fe_SIA_path/image_2.dat
+    ../Fe_SIA_path/image_3.dat
+    ../Fe_SIA_path/image_4.dat
+    ../Fe_SIA_path/image_5.dat
+    ../Fe_SIA_path/image_6.dat
+    ../Fe_SIA_path/image_7.dat
+    ../Fe_SIA_path/image_8.dat
+    ../Fe_SIA_path/image_9.dat
+  </PathwayConfigurations>
+
+</PAFI>
+<Scripts>
+  <!-- LAMMPS script to read in the first pathway
+      configuration and load the potential
+      pafi_fix_region : a region covering the entire cell
+      to test FixPAFIGroup functionality
+  -->
+  <Input>
+    units metal
+    atom_style atomic
+    atom_modify map array sort 0 0.0
+    neigh_modify every 2 delay 10 check yes page 1000000 one 100000
+    read_data  ../Fe_SIA_path/image_1.dat
+    pair_style    eam/fs
+    pair_coeff * * ../Fe_SIA_path/Fe.eam.fs Fe
+    # Uncomment to test FixPAFIGroup functionality
+    # region pafi_fix_region block INF INF INF INF INF INF units box
+    thermo 10
+    run 0
+  </Input>
+
+  <!--
+  Apply any fixes e.g. external stresses before thermalization/sampling
+  -->
+  <PreRun>
+    # Uncomment to test FixPAFIGroup functionality
+    # group pafi_fix_group region pafi_fix_region
+  </PreRun>
+
+  <!-- Turn off any fixes established in PreRun after each sampling run -->
+  <PostRun>
+  </PostRun>
+</Scripts>

@@ -290,11 +290,14 @@ void LAMMPSSimulator::rescale_cell(double T) {
 */
 void LAMMPSSimulator::sample(double r, double T,
             std::map<std::string,double> &results, double *dev) {
-  error_count = 0;
-  last_error_message="";
-  results.clear();
+  #ifdef VERBOSE
+  if(local_rank==0) std::cout<<"LAMMPSSimulator::sample()"<<std::endl;
+  #endif
+
+  bool overdamped;
+  int fix_order;
   double a_disp=0.0,max_disp = 0.0, mean_disp=0.0;
-  std::string cmd;
+  std::string cmd, T_str;
   double norm_mag, sampleT, dm;
   double *lmp_ptr;
   std::string OverDampedFlag = params->parameters["OverDamped"];
@@ -303,21 +306,19 @@ void LAMMPSSimulator::sample(double r, double T,
   std::string ThermWindow = params->parameters["ThermWindow"];
   std::string FixPafiGroup = params->parameters["FixPAFIGroup"];
 
-  if (lammps_has_id(lmp,"group",FixPafiGroup.c_str())==0) {
-    if(local_rank==0) {
-      std::cout<<"LAMMPSSimulator: Group "<<FixPafiGroup<<" not found! ";
-      std::cout<<"Reverting to FixPafiGroup = all"<<std::endl;
-    }
-    FixPafiGroup = "all";
-  };
+  error_count = 0;
+  last_error_message="";
+  results.clear();
 
-  std::string T_str = std::to_string(T);
-  bool overdamped = bool(std::stoi(OverDampedFlag)==1);
+
+
+  T_str = std::to_string(T);
+  overdamped = bool(std::stoi(OverDampedFlag)==1);
   /*
   0: PreRun - HP - PostRun
   1: HP - PreRun - PostRun
   */
-  int fix_order = 0;
+  fix_order = 0;
   if(params->parameters.find("FixOrder")==params->parameters.end()) {
     #ifdef VERBOSE
     if(local_rank==0)
@@ -330,6 +331,20 @@ void LAMMPSSimulator::sample(double r, double T,
   populate(r,norm_mag,0.0);
   if(fix_order==0) run_script("PreRun");  // Stress Fixes
   populate(r,norm_mag,T);
+
+
+  if (lammps_has_id(lmp,"group",FixPafiGroup.c_str())==0) {
+    if(local_rank==0) {
+      std::cout<<"LAMMPSSimulator: Group "<<FixPafiGroup<<" not found! ";
+      std::cout<<"Reverting to FixPafiGroup = all. ";
+      if(fix_order==0) {
+        std::cout<<"WARNING: FixOrder==0 could be the issue!"<<std::endl;
+      } else {
+        std::cout<<std::endl;
+      }
+    }
+    FixPafiGroup = "all";
+  };
 
   // pafi fix
   cmd = "run 0\n"; // to ensure the PreRun script is executed

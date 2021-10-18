@@ -2,49 +2,14 @@
 .DS_Store
 */.DS_Store
 
-# test data
+# build data
 build/*
-mbuild/*
-obuild/*
-examples/*
-run/*
-# dev data
-example/*
-!example/Fe*
-example/dumps/*
-!example/dumps/params_0
-!example/config.xml
-!example/sample_plot.py
-!example/alt_sample_plot.py
 
-lib/*
-notes.py
+# test data
+example/path_test/dumps/*
+!example/path_test/run.sh
+!example/path_test/config.xml
 
-# Prerequisites
-*/*.d
-
-# Compiled Object files
-*/*.slo
-*/*.lo
-*/*.o
-*/*.obj
-
-# Precompiled Headers
-*/*.gch
-*/*.pch
-
-# Compiled Dynamic libraries
-*/*.so
-*/*.dylib
-*/*.dll
-
-# Compiled Static libraries
-*/*.lai
-*/*.la
-*/*.a
-*/*.lib
-
-# Executables
-*/*.exe
-*/*.out
-*/*.app
+example/sample_run/dumps/*
+!example/sample_run/run.sh
+!example/sample_run/config.xml
