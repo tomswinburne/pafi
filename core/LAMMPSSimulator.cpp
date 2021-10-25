@@ -295,7 +295,6 @@ void LAMMPSSimulator::sample(double r, double T,
   #endif
 
   bool overdamped;
-  int fix_order;
   double a_disp=0.0,max_disp = 0.0, mean_disp=0.0;
   std::string cmd, T_str;
   double norm_mag, sampleT, dm;
@@ -314,34 +313,18 @@ void LAMMPSSimulator::sample(double r, double T,
 
   T_str = std::to_string(T);
   overdamped = bool(std::stoi(OverDampedFlag)==1);
-  /*
-  0: PreRun - HP - PostRun
-  1: HP - PreRun - PostRun
-  */
-  fix_order = 0;
-  if(params->parameters.find("FixOrder")==params->parameters.end()) {
-    #ifdef VERBOSE
-    if(local_rank==0)
-      std::cout<<"LAMMPSSimulator: No FixOrder! Defaulting to 0"<<std::endl;
-    #endif
-  } else fix_order = std::stoi(params->parameters["FixOrder"]);
 
   params->parameters["Temperature"] = T_str;
 
   populate(r,norm_mag,0.0);
-  if(fix_order==0) run_script("PreRun");  // Stress Fixes
+  run_script("PreRun");  // Stress Fixes
   populate(r,norm_mag,T);
 
 
   if (lammps_has_id(lmp,"group",FixPafiGroup.c_str())==0) {
     if(local_rank==0) {
       std::cout<<"LAMMPSSimulator: Group "<<FixPafiGroup<<" not found! ";
-      std::cout<<"Reverting to FixPafiGroup = all. ";
-      if(fix_order==0) {
-        std::cout<<"WARNING: FixOrder==0 could be the issue!"<<std::endl;
-      } else {
-        std::cout<<std::endl;
-      }
+      std::cout<<"Reverting to FixPafiGroup = all."<<std::endl;
     }
     FixPafiGroup = "all";
   };
@@ -353,7 +336,7 @@ void LAMMPSSimulator::sample(double r, double T,
   cmd += params->seed_str()+" overdamped "+OverDampedFlag+" com 1\nrun 0";
   run_commands(cmd);
 
-  if(fix_order==1) run_script("PreRun");  // Stress Fixes
+  run_script("PreSample");  // Stress Fixes
 
   if(params->preMin) {
     #ifdef VERBOSE

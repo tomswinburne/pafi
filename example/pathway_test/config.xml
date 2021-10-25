@@ -62,13 +62,6 @@
   <PreMin> 1 </PreMin>
 
   <!--
-  Change order in which Pre/Post run fixes are applied
-  0: PreRun - hyperplane constraints - PostRun (standard)
-  1: hyperplane constraints - PreRun - PostRun
-  -->
-  <FixOrder> 0 </FixOrder>
-
-  <!--
   Group of atoms to which hyperplane fix and thermalization will be applied
   will raise error if group does not exist. Experimental feature.
   Default: all
@@ -123,10 +116,21 @@
 
 </PAFI>
 <Scripts>
-  <!-- LAMMPS script to read in the first pathway
-      configuration and load the potential
-      pafi_fix_region : a region covering the entire cell
-      to test FixPAFIGroup functionality
+  <!--
+    LAMMPS script snippets
+    Execution Order:
+    -Input (once)
+    For each sample:
+      - PreRun
+      - * hyperplane constraint fixes *
+      - PreSample
+      - * run for Ntherm + Nsteps *
+      - PostRun
+  -->
+  <!--
+  Input:
+      Read in the first pathway configuration and load the potential
+      pafi_fix_region : a region covering the entire cell to test FixPAFIGroup
   -->
   <Input>
     units metal
@@ -143,14 +147,23 @@
   </Input>
 
   <!--
-  Apply any fixes e.g. external stresses before thermalization/sampling
+  PreRun:
+    Apply any fixes before hyperplane constraint
   -->
   <PreRun>
     # Uncomment to test FixPAFIGroup functionality
     # group pafi_fix_group region pafi_fix_region
   </PreRun>
-
-  <!-- Turn off any fixes established in PreRun after each sampling run -->
+  <!--
+  PreSample:
+    Apply any fixes after hyperplane constraint, before sampling
+  -->
+  <PreSample>
+  </PostSample>
+  <!--
+  PostRun:
+    Turn off any fixes established in PreRun and PreSample
+  -->
   <PostRun>
   </PostRun>
 </Scripts>
