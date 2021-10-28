@@ -296,7 +296,7 @@ int main(int narg, char **arg) {
       //sim.write_dev(dump_fn,r,all_dev,all_dev_sq);
 
       // raw output
-      raw<<total_valid_data<<" ";
+      raw<<r<<" "<<total_valid_data<<" ";
       for(auto j: raw_dump_indicies)
         for(int i=0;i<total_valid_data;i++) raw<<valid_res[i*nRes+j]<<" ";
       for(auto j: raw_dump_indicies)
