@@ -18,6 +18,8 @@ except ImportError:
   has_inset=False
 
 
+# Does the physics impose mirror symmetry around 0.5?
+symmetric = False
 
 
 """
@@ -47,12 +49,16 @@ inset_data =[]
 for i,T in enumerate(Tlist):
   fn = file_prefix+f"_{T}K_{epoch}"
   data = np.loadtxt(fn)
-  cF = cumtrapz(-data[:,2],x=data[:,0])
-  F = data[:,1]
-  eb = cumtrapz(data[:,3],x=data[:,0])
-
+  if not symmetric:
+    cF = cumtrapz(-data[:,2],x=data[:,0])
+    F = data[:,1]
+    eb = cumtrapz(data[:,3],x=data[:,0])
+  else:
+    cF = cumtrapz(-0.5*(data[:,2]-data[::-1,2]),x=data[:,0])
+    F = 0.5 * (data[:,1] + data[::-1,1])
+    F -= F[0]
+    eb = cumtrapz(0.5*np.sqrt(data[:,3]**2+data[::-1,3]**2),x=data[:,0])
   ax.fill_between(data[:-1,0], F[:-1]-eb, F[:-1]+eb, color=f'C{i}', alpha=0.5)
-
   ax.plot(data[:-1,0],data[:-1,1], f'C{i%9}-', label=f"{T}K", lw=2)
 
   inset_data.append([T,F.max(),eb[F[:-1].argmax()]])

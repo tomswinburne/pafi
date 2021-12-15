@@ -3,7 +3,8 @@
 */.DS_Store
 
 # build data
-build/*
+build*
+ext-*
 
 # test data
 example/path_test/dumps/*
