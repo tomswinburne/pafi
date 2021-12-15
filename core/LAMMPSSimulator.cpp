@@ -65,7 +65,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
     std::cout<<"LAMMPSSimulator(): Searching for "<<pafi_package<<std::endl;
   #endif
 
-  has_pafi = (bool)lammps_config_has_package(pafi_package.c_str());
+  has_pafi = (bool)lammps_config_has_package((char *)pafi_package.c_str());
   #ifdef VERBOSE
   if(local_rank==0)
     std::cout<<"LAMMPSSimulator(): has_pafi: "<<has_pafi<<std::endl;
