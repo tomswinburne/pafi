@@ -28,7 +28,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   lmp = new LAMMPS(5,lmparg,instance_comm);
 
   int lammps_release_int = lammps_version(lmp); // YYYYMMDD
-  std::string package_name = "USER-MISC";
+  pafi_package = "USER-MISC";
   if(lammps_release_int<oldest_lammps_version) {
     if(local_rank==0) {
       std::cout<<lammps_int_to_date(lammps_release_int)<<" LAMMPS TOO OLD! ";
@@ -37,7 +37,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
     return;
   }
 
-  if(lammps_release_int>=20210728) package_name = "EXTRA-FIX";
+  if(lammps_release_int>=20210728) pafi_package = "EXTRA-FIX";
 
   #ifdef VERBOSE
   if(local_rank==0)
@@ -62,10 +62,10 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
 
   #ifdef VERBOSE
   if(local_rank==0)
-    std::cout<<"LAMMPSSimulator(): Searching for "<<package_name<<std::endl;
+    std::cout<<"LAMMPSSimulator(): Searching for "<<pafi_package<<std::endl;
   #endif
 
-  has_pafi = (bool)lammps_config_has_package(package_name.c_str());
+  has_pafi = (bool)lammps_config_has_package(pafi_package.c_str());
   #ifdef VERBOSE
   if(local_rank==0)
     std::cout<<"LAMMPSSimulator(): has_pafi: "<<has_pafi<<std::endl;

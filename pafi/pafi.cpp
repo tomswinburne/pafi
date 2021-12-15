@@ -96,7 +96,7 @@ int main(int narg, char **arg) {
 
   if(!sim.has_pafi) {
     if(rank==0)
-      std::cout<<"PAFI Error: missing USER-MISC package in LAMMPS"<<std::endl;
+      std::cout<<"PAFI Error: missing "<<sim.pafi_package<<" package in LAMMPS"<<std::endl;
     exit(-1);
   }
   if(sim.error_count>0 && local_rank==0) std::cout<<sim.last_error()<<std::endl;
