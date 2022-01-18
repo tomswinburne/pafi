@@ -14,62 +14,82 @@
 
 # Installation
 
+## Install `cmake`
+- On a cluster, try `module load cmake`
+- On Linux, try e.g. `[apt/yum] install cmake`
+- On OSX, try e.g.  `[conda/brew] install cmake`
+- Alternatively [download](https://cmake.org/download/) and install `cmake` manually
+
+## Set local install environment
+- This is where `LAMMPS` will be installed, and where `PAFI` will look
+```bash
+export PREFIX=${HOME}/.local # example value
+```
+
 ## Compile `LAMMPS` with `EXTRA-FIX` package
 
-1. `PAFI` is now integrated into `LAMMPS` as part of the `EXTRA-FIX` package, introduced in the 28 July 2021 Patch release. For earlier versions, use the `USER-MISC` package instead.
-You can [download](https://lammps.sandia.gov/download.html) a tarball from the `LAMMPS`
-website or clone the public repository with
+*For LAMMPS version older than 28 July 2021, or to statically link with traditional make, please follow [these instructions](STATIC_MAKE.md)*
+
+1. [Download](https://lammps.sandia.gov/download.html) a tarball or
 ```bash
 git clone https://github.com/lammps/lammps.git
 ```
 
-2. Install `EXTRA-FIX` and any packages you desire (e.g. replica for `NEB`)
+2. Build `LAMMPS` with `cmake` with `EXTRA-FIX` and any packages you desire.
+[LAMMPS Documentation](https://docs.lammps.org/Build_link.html)
+
+Example with `REPLICA` for NEB calculations and `MANYBODY` for EAM potentials:
+
+
+Create a file `my_options.cmake`:
+```cmake
+
+# set installation location
+set(CMAKE_INSTALL_PREFIX "$ENV{PREFIX}")
+
+# enforce c++11 standards
+set(CCFLAGS -g -O3 -std=c++11)
+
+# compile a binary and shared library
+set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+
+# allow error messages (very useful)
+set(LAMMPS_EXCEPTIONS ON CACHE BOOL "" FORCE)
+
+# minimal packages to run example (MANYBODY, EXTRA-FIX) and generate new pathway (REPLICA for "fix neb")
+set(ALL_PACKAGES MANYBODY EXTRA-FIX REPLICA)
+
+foreach(PKG ${ALL_PACKAGES})
+  set(PKG_${PKG} ON CACHE BOOL "" FORCE)
+endforeach()
+```
+
 ```bash
-cd /path/to/lammps/src
-make yes-extra-fix ## yes-user-misc for versions before 28 July 2021 Patch release
-make yes-replica # for NEB calculation
-make yes-package # (e.g. manybody for EAM potentials etc)
-```
+# go to root of LAMMPS distribution
+cd /path/to/lammps
 
-3. In the appropriate Makefile add `-std=c++11` to `CCFLAGS` and `LINKFLAGS` and
-add `-DLAMMPS_EXCEPTIONS` to `LMP_INC` to allow `PAFI` to read `LAMMPS` error messages.
-This is very useful when running your own simulations. For `src/MAKE/Makefile.mpi` this reads
- ```make
-CCFLAGS =	-g -O3 -std=c++11
-LINKFLAGS =	-g -O3 -std=c++11
-LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64  -DLAMMPS_EXCEPTIONS
-```
+# create build folder
+mkdir build
+cd build
 
-4. Compile static library and binary Consult [LAMMPS documentation](http://lammps.sandia.gov/doc/Section_start.html) for details
-```bash
-   make mpi mode=lib # liblammps_mpi.a library for pafi
-   make mpi # lmp_mpi binary for running initial NEB calculation if desired
-```
+# configure LAMMPS compilation
+cmake -C /path/to/my_options.cmake ../cmake
 
-4. Copy library to your local lib/ and headers to local include/, at e.g. ${HOME}/.local
-```bash
-  export PREFIX=${HOME}/.local # example value
-  cp liblammps_mpi.a ${PREFIX}/lib/liblammps_mpi.a
-  mkdir ${PREFIX}/include/lammps
-  cp *.h ${PREFIX}/include/lammps/
-```
+# compile LAMMPS
+cmake --build .
 
+# install LAMMPS into $PREFIX
+cmake --install .
+```
 
 ## Compile `PAFI`
-0. `PAFI` requires `cmake` to compile:
-- On a cluster, try `module load cmake`
-- On Linux, try `[apt/yum] install cmake`
-- Alternatively [download](https://cmake.org/download/) and install `cmake` manually
-
-*Technical point: `LAMMPS` can also be built with `cmake` . However, this is causes
-[complications](https://lammps.sandia.gov/doc/Build_link.html) with static linking.*
 
 1. Specify compiler in CMakeLists.txt:
-```make
+```cmake
    set(CMAKE_CXX_COMPILER path/to/mpic++)
 ```
 
-2. Make pafi build folder, run cmake and make
+2. Make pafi build folder, run `cmake`, ensuring `PREFIX` is in your environment
 ```bash
    export PREFIX=${HOME}/.local # if in different shell to LAMMPS compilation
    mkdir build
