@@ -14,15 +14,13 @@
 
 # Installation
 
-## Install `cmake`
-- Either [download](https://cmake.org/download/) or try e.g.
+- Install `cmake` by [download](https://cmake.org/download/) or try e.g.
 `[conda/apt/brew] install cmake` or `module load cmake`
 
-## Set local install location
-```bash
+- Set local install location```bash
 export PREFIX=${HOME}/.local # example value
 ```
-## Build `LAMMPS`
+- Build `LAMMPS`:
 *For LAMMPS version older than 28 July 2021, or to statically link with traditional make, please follow [these instructions](STATIC_MAKE.md)*
 
 1. [Download](https://lammps.sandia.gov/download.html) a tarball or clone into `LAMMPS` source code
@@ -57,9 +55,10 @@ cmake --install .
 
 2. Make pafi build folder, run `cmake`, ensuring `PREFIX` is in your environment
 ```bash
-   export PREFIX=${HOME}/.local # if in different shell to LAMMPS compilation
-   mkdir build
-   cd build
-   cmake ..
-   make # or try make -j4 for parallel make using 4 cores
+cd path/to/pafi
+export PREFIX=${HOME}/.local # if in different shell to LAMMPS compilation
+mkdir build
+cd build
+cmake ..
+make # or try make -j4 for parallel make using 4 cores
 ```
