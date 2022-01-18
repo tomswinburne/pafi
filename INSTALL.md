@@ -64,6 +64,7 @@ foreach(PKG ${ALL_PACKAGES})
 endforeach()
 ```
 
+Build `LAMMPS`:
 ```bash
 # go to root of LAMMPS distribution
 cd /path/to/lammps
