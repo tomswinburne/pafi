@@ -16,20 +16,12 @@
 
 ## Install `cmake`
 - Either [download](https://cmake.org/download/) or try e.g.
-```bash
-module load cmake # linux cluster
-conda install cmake # unix
-apt install cmake # ubuntu
-brew install cmake # osx
-... # other options available!
+`[conda/apt/brew] install cmake` or `module load cmake`
 
-```
 ## Set local install location
-- This is where `LAMMPS` will be installed, and where `PAFI` will look
 ```bash
 export PREFIX=${HOME}/.local # example value
 ```
-
 ## Build `LAMMPS`
 *For LAMMPS version older than 28 July 2021, or to statically link with traditional make, please follow [these instructions](STATIC_MAKE.md)*
 
