@@ -15,19 +15,22 @@
 # Installation
 
 ## Install `cmake`
-- On a cluster, try `module load cmake`
-- On Linux, try e.g. `[apt/yum] install cmake`
-- On OSX, try e.g.  `[conda/brew] install cmake`
-- Alternatively [download](https://cmake.org/download/) and install `cmake` manually
+- Either [download](https://cmake.org/download/) or try e.g.
+```bash
+module load cmake # linux cluster
+conda install cmake # unix
+apt install cmake # ubuntu
+brew install cmake # osx
+... # other options available!
 
-## Set local install environment
+```
+## Set local install location
 - This is where `LAMMPS` will be installed, and where `PAFI` will look
 ```bash
 export PREFIX=${HOME}/.local # example value
 ```
 
 ## Build `LAMMPS`
-
 *For LAMMPS version older than 28 July 2021, or to statically link with traditional make, please follow [these instructions](STATIC_MAKE.md)*
 
 1. [Download](https://lammps.sandia.gov/download.html) a tarball or clone into `LAMMPS` source code
@@ -41,37 +44,16 @@ git clone https://github.com/lammps/lammps.git
 cd /path/to/lammps
 ```
 
-2. Create a file `my_options.cmake`:
-```cmake
+2. Configure `LAMMPS` with at least `EXTRA-FIX` package. Example options in `lammps_options.cmake` or see `path/to/lammps/cmake/presets`
 
-# set installation location
-set(CMAKE_INSTALL_PREFIX "$ENV{PREFIX}")
-
-# enforce c++11 standards
-set(CCFLAGS -g -O3 -std=c++11)
-
-# compile a binary and shared library
-set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
-
-# allow error messages (very useful)
-set(LAMMPS_EXCEPTIONS ON CACHE BOOL "" FORCE)
-
-# minimal packages to run example (MANYBODY, EXTRA-FIX) and generate new pathway (REPLICA for "fix neb")
-set(ALL_PACKAGES MANYBODY EXTRA-FIX REPLICA)
-
-foreach(PKG ${ALL_PACKAGES})
-  set(PKG_${PKG} ON CACHE BOOL "" FORCE)
-endforeach()
-```
-
-Build `LAMMPS`:
+3. Build `LAMMPS`:
 ```bash
 # create build folder
 mkdir build
 cd build
 
 # configure LAMMPS compilation
-cmake -C ../my_options.cmake ../cmake
+cmake -C /path/to/lammps_options.cmake ../cmake
 
 # compile LAMMPS
 cmake --build .
