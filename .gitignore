@@ -7,10 +7,10 @@ build*
 ext-*
 
 # test data
-example/path_test/dumps/*
-!example/path_test/run.sh
-!example/path_test/config.xml
+example/pathway_test/*
+!example/pathway_test/run.sh
+!example/pathway_test/config.xml
 
-example/sample_run/dumps/*
+example/sample_run/*
 !example/sample_run/run.sh
 !example/sample_run/config.xml

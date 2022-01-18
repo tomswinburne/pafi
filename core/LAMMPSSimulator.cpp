@@ -419,7 +419,7 @@ void LAMMPSSimulator::sample(double r, double T,
     for(int i=0;i<3*natoms;i++) dev[i] -= path(i,r,0,scale[i%3]);
     pbc.wrap(dev,3*natoms);
   } else {
-    run_commands("reset_timestep "+SampleSteps); // for fix calculation
+    //run_commands("reset_timestep "+SampleSteps); // for fix calculation
     gather("f_pafi_ap",3,dev);
     run_commands("unfix pafi_ap");
     run_commands("uncompute pafi_dx");

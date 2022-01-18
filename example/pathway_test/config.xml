@@ -139,7 +139,7 @@
     neigh_modify every 2 delay 10 check yes page 1000000 one 100000
     read_data  ../Fe_SIA_path/image_1.dat
     pair_style    eam/fs
-    pair_coeff * * ../Fe_SIA_path/Fe.eam.fs Fe
+    pair_coeff * * ../Fe_SIA_path/Fe.eam.fs Fe Fe
     # Uncomment to test FixPAFIGroup functionality
     # region pafi_fix_region block INF INF INF INF INF INF units box
     thermo 10

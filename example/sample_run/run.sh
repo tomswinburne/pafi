@@ -6,7 +6,7 @@ ln -s ../../build/pafi pafi
 # create dump folder
 mkdir -p dumps
 
-NP=1
+NP=4
 
 # hostfile not always required
 echo "localhost slots="${NP} > hostfile
