@@ -26,22 +26,22 @@
 export PREFIX=${HOME}/.local # example value
 ```
 
-## Compile `LAMMPS` with `EXTRA-FIX` package
+## Build `LAMMPS`
 
 *For LAMMPS version older than 28 July 2021, or to statically link with traditional make, please follow [these instructions](STATIC_MAKE.md)*
 
-1. [Download](https://lammps.sandia.gov/download.html) a tarball or
+1. [Download](https://lammps.sandia.gov/download.html) a tarball or clone into `LAMMPS` source code
 ```bash
 git clone https://github.com/lammps/lammps.git
 ```
 
-2. Build `LAMMPS` with `cmake` with `EXTRA-FIX` and any packages you desire.
-[LAMMPS Documentation](https://docs.lammps.org/Build_link.html)
+2. Go to root of `LAMMPS` distribution
+```bash
+# go to root of distribution
+cd /path/to/lammps
+```
 
-Example with `REPLICA` for NEB calculations and `MANYBODY` for EAM potentials:
-
-
-Create a file `my_options.cmake`:
+2. Create a file `my_options.cmake`:
 ```cmake
 
 # set installation location
@@ -66,15 +66,12 @@ endforeach()
 
 Build `LAMMPS`:
 ```bash
-# go to root of LAMMPS distribution
-cd /path/to/lammps
-
 # create build folder
 mkdir build
 cd build
 
 # configure LAMMPS compilation
-cmake -C /path/to/my_options.cmake ../cmake
+cmake -C ../my_options.cmake ../cmake
 
 # compile LAMMPS
 cmake --build .
