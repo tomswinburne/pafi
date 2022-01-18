@@ -30,20 +30,11 @@ git clone https://github.com/lammps/lammps.git
 ```
 2. Configure `LAMMPS` with `EXTRA-FIX` package. See `lammps_options.cmake` in `PAFI` or `path/to/lammps/cmake/presets`, then build:
 ```bash
-# go to root of distribution
 cd /path/to/lammps
-
-# create build folder
 mkdir build
 cd build
-
-# configure LAMMPS compilation using e.g. PAFI example
 cmake -C /path/to/pafi/lammps_options.cmake ../cmake
-
-# compile LAMMPS
 cmake --build .
-
-# install LAMMPS into $PREFIX
 cmake --install .
 ```
 
