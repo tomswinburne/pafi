@@ -37,23 +37,17 @@ export PREFIX=${HOME}/.local # example value
 ```bash
 git clone https://github.com/lammps/lammps.git
 ```
-
-2. Go to root of `LAMMPS` distribution
+2. Configure `LAMMPS` with at least `EXTRA-FIX` package. Example options in `lammps_options.cmake` or see `path/to/lammps/cmake/presets`, then build:
 ```bash
 # go to root of distribution
 cd /path/to/lammps
-```
 
-2. Configure `LAMMPS` with at least `EXTRA-FIX` package. Example options in `lammps_options.cmake` or see `path/to/lammps/cmake/presets`
-
-3. Build `LAMMPS`:
-```bash
 # create build folder
 mkdir build
 cd build
 
-# configure LAMMPS compilation
-cmake -C /path/to/lammps_options.cmake ../cmake
+# configure LAMMPS compilation using e.g. PAFI example
+cmake -C /path/to/pafi/lammps_options.cmake ../cmake
 
 # compile LAMMPS
 cmake --build .
