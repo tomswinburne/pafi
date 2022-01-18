@@ -17,7 +17,8 @@
 - Install `cmake` by [download](https://cmake.org/download/) or try e.g.
 `[conda/apt/brew] install cmake` or `module load cmake`
 
-- Set local install location```bash
+- Set local install location
+```bash
 export PREFIX=${HOME}/.local # example value
 ```
 - Build `LAMMPS`:
