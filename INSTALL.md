@@ -13,6 +13,7 @@
 ## [Getting Started](TUTORIAL.md)
 
 # Installation
+*For LAMMPS version older than 28 July 2021, or to statically link with traditional make, please follow [these instructions](STATIC_MAKE.md)*
 
 - Install `cmake` by [download](https://cmake.org/download/) or try e.g.
 `[conda/apt/brew] install cmake` or `module load cmake`
@@ -21,14 +22,10 @@
 ```bash
 export PREFIX=${HOME}/.local # example value
 ```
-- Build `LAMMPS`:
-*For LAMMPS version older than 28 July 2021, or to statically link with traditional make, please follow [these instructions](STATIC_MAKE.md)*
+## Build LAMMPS
+- [Download](https://lammps.sandia.gov/download.html) or `git clone https://github.com/lammps/lammps.git`
 
-1. [Download](https://lammps.sandia.gov/download.html) a tarball or clone into `LAMMPS` source code
-```bash
-git clone https://github.com/lammps/lammps.git
-```
-2. Configure `LAMMPS` with `EXTRA-FIX` package. See `lammps_options.cmake` in `PAFI` or `path/to/lammps/cmake/presets`, then build:
+- Configure `LAMMPS` with `EXTRA-FIX` package. See `lammps_options.cmake` in `PAFI` or `path/to/lammps/cmake/presets`, then build:
 ```bash
 cd /path/to/lammps
 mkdir build
@@ -38,14 +35,14 @@ cmake --build .
 cmake --install .
 ```
 
-## Compile `PAFI`
+## Build PAFI
 
-1. Specify compiler in CMakeLists.txt:
+- Specify compiler in `CMakeLists.txt`:
 ```cmake
    set(CMAKE_CXX_COMPILER path/to/mpic++)
 ```
 
-2. Make pafi build folder, run `cmake`, ensuring `PREFIX` is in your environment
+- Make pafi build folder, run `cmake`, ensuring `PREFIX` is in your environment
 ```bash
 cd path/to/pafi
 export PREFIX=${HOME}/.local # if in different shell to LAMMPS compilation
