@@ -54,7 +54,10 @@
    1 : Output ensemble averaged in-plane deviation following in-plane minimization post-run. No noise but will lose some/all features of path
   -->
   <postMin> 0 </postMin>
-  
+
+	<!--
+		Dump "hot" snapshot after each run. For development only!
+	-->
   <workerDump> 1 </workerDump>
 
   <!--
