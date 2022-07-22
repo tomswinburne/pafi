@@ -37,7 +37,7 @@
 
 
   <!-- perform overdamped/Brownian or Langevin dynamics on hyperplane -->
-  <OverDamped> 1 </OverDamped>
+  <OverDamped> 0 </OverDamped>
 
   <!--
   Friction parameter as used by MD engine (here LAMMPS : 1/strength)

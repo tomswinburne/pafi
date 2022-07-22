@@ -36,6 +36,7 @@ Parser::Parser(std::string file, bool test) {
   parameters["nPlanes"] = "10";
   parameters["DumpFolder"] = "./dumps";
   parameters["OverDamped"] = "1";
+	parameters["CoM"] = "1";
   parameters["Friction"] = "0.1";
   parameters["StartCoordinate"] = "0.0";
   parameters["StopCoordinate"] = "1.0";
@@ -141,6 +142,7 @@ void Parser::overwrite_xml(int nProcs) {
   parameters["nRepeats"] = "1";
   parameters["DumpFolder"] = "./dumps";
   parameters["OverDamped"] = "1";
+	parameters["CoM"] = "1";
   parameters["Friction"] = "0.1";
   parameters["StartCoordinate"] = "0.0";
   parameters["StopCoordinate"] = "1.0";
