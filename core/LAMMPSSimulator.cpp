@@ -300,6 +300,7 @@ void LAMMPSSimulator::sample(double r, double T,
   double norm_mag, sampleT, dm;
   double *lmp_ptr;
   std::string OverDampedFlag = params->parameters["OverDamped"];
+	std::string CoMFlag = params->parameters["CoM"];
   std::string SampleSteps = params->parameters["SampleSteps"];
   std::string ThermSteps = params->parameters["ThermSteps"];
   std::string ThermWindow = params->parameters["ThermWindow"];
@@ -333,7 +334,8 @@ void LAMMPSSimulator::sample(double r, double T,
   cmd = "run 0\n"; // to ensure the PreRun script is executed
   cmd += "fix pafi_hp " + FixPafiGroup + " pafi pafi_path "+T_str+" ";
   cmd += params->parameters["Friction"]+" ";
-  cmd += params->seed_str()+" overdamped "+OverDampedFlag+" com 1\nrun 0";
+  cmd += params->seed_str()+" overdamped "+OverDampedFlag;
+	cmd += " com "+OverDampedFlag+"\nrun 0";
   run_commands(cmd);
 
   run_script("PreSample");  // Stress Fixes
@@ -351,11 +353,15 @@ void LAMMPSSimulator::sample(double r, double T,
   MinEnergy = getEnergy();
   results["MinEnergy"] = MinEnergy;
 
+	// temperature calculation
+	cmd = "compute pafi_temp "+FixPafiGroup+" temp";
+	run_commands(cmd);
+
   // time average
   cmd = "reset_timestep 0\n";
   cmd += "fix pafi_ae all ave/time 1 "+ThermWindow+" ";
   if(overdamped) cmd += ThermSteps+" c_pe\n";
-  else cmd += ThermSteps+" c_thermo_temp\n";
+  else cmd += ThermSteps+" c_pafi_temp\n";
   cmd += "run "+ThermSteps;
   run_commands(cmd);
 
@@ -372,7 +378,7 @@ void LAMMPSSimulator::sample(double r, double T,
   cmd = "reset_timestep 0\n";
   cmd += "fix pafi_ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" ";
   if(overdamped) cmd += "c_pe\n";
-  else cmd += "c_thermo_temp\n";
+  else cmd += "c_pafi_temp\n";
 
   if(!params->postMin) {
     cmd += "compute pafi_dx all displace/atom\n";
@@ -436,6 +442,7 @@ void LAMMPSSimulator::sample(double r, double T,
 
   // reset
   run_commands("unfix pafi_ae\nunfix pafi_af\nunfix pafi_hp");
+	run_commands("uncompute pafi_temp");
 
   // Stress Fixes
   run_script("PostRun");
