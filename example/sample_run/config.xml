@@ -12,12 +12,13 @@
 
   <!-- Number of samples per plane per worker -->
   <nRepeats> 1 </nRepeats>
+  <ForceErrorThresh> 0.01 </ForceErrorThresh>
 
   <!-- Data gathering steps -->
-  <SampleSteps> 1000 </SampleSteps>
+  <SampleSteps> 10 </SampleSteps>
 
   <!-- Steps for thermalization -->
-  <ThermSteps> 1000 </ThermSteps>
+  <ThermSteps> 10 </ThermSteps>
 
   <!-- Max steps for optional in-plane minimizations (see below) -->
   <MinSteps> 1000 </MinSteps>
@@ -95,7 +96,7 @@
   <ReSampleThresh> 0.8 </ReSampleThresh>
 
   <!-- How many resample attempts -->
-  <maxExtraRepeats> 1 </maxExtraRepeats>
+  <maxExtraRepeats> 10 </maxExtraRepeats>
 
   <!--
   Sequential list of pathway configurations,
