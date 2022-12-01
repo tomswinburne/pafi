@@ -44,7 +44,7 @@ std::map<std::string,std::string> parameters;
 std::map<std::string,std::string> scripts;
 
 std::vector<std::string> PathwayConfigurations;
-double lowT,highT,Friction,startr,stopr,maxjump_thresh,redo_thresh;
+double lowT,highT,Friction,startr,stopr,maxjump_thresh,redo_thresh,f_error_thresh;
 int CoresPerWorker, nPlanes, TSteps, nRepeats, maxExtraRepeats;
 unsigned random_seed;
 std::string dump_dir;

@@ -50,6 +50,7 @@ Parser::Parser(std::string file, bool test) {
   parameters["MatchPlanes"] = "0";
   parameters["RealMEPDist"] = "1";
   parameters["FixPAFIGroup"] = "all";
+  parameters["FixPAFIGroup"] = "all";
 
 
   seeded = false;
@@ -121,13 +122,13 @@ void Parser::set_parameters() {
   loglammps = bool(std::stoi(parameters["LogLammps"]));
   maxjump_thresh = std::stod(parameters["MaxJump"]);
   redo_thresh = std::stod(parameters["ReSampleThresh"]);
+  f_error_thresh = std::stod(parameters["ForceErrorThresh"]);
   maxExtraRepeats = std::stoi(parameters["maxExtraRepeats"]);
   postMin = bool(std::stoi(parameters["postMin"]));
   preMin = bool(std::stoi(parameters["PreMin"]));
   spline_path = bool(std::stoi(parameters["SplinePath"]));
   match_planes = !bool(std::stoi(parameters["Rediscretize"]));
   real_coord = bool(std::stoi(parameters["RealMEPDist"]));
-
 };
 
 void Parser::overwrite_xml(int nProcs) {
@@ -150,6 +151,7 @@ void Parser::overwrite_xml(int nProcs) {
   parameters["MaxJump"] = "0.1";
   parameters["ReSampleThresh"] = "0.5";
   parameters["maxExtraRepeats"] = "1";
+  parameters["ForceErrorThresh"] = "1.0";
 
   //parameters["postMin"] = "1";
   //parameters["PreMin"] = "1";
