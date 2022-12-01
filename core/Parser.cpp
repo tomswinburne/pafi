@@ -129,6 +129,13 @@ void Parser::set_parameters() {
   spline_path = bool(std::stoi(parameters["SplinePath"]));
   match_planes = !bool(std::stoi(parameters["Rediscretize"]));
   real_coord = bool(std::stoi(parameters["RealMEPDist"]));
+  use_custom_positions = bool(std::stoi(parameters["UseCustomPositions"]));
+
+  std::stringstream ss(parameters["CustomPositions"]);
+  std::istream_iterator<std::string> begin(ss);
+  std::istream_iterator<std::string> end;
+  std::vector<std::string> tokens(begin, end);
+  for (auto &s: tokens) custom_positions.push_back(std::stod(s));
 };
 
 void Parser::overwrite_xml(int nProcs) {
@@ -152,7 +159,13 @@ void Parser::overwrite_xml(int nProcs) {
   parameters["ReSampleThresh"] = "0.5";
   parameters["maxExtraRepeats"] = "1";
   parameters["ForceErrorThresh"] = "1.0";
-
+  parameters["UseCustomPositions"] = "0.0";
+  parameters["CustomPositions"] = "0.0 1.0";
+  std::stringstream ss(parameters["CustomPositions"]);
+  std::istream_iterator<std::string> begin(ss);
+  std::istream_iterator<std::string> end;
+  std::vector<std::string> tokens(begin, end);
+  for (auto &s: tokens) custom_positions.push_back(std::stod(s));
   //parameters["postMin"] = "1";
   //parameters["PreMin"] = "1";
 };
