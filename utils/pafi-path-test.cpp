@@ -194,12 +194,19 @@ int main(int narg, char **arg) {
     std::cout<<"\n";
   }
 
+
   std::vector<double> sample_r;
-  if(params.spline_path and not params.match_planes) {
+  if(params.use_custom_positions) {
+    for(auto r: params.custom_positions) {
+      sample_r.push_back(r);
+      std::cout<<r<<std::endl;
+    }
+  } else {
+    if(params.spline_path and not params.match_planes) {
     for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr )
       sample_r.push_back(r);
-  } else for(auto r: sim.pathway_r)
-    if(r>=params.startr-0.02 && r<=params.stopr+0.02) sample_r.push_back(r);
+    } else for(auto r: sim.pathway_r) if(r>=params.startr-0.02 && r<=params.stopr+0.02) sample_r.push_back(r);
+  }
 
   for(auto r: sample_r) {
     valid_res.clear();

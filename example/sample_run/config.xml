@@ -23,7 +23,7 @@
   <!-- Max steps for optional in-plane minimizations (see below) -->
   <MinSteps> 1000 </MinSteps>
 
-  <!-- Custom knot positions -->
+  <!-- Custom knot positions for integration TEST FEATURE-->
   <UseCustomPositions>0</UseCustomPositions>  
   <CustomPositions>0. 0.16 0.223 0.3 0.4 0.5</CustomPositions>
 

@@ -161,7 +161,7 @@ int main(int narg, char **arg) {
     if(params.spline_path and not params.match_planes) {
     for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr )
       sample_r.push_back(r);
-    } else for(auto r: sim.pathway_r) if(r>=0.0 && r<=1.0) sample_r.push_back(r);
+    } else for(auto r: sim.pathway_r) if(r>=params.startr-0.02 && r<=params.stopr+0.02) sample_r.push_back(r);
   }
   
 
