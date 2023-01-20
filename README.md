@@ -22,6 +22,7 @@ Using PAFI? Please cite [this paper](https://journals.aps.org/prl/abstract/10.11
 
 Applications:
 > Namakian *et al.* Comp. Mat. Sci. 2023 [link](https://doi.org/10.1016/j.commatsci.2022.111971)
+
 > Sato *et al.* Mat. Res. Lett.  2021 [link](https://doi.org/10.1080/21663831.2021.1875079)
 
 
