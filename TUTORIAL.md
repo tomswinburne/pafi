@@ -16,7 +16,12 @@
 
 0. Steps 1,2 can be skipped if using the NEB calculation (SIA in EAM-Fe) in the examples folder
 
-1. First set up a LAMMPS neb calculation as described [here](http://lammps.sandia.gov/doc/neb.html)
+1. First set up a LAMMPS NEB calculation as described [here](http://lammps.sandia.gov/doc/neb.html)
+We have added a new `equal` NEB style to LAMMPS, currently on [github](https://github.com/lammps/lammps.git)
+before the next major (2023) update. This gives optimal knot spacing for force integration, used with e.g. 
+```
+         fix neb_fix all neb 1.0 parallel equal
+```
 
 2. In the LAMMPS script, use the `write_data` command to dump all the NEB knots, i.e.
 ```
