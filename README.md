@@ -13,6 +13,8 @@ v0.9 :copyright: TD Swinburne and M-C Marinica 2020 MIT License
 
 thomas dot swinburne at cnrs dot fr
 
+:rotating_list: New `equal` NEB style for `LAMMPS` on [github](https://github.com/lammps/lammps.git), ideal to produce pathways for PAFI [documentation](https://github.com/lammps/lammps/blob/develop/doc/src/fix_neb.rst)
+
 Using PAFI? Please cite [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503)
 > *Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems*   
 > T.D. Swinburne and M.-C. Marinica
