@@ -15,13 +15,13 @@
   <ForceErrorThresh> 0.1 </ForceErrorThresh>
 
   <!-- Data gathering steps -->
-  <SampleSteps> 10 </SampleSteps>
+  <SampleSteps> 100 </SampleSteps>
 
   <!-- Steps for thermalization -->
-  <ThermSteps> 10 </ThermSteps>
+  <ThermSteps> 100 </ThermSteps>
 
   <!-- Max steps for optional in-plane minimizations (see below) -->
-  <MinSteps> 1000 </MinSteps>
+  <MinSteps> 100 </MinSteps>
 
   <!-- Custom knot positions for integration TEST FEATURE-->
   <UseCustomPositions>0</UseCustomPositions>  
@@ -59,6 +59,11 @@
    1 : Output ensemble averaged in-plane deviation following in-plane minimization post-run. No noise but will lose some/all features of path
   -->
   <postMin> 1 </postMin>
+
+	<!--
+		Dump "hot" snapshot after each run. For development only!
+	-->
+  <workerDump> 1 </workerDump>
 
   <!--
   Perform an in-plane minimization before thermalization/sampling.
