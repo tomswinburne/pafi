@@ -120,9 +120,10 @@ int main(int narg, char **arg) {
 
   const int vsize = 3 * sim.natoms;
   const int rsize = nRes*nWorkers;
-
+  bool not_finished_sampling;
   int total_valid_data, totalRepeats, total_invalid_data;
-  double temp, dr, t_max_jump, p_jump;
+  double temp, dr, t_max_jump, p_jump, f_mean;
+  double *f_error = new double[1];
   std::string rstr,Tstr,dump_fn,fn,dump_suffix;
   std::map<std::string,double> results;
 
@@ -151,11 +152,18 @@ int main(int narg, char **arg) {
   else dr = 0.1;
 
   std::vector<double> sample_r;
-  if(params.spline_path and not params.match_planes) {
+  if(params.use_custom_positions) {
+    for(auto r: params.custom_positions) {
+      sample_r.push_back(r);
+      std::cout<<r<<std::endl;
+    }
+  } else {
+    if(params.spline_path and not params.match_planes) {
     for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr )
       sample_r.push_back(r);
-  } else for(auto r: sim.pathway_r) if(r>=0.0 && r<=1.0) sample_r.push_back(r);
-
+    } else for(auto r: sim.pathway_r) if(r>=params.startr-0.02 && r<=params.stopr+0.02) sample_r.push_back(r);
+  }
+  
 
 
   for(double T = params.lowT; T <= params.highT;) {
@@ -215,7 +223,8 @@ int main(int narg, char **arg) {
       total_valid_data=0;
       totalRepeats=0;
       t_max_jump=0.0;
-      while (total_valid_data<=int(params.redo_thresh*nWorkers*nRepeats)) {
+      not_finished_sampling = true;
+      while (not_finished_sampling) {
 
         sim.sample(r, T, results, local_dev);
         double aa=0.0;
@@ -279,6 +288,25 @@ int main(int narg, char **arg) {
                                 "Try a lower temperature. See README for tips";
           break;
         }
+        not_finished_sampling = bool(total_valid_data<=int(params.redo_thresh*nWorkers*nRepeats));
+
+        // determine force error
+        f_error[0]=0.0;
+        if(rank==0){
+          f_mean = 0.0;
+          for (int i=0;i<total_valid_data;i++)
+            f_mean += valid_res[i*nRes+2] / double(total_valid_data);
+          for (int i=0;i<total_valid_data;i++) {
+            // we have N^2 as require standard error on mean
+            temp = (f_mean-valid_res[i*nRes+2]) / double(total_valid_data);
+            f_error[0] += temp * temp ;
+          }
+          f_error[0] = std::sqrt(f_error[0]);
+        }
+        MPI_Bcast(f_error,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+        
+        not_finished_sampling += bool(f_error[0] >= params.f_error_thresh);
+
         if(rank==0) std::cout<<"#"<<std::flush;
       }
       // collate
@@ -317,13 +345,13 @@ int main(int narg, char **arg) {
 
         for(int i=0;i<total_valid_data;i++) for(int j=0;j<nRes;j++) {
           temp = valid_res[i*nRes+j]-final_res[j];
-          final_res[j+nRes] += temp * temp;
+          final_res[j+nRes] += temp * temp / double(total_valid_data);
         }
         // under assumption that sample time is longer than autocorrelations,
         // expected variance in time average is ensemble variance / nWorkers
         // raw_output gives data to confirm this assumption (CLT with grouping)
         if(total_valid_data>0) for(int j=0;j<nRes;j++)
-          final_res[j+nRes] = sqrt(final_res[j+nRes])/double(total_valid_data);
+          final_res[j+nRes] = sqrt(final_res[j+nRes])/sqrt(double(total_valid_data));
 
         integr.push_back(r);
         dfer.push_back(final_res[2]); // <dF/dr>
