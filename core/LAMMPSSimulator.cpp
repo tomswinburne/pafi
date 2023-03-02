@@ -14,17 +14,15 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   nres = nr;
   params = &p;
   // set up LAMMPS
-  char str1[32];
+  std::string logfile = "none";
+  if(params->loglammps)
+    logfile = "log.lammps."+std::to_string(tag);
   char **lmparg = new char*[5];
   lmparg[0] = NULL; // required placeholder for program name
   lmparg[1] = (char *) "-screen";
   lmparg[2] = (char *) "none";
   lmparg[3] = (char *) "-log";
-  if(params->loglammps) {
-    sprintf(str1,"log.lammps.%d",tag);
-    lmparg[4] = str1;
-  } else lmparg[4] = (char *) "none";
-
+  lmparg[4] = (char *) logfile.c_str();
   lmp = new LAMMPS(5,lmparg,instance_comm);
 
   int lammps_release_int = lammps_version(lmp); // YYYYMMDD

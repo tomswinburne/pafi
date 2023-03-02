@@ -53,7 +53,7 @@
   <Friction> 0.005 </Friction>
 
   <!-- 0/1 Output LAMMPS logfiles for error checking purposes -->
-  <LogLammps> 1 </LogLammps>
+  <LogLammps> 0 </LogLammps>
 
   <!--
    0 : (Default) Output time-and-ensemble averaged in-plane deviation from reference pathway. Can indicate finite temperature path but will have sampling noise

@@ -52,8 +52,6 @@ int CoresPerWorker, nPlanes, TSteps, nRepeats, maxExtraRepeats;
 unsigned random_seed;
 std::string dump_dir;
 bool seeded,loglammps,postMin,preMin,xml_success,spline_path;
-bool workerDump,match_planes,real_coord;
-bool seeded,loglammps,postMin,preMin,xml_success,spline_path
 bool workerDump,match_planes,real_coord,use_custom_positions;
 
 private:
