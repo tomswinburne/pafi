@@ -45,6 +45,7 @@ Parser::Parser(std::string file, bool test) {
   parameters["ReSampleThresh"] = "0.5";
   parameters["maxExtraRepeats"] = "1";
   parameters["postMin"] = "0";
+	parameters["workerDump"] = "0";
   parameters["PreMin"] = "1";
   parameters["SplinePath"] = "1";
   parameters["MatchPlanes"] = "0";
@@ -123,6 +124,7 @@ void Parser::set_parameters() {
   redo_thresh = std::stod(parameters["ReSampleThresh"]);
   maxExtraRepeats = std::stoi(parameters["maxExtraRepeats"]);
   postMin = bool(std::stoi(parameters["postMin"]));
+	workerDump = bool(std::stoi(parameters["workerDump"]));
   preMin = bool(std::stoi(parameters["PreMin"]));
   spline_path = bool(std::stoi(parameters["SplinePath"]));
   match_planes = !bool(std::stoi(parameters["Rediscretize"]));
