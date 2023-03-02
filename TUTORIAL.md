@@ -16,15 +16,20 @@
 
 0. Steps 1,2 can be skipped if using the NEB calculation (SIA in EAM-Fe) in the examples folder
 
-1. First set up a LAMMPS neb calculation as described [here](http://lammps.sandia.gov/doc/neb.html)
+1. First set up a LAMMPS NEB calculation as described [here](http://lammps.sandia.gov/doc/neb.html)
+We have added a new `equal` NEB style to LAMMPS, currently on [github](https://github.com/lammps/lammps.git)
+before the next major (2023) update. This gives optimal knot spacing for force integration, used with e.g. 
+```
+         fix neb_fix all neb 1.0 parallel equal
+```
 
 2. In the LAMMPS script, use the `write_data` command to dump all the NEB knots, i.e.
 ```
-variable u equal part # partition for NEB image
+         variable u equal part # partition for NEB image
 
-neb etol ftol N1 N2 Nevery file-style arg keyword
+         neb etol ftol N1 N2 Nevery file-style arg keyword
 
-write_data neb_knot_file.$u
+         write_data neb_knot_file.$u
 ```
 
 3. Configure `config.xml` to load in your NEB images with the correct potential
@@ -32,8 +37,8 @@ write_data neb_knot_file.$u
 4. Run the test routine `pafi-path-test`, which runs PAFI with a single worker,
 at zero temperature, for one step per plane. Run with `CoresPerWorker` procs, e.g.
 ```bash
-mkdir -p dumps
-mpirun -np 2 ./pafi-path-test
+         mkdir -p dumps
+         mpirun -np 2 ./pafi-path-test
 ```
 where the first line ensures your dump folder (here the default value) actually exists.
 
@@ -57,13 +62,13 @@ follow the suggestions to reduce error.
 ## Manual use (not recommended)
 1. Compile the `pafi-lammps-preparation` binary
 ```bash
-cd build
-make pafi-lammps-path
+         cd build
+         make pafi-lammps-path
 ```
 2. Configure the configuration xml file, to specify the path then run
 ```bash
-mkdir -p dumps
-mpirun -np 1 ./pafi-lammps-preparation
+         mkdir -p dumps
+         mpirun -np 1 ./pafi-lammps-preparation
 ```
 
 3. This will make a set of files `dumps/pafipath.*.data` which can be run using the `PAFI` example script in the `examples/USER/misc/pafi` directory of the `LAMMPS` repository

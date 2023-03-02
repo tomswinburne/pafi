@@ -415,8 +415,13 @@ void LAMMPSSimulator::sample(double r, double T,
   results["TdX"] = (*lmp_ptr);
   lammps_free(lmp_ptr);
 
-  // post minmization - max jump
 
+	if(params->workerDump) {
+		cmd = "write_data "+params->dump_dir;
+		cmd += "/worker_snapshot_"+std::to_string(tag)+"_"+std::to_string(r)+".dat";
+		run_commands(cmd);
+	}
+	// post minmization - max jump
   if(params->postMin) {
     cmd = "min_style fire\n minimize 0 0.01 ";
     cmd += params->parameters["MinSteps"]+" "+params->parameters["MinSteps"];
