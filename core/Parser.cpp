@@ -247,8 +247,10 @@ std::string Parser::welcome_message(){
 };
 
 std::vector<double> Parser::sample_r(std::vector<double> pathway_r) {
-  std::vector<double> r_vec;
   // determine knot positions 
+  // pathway_r : from NEB
+  // All in convention set by RealMEPDist
+  std::vector<double> r_vec;
   // Hierarchy: use_custom_positions, rediscretize
   if(use_custom_positions) {
     // overwrite everything with custom positions
