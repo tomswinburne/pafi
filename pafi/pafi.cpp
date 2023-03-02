@@ -122,7 +122,7 @@ int main(int narg, char **arg) {
   const int rsize = nRes*nWorkers;
   bool not_finished_sampling;
   int total_valid_data, totalRepeats, total_invalid_data;
-  double temp, dr, t_max_jump, p_jump, f_mean;
+  double temp, t_max_jump, p_jump, f_mean;
   double *f_error = new double[1];
   std::string rstr,Tstr,dump_fn,fn,dump_suffix;
   std::map<std::string,double> results;
@@ -146,25 +146,8 @@ int main(int narg, char **arg) {
   std::list<int> raw_dump_indicies = {2,3,4,7};// <f> std(f) <Psi> <Jump>
 
 
-
-  if (params.nPlanes>1)
-    dr = (params.stopr-params.startr)/(double)(params.nPlanes-1);
-  else dr = 0.1;
-
-  std::vector<double> sample_r;
-  if(params.use_custom_positions) {
-    for(auto r: params.custom_positions) {
-      sample_r.push_back(r);
-      std::cout<<r<<std::endl;
-    }
-  } else {
-    if(params.spline_path and not params.match_planes) {
-    for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr )
-      sample_r.push_back(r);
-    } else for(auto r: sim.pathway_r) if(r>=params.startr-0.02 && r<=params.stopr+0.02) sample_r.push_back(r);
-  }
+  std::vector<double> sample_r = params.sample_r(sim.pathway_r);
   
-
 
   for(double T = params.lowT; T <= params.highT;) {
 

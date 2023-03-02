@@ -72,7 +72,7 @@ public:
   std::vector<spline> pathway;
   std::vector<double> pathway_r;
   std::string pafi_package;
-  bool s_flag,has_pafi,spline_path;
+  bool s_flag,has_pafi,cubic_spline;
 private:
   /* nothing */
 };

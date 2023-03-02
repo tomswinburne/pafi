@@ -148,12 +148,6 @@ int main(int narg, char **arg) {
   // TODO : replace
   std::list<int> raw_dump_indicies = {2,3,4,7};// <f> std(f) <Psi> <Jump>
 
-
-
-  if (params.nPlanes>1)
-    dr = (params.stopr-params.startr)/(double)(params.nPlanes-1);
-  else dr = 0.1;
-
   double T = 0.0;
 
   Tstr = std::to_string((int)(T));
@@ -195,18 +189,8 @@ int main(int narg, char **arg) {
   }
 
 
-  std::vector<double> sample_r;
-  if(params.use_custom_positions) {
-    for(auto r: params.custom_positions) {
-      sample_r.push_back(r);
-      std::cout<<r<<std::endl;
-    }
-  } else {
-    if(params.spline_path and not params.match_planes) {
-    for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr )
-      sample_r.push_back(r);
-    } else for(auto r: sim.pathway_r) if(r>=params.startr-0.02 && r<=params.stopr+0.02) sample_r.push_back(r);
-  }
+  std::vector<double> sample_r = params.sample_r(sim.pathway_r);
+  
 
   for(auto r: sample_r) {
     valid_res.clear();

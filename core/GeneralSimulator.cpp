@@ -134,13 +134,13 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list, int real_co
     }
 
 
-    xspl.set_points(r,xs,params->spline_path);
+    xspl.set_points(r,xs,params->cubic_spline);
     pathway.push_back(xspl);
 
-    yspl.set_points(r,ys,params->spline_path);
+    yspl.set_points(r,ys,params->cubic_spline);
     pathway.push_back(yspl);
 
-    zspl.set_points(r,zs,params->spline_path);
+    zspl.set_points(r,zs,params->cubic_spline);
     pathway.push_back(zspl);
 
   }
@@ -148,7 +148,7 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list, int real_co
 };
 
 double GeneralSimulator::path(int i, double r, int d, double s) {
-  if(params->spline_path or d==0) return pathway[i].deriv(d,r) * s;
+  if(d==0) return pathway[i].deriv(d,r) * s;
   double dr = 1.0 / pathway_r.size();
   double val = pathway[i].deriv(0,r);
   if(d==1) return (pathway[i].deriv(0,r+dr)-val) * s/dr;

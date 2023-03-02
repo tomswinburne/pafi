@@ -34,6 +34,8 @@ std::vector<std::string> split_lines(std::string r);
 
 std::vector<std::string> Script(std::string sn);
 
+std::vector<double> sample_r(std::vector<double> pathway_r);
+
 void seed(unsigned _random_seed);
 
 std::string seed_str(bool reseed=true);
@@ -51,8 +53,8 @@ double lowT,highT,Friction,startr,stopr,maxjump_thresh,redo_thresh,f_error_thres
 int CoresPerWorker, nPlanes, TSteps, nRepeats, maxExtraRepeats, real_coord;
 unsigned random_seed;
 std::string dump_dir;
-bool seeded,loglammps,postMin,preMin,xml_success,spline_path;
-bool workerDump,match_planes,use_custom_positions;
+bool seeded,loglammps,postMin,preMin,xml_success;
+bool workerDump,rediscretize,use_custom_positions,cubic_spline;
 
 private:
   std::mt19937 rng;

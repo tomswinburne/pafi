@@ -68,19 +68,13 @@
   Uncomment this line to test FixPAFIGroup functionality (see below)
   -->
   <!--<FixPAFIGroup>pafi_fix_group</FixPAFIGroup>-->
-
-  <!-- If == 0 ignore NPlanes, Start Coordinate and StopCoordinate;
-  sample only at provided pathway configurations. Test feature -->
-  <Rediscretize>1</Rediscretize>
-
+  
   <!-- If Rediscretize==1, sample on nPlanes equally spaced
   planes in [StartCoordinate,StopCoordinate], a subset of [0,1] -->
+  <Rediscretize>1</Rediscretize>
   <nPlanes> 11 </nPlanes>
   <StartCoordinate> 0.0 </StartCoordinate>
   <StopCoordinate> 1.0 </StopCoordinate>
-
-  <!-- If==0, turn off cubic spline interpolation. NOT recommended -->
-  <SplinePath>1</SplinePath>
 
   <!-- Use geometric distance for MEP coordinate (Default: 1) -->
   <RealMEPDist>1</RealMEPDist>

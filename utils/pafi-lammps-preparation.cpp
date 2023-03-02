@@ -72,18 +72,11 @@ int main(int narg, char **arg) {
 
   sim.make_path(params.PathwayConfigurations,params.real_coord);
 
+  std::vector<double> sample_r = params.sample_r(sim.pathway_r);
+
   f = new double[3*sim.natoms];
 
-  if (params.nPlanes>1) dr = (params.stopr-params.startr)/(double)(params.nPlanes-1);
-  else dr = 0.1;
-  std::vector<double> sample_r;
-  if(params.spline_path and not params.match_planes) {
-    for (double r = params.startr; r <= params.stopr+0.5*dr; r += dr )
-      sample_r.push_back(r);
-  } else for(auto r: sim.pathway_r) if(r>=0.0 && r<=1.0) sample_r.push_back(r);
-
-
-
+  
   if(rank==0) {
     std::cout<<"\n\nPath Loaded\n\n";
     std::cout<<std::setw(17)<<"              r";
