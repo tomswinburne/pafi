@@ -56,7 +56,7 @@ public:
 
   void write_dev(std::string fn, double r, double *dev, double *dev_sq);
 
-  void make_path(std::vector<std::string> knot_list, bool real_coord);
+  void make_path(std::vector<std::string> knot_list, int real_coord);
 
   double path(int i, double r, int d, double s);
 

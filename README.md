@@ -42,6 +42,8 @@ Applications:
 
 ## Notes on choosing parameters
 
+- The `RealMEPDist` parameter determines how the "reaction coordinate" (r.c.) is calculated. For  `RealMEPDist=0` the r.c. is simply `HyperplaneIndex/(nPlanes-1)`. `RealMEPDist=1` the r.c. is the total real space distance from the first configuration, normalized to one, whilst for `RealMEPDist=2`, the r.c. is the average distance from the first and to the last configuration, normalized to one. For best comparision to a NEB calculation, we recommend `RealMEPDist=1`.
+
 - If `SampleSteps` is too large workers will make thermally activated "jumps" to nearby paths in the hyperplane. This will return a warning message `Reference path too unstable for sampling.`
  and increase error. If this happens, decrease `SampleSteps` and increase `nRepeats`
 
@@ -52,6 +54,7 @@ Applications:
 - Each PAFI worker runs at the same speed as LAMMPS. Increasing `CoresPerWorker` will typically decrease execution time but also reduce `nWorkers` and increase error, as we have less samples.
 
 - If you are core-limited, the `nRepeats` option forces workers to perform multiple independent sampling runs on each plane. For example, with all other parameters fixed, running on 32 cores with `nRepeats=3` is equivalent to running on 3*32=96 cores with  `nRepeats=1`, but the latter will finish in a third of the time.
+
 
 
 ## External Libraries

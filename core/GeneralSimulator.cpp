@@ -63,10 +63,9 @@ void GeneralSimulator::expansion(double T, double *newscale) {
   newscale[2] += coeff*T;
   coeff = std::stod(params->parameters["QuadraticThermalExpansionZ"]);
   newscale[2] += coeff*T*T;
-  //std::cout<<scale[0]<<" "<<scale[1]<<" "<<scale[2]<<std::endl;
 };
 
-void GeneralSimulator::make_path(std::vector<std::string> knot_list, bool real_coord) {
+void GeneralSimulator::make_path(std::vector<std::string> knot_list, int real_coord) {
   pathway_r.clear();
   int nknots = knot_list.size();
   // no way around it- have to store all the knots
@@ -89,7 +88,13 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list, bool real_c
     for(int i=0;i<3*natoms;i++) \
       knots[i+knot*3*natoms] = x[i]+knots[i];
   }
-  if(real_coord) {
+  
+  if(real_coord>0) {
+    /*
+      real_coord==1 : use the real space distance between knots
+      real_coord==2 : use symmetrized distance
+    */
+
     for(int knot=0;knot<nknots;knot++) {
       r[knot] = 0.;
       rr[knot] = 0.;
@@ -105,10 +110,15 @@ void GeneralSimulator::make_path(std::vector<std::string> knot_list, bool real_c
     for(int knot=1;knot<nknots;knot++) rr[knot] = sqrt(rr[knot]/rr[0]);
     rr[0] = 1.0;
     r[nknots-1] = 1.0;
-    for(int knot=0;knot<nknots;knot++) {
-      pathway_r.push_back(0.5*(r[knot] + 1.0 - rr[knot]));
-      r[knot] = 0.5*(r[knot] + 1.0 - rr[knot]);
-    }
+
+    if(real_coord==1) {
+      for(int knot=0;knot<nknots;knot++) pathway_r.push_back(r[knot]);
+    } else {
+      for(int knot=0;knot<nknots;knot++) {
+        pathway_r.push_back(0.5*(r[knot] + 1.0 - rr[knot]));
+        r[knot] = 0.5*(r[knot] + 1.0 - rr[knot]);
+      }
+    }    
   } else {
     for(int knot=0;knot<nknots;knot++) {
       r[knot] = 1.0*float(knot)/float(nknots-1);

@@ -130,7 +130,7 @@ void Parser::set_parameters() {
   preMin = bool(std::stoi(parameters["PreMin"]));
   spline_path = bool(std::stoi(parameters["SplinePath"]));
   match_planes = !bool(std::stoi(parameters["Rediscretize"]));
-  real_coord = bool(std::stoi(parameters["RealMEPDist"]));
+  real_coord = int(std::stoi(parameters["RealMEPDist"]));
   use_custom_positions = bool(std::stoi(parameters["UseCustomPositions"]));
 
   std::stringstream ss(parameters["CustomPositions"]);

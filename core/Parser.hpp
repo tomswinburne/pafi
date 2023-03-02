@@ -48,11 +48,11 @@ std::map<std::string,std::string> scripts;
 std::vector<std::string> PathwayConfigurations;
 std::vector<double> custom_positions;
 double lowT,highT,Friction,startr,stopr,maxjump_thresh,redo_thresh,f_error_thresh;
-int CoresPerWorker, nPlanes, TSteps, nRepeats, maxExtraRepeats;
+int CoresPerWorker, nPlanes, TSteps, nRepeats, maxExtraRepeats, real_coord;
 unsigned random_seed;
 std::string dump_dir;
 bool seeded,loglammps,postMin,preMin,xml_success,spline_path;
-bool workerDump,match_planes,real_coord,use_custom_positions;
+bool workerDump,match_planes,use_custom_positions;
 
 private:
   std::mt19937 rng;
