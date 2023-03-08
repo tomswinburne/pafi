@@ -1,6 +1,6 @@
 import numpy as np
 from glob import glob
-import pafi
+from pafi import pafi
 import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
 
