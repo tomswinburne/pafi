@@ -107,7 +107,9 @@ def guess_mode(x):
 
 
 def plot_profile(args):
-
+    if args.terminal:
+        import plotext as plx
+        
     cols = 1
     if args.hist:
         cols += 1
@@ -136,7 +138,18 @@ def plot_profile(args):
                 plt.xlabel("hyperplane")
         except: pass
     plt.tight_layout()
-    plt.show()
+
+    if args.save is not None:
+        try:
+            plt.savefig(args.save)
+        except:
+            print(f"failed saving plot to {args.f}")
+    if not args.quiet:
+        if args.terminal:
+            plx.from_matplotlib(fig)
+            plx.show()
+        else:
+            plt.show()
 
 
 
@@ -166,18 +179,18 @@ def plot_pafi_results(args):
                                         add_pts=additional_pts,
                                         harmonic_until_T=args.harmonic_limit)
 
-    fig.tight_layout()
-    if args.save is not None:
-        try:
-            plt.savefig(args.save)
-        except:
-            print(f"failed saving plot to {args.f}")
-    if not args.quiet:
-        if args.terminal:
-            plx.from_matplotlib(fig)
-            plx.show()
-        else:
-            plt.show()
+        fig.tight_layout()
+        if args.save is not None:
+            try:
+                plt.savefig(args.save)
+            except:
+                print(f"failed saving plot to {args.f}")
+        if not args.quiet:
+            if args.terminal:
+                plx.from_matplotlib(fig)
+                plx.show()
+            else:
+                plt.show()
 
 
-        
+            
