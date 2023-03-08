@@ -110,10 +110,13 @@ class PafiResult():
         self.bar = self.get_bar()
 
     def get_r_from_neb_csv(self, file):
-        # todo: parse log.lammps directly
+        # a = np.genfromtxt(file)
+        # a = a[np.isfinite(a).any(axis=1)][:,0]
+        # return (a-a[0])/a[-1]
+
         return np.loadtxt(file)[:,0]
         
-    def raw_parser(self, disp_thresh=1.0, outliers=0.5):
+    def raw_parser(self, disp_thresh=1.0, mask_outliers=False):
         """Parse the raw data file"""
         try:
             f = open(self.file,'r')
@@ -128,7 +131,6 @@ class PafiResult():
         
 
         if PafiResult.has_old_data_format(self.file):
-            ## Kept for back compatibility with versions before commit 3ca8f884 (20/09/21)
             if self.r_coord is not None:
                 # Use rcoord from logfile
                 print('Use rcoord from logfile')
@@ -145,6 +147,7 @@ class PafiResult():
                             r_dFave_dFstd += [[r_c, 
                                                 fields[1:n_valid+1].mean(),
                                                 fields[1:n_valid+1].std()/np.sqrt(n_valid)]]
+                # print(self.file, " data :", count_data, " valid : ", count_valid, " ({}%)".format(int(count_valid/count_data*100)))
                 r_dFave_dFstd = np.r_[r_dFave_dFstd]
                 r_dFave_dFstd[:,0]/=r_dFave_dFstd[-1][0] # r : 0 -> 1
                 return r_dFave_dFstd, len(r_dFave_dFstd)
@@ -167,14 +170,14 @@ class PafiResult():
                                                 fields[1:n_valid+1].mean(),
                                                 fields[1:n_valid+1].std()/np.sqrt(n_valid)]]
                         r += 1.0 # always increment even if n_valid==0
+                # print(self.file, " data :", count_data, " valid : ", count_valid, " ({}%)".format(int(count_valid/count_data*100)))
                 r_dFave_dFstd = np.r_[r_dFave_dFstd]
                 r_dFave_dFstd[:,0]/=r_dFave_dFstd[-1][0] # r : 0 -> 1
                 return r_dFave_dFstd, len(r_dFave_dFstd)
         else:
-            ## CURRENT FORMAT
             # reaction coordinate is read from file
             print("Reaction coordinate is read from raw file")
-            
+            outliers = 0.5
             for line in f.readlines():
                 if line[0] != "#":
                     fields = np.loadtxt(io.StringIO(line.strip()))
@@ -186,15 +189,14 @@ class PafiResult():
                         count_valid += n_valid
 
                         dF = np.array(fields[2:n_valid+2])
-
-                        # Mask to remove outliers
                         low = np.outer(np.percentile(dF, outliers, axis=0),np.ones(dF.shape[0]))
                         high = np.outer(np.percentile(dF, 100-outliers, axis=0),np.ones(dF.shape[0]))
                         mask = (dF>low) * (dF<high) 
                         masked = (dF*mask).reshape(dF.shape[0])
-
                         if np.allclose(masked, 0):
                             masked = dF # disable mask for 0K runs
+                        if not mask_outliers:
+                            masked = dF
                         
                         n = np.count_nonzero(masked)
                         r_dFave_dFstd += [[fields[0],
@@ -203,6 +205,12 @@ class PafiResult():
 
                         dF_raw += list((masked-masked.mean())/masked.std())
                         std_raw += [masked.std()/np.sqrt(n)]
+                        # dF_raw += list((fields[2:n_valid+2]-fields[2:n_valid+2].mean())/fields[2:n_valid+2].std())
+                        # std_raw += [fields[2:n_valid+2].std()/np.sqrt(n_valid)]
+                        # 
+                        # r_dFave_dFstd += [[fields[0],
+                                         # fields[2:n_valid+2].mean(),
+                                         # fields[2:n_valid+2].std()/np.sqrt(n_valid)]]
             
             print(self.file, " data :", count_data, " valid : ", count_valid, " ({}%)".format(int(count_valid/count_data*100)))
             r_dFave_dFstd = np.r_[r_dFave_dFstd]
@@ -331,7 +339,7 @@ def free_energy_vs_temperature(flist, ax=None, fit_harmonic=True, harmonic_until
     ax[1].fill_between(bar[:,0], bar[:,3]-bar[:,4], bar[:,3]+bar[:,4],facecolor='0.93')
     if fit_harmonic:
         # harmonic domain
-        ax[1].plot(bar[:4,0],p[1]+p[0]*bar[:4,0],'--', color=f'C{start_color_at_index}', label=label_prepend + r'$\Delta U_0=%2.3geV,\Delta S_0=%2.3g{\rm k_B}$' % (p[1], -p[0]/kb))
+        ax[1].plot(bar[:,0],p[1]+p[0]*bar[:,0],'--', color=f'C{start_color_at_index}', label=label_prepend + r'$\Delta U_0=%2.3geV,\Delta S_0=%2.3g{\rm k_B}$' % (p[1], -p[0]/kb))
     ax[1].set_xlabel("Temperature (K)")
     ax[1].set_ylabel("Gibbs energy of activation (eV)")
     ax[1].legend(loc='best')
