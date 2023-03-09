@@ -42,7 +42,7 @@ class Profile():
 
     def __init__(self, data, neb_rcoord=None):
         self.data = data
-        self.barrier = data[:,1].max()
+        self.barrier = data[:,1].max() - data[:data[:,1].argmax()].min()
         self.error = data[0][2] + data[data[:,1].argmax()][2]
         self.neb_rcoord = neb_rcoord
 
@@ -82,7 +82,7 @@ class PafiResult():
         >>> plt.show()
     """
 
-    def __init__(self, file, logfile=None, temperature=None, neb_csv=None):
+    def __init__(self, file, logfile=None, temperature=None, neb_csv=None, full_path=False):
         assert (isinstance(file, str)) or (isinstance(file, pathlib.Path)) ,"`file` must be str or pathlib.Path object."
         
         self.file = file
@@ -102,10 +102,10 @@ class PafiResult():
 
         raw, self.hist_data, self.std = self.raw_parser()
 
-        self.discrete_profile = Profile(PafiResult.integrate(raw), self.neb_rcoord)
+        self.discrete_profile = Profile(PafiResult.integrate(raw, full_path=full_path), self.neb_rcoord)
  
         remeshed = PafiResult.remesh(raw)
-        self.splined_profile = Profile(PafiResult.integrate(remeshed), self.neb_rcoord)
+        self.splined_profile = Profile(PafiResult.integrate(remeshed, full_path=full_path), self.neb_rcoord)
 
         self.bar = self.get_bar()
 
@@ -256,15 +256,16 @@ class PafiResult():
         spl_data[:,2] = interp1d(data[:,0], data[:,2],kind='linear',fill_value="extrapolate")(spl_data[:,0])
         return spl_data
 
-    def integrate(data, discretization_error_estimate=1e-4):
+    def integrate(data, full_path, discretization_error_estimate=1e-4):
         idata = np.zeros(data.shape)
         idata[:,0] = data[:,0]
         idata[1:,1] = -cumtrapz(data[:,1],data[:,0])
         idata[1:,2] = cumtrapz(data[:,2],data[:,0]) +  discretization_error_estimate
-        run_min =  np.minimum.accumulate(idata[:,1])
-        run_min_shift =  np.minimum.accumulate(np.append(idata[1:,1],idata[-1][1]))
-        if (run_min == run_min_shift).sum()>0:
-            idata = idata[run_min == run_min_shift,:]
+        if not full_path:
+            run_min =  np.minimum.accumulate(idata[:,1])
+            run_min_shift =  np.minimum.accumulate(np.append(idata[1:,1],idata[-1][1]))
+            if (run_min == run_min_shift).sum()>0:
+                idata = idata[run_min == run_min_shift,:]
         idata[:,1]-=idata[0][1]
         return idata
 
@@ -310,12 +311,12 @@ class PafiResult():
         return ax
 
 def free_energy_vs_temperature(flist, ax=None, fit_harmonic=True, harmonic_until_T=100, ymin=-0.05, label_prepend="", 
-                                start_color_at_index=0, return_poly=False, add_pts=None):
+                                start_color_at_index=0, return_poly=False, add_pts=None, full_path=False):
 
     if (ax is None) or len(ax)!=2:
         fig, ax = plt.subplots(1,2, figsize=(9,5),dpi=144,sharey=True)
     
-    data = [PafiResult(file) for file in flist]
+    data = [PafiResult(file, full_path=full_path) for file in flist]
     data.sort(key=lambda x: x.temperature)
     bar = np.array([x.bar for x in data])
 
@@ -343,7 +344,7 @@ def free_energy_vs_temperature(flist, ax=None, fit_harmonic=True, harmonic_until
     ax[1].set_xlabel("Temperature (K)")
     ax[1].set_ylabel("Gibbs energy of activation (eV)")
     ax[1].legend(loc='best')
-    ax[1].set_ylim(ymin=ymin)
+    # ax[1].set_ylim(ymin=ymin)
     plt.subplots_adjust(wspace=0)
     plt.tight_layout()
     

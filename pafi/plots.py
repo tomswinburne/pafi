@@ -121,7 +121,7 @@ def plot_profile(args):
 
     plt.sca(axs[0])
     for file in glob(args.file):
-        r = pafi.PafiResult(file)
+        r = pafi.PafiResult(file, full_path=args.full_path)
         r.plot(ax=axs[0])
     if cols>1:
         try:
@@ -177,7 +177,8 @@ def plot_pafi_results(args):
                                         ax=ax,
                                         fit_harmonic=args.no_fit,
                                         add_pts=additional_pts,
-                                        harmonic_until_T=args.harmonic_limit)
+                                        harmonic_until_T=args.harmonic_limit,
+                                        full_path=args.full_path)
 
         fig.tight_layout()
         if args.save is not None:

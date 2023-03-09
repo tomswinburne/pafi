@@ -42,6 +42,8 @@ def parse_cli_args():
                         help="Plot an histogram of dF to see its distribution.")
     parser_pafi.add_argument('--std', action="store_true",
                         help="Plot std of dF for each hyperplane.")
+    parser_pafi.add_argument('--full-path', '--fp', action="store_true",
+                        help="Show all points instead of cutting the part before the initial minimum (which is the default).")
     parser_pafi.set_defaults(func=plots.plot_pafi_results)
 
     # COMMON TO ALL MODES 
