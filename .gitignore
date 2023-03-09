@@ -6,6 +6,10 @@
 build/*
 ext-*
 
+# python
+pafi/__pycache__
+*.egg-info
+
 # test data
 example/pathway_test/*
 !example/pathway_test/run.sh
