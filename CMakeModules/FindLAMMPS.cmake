@@ -19,3 +19,27 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(LAMMPS DEFAULT_MSG LAMMPS_LIBRARY LAMMPS_INCLUDE_DIR )
 
 mark_as_advanced(LAMMPS_INCLUDE_DIR LAMMPS_LIBRARY )
+
+## from previous attempt in CMakeLists.txt
+#ww # Specify the static library file
+#ww set(LAMMPS_LIBRARIES "${LAMMPS_LIBRARY_DIR}/liblammps.a")
+#ww 
+#find_package(LAMMPS REQUIRED)
+#include_directories(${LAMMPS_INCLUDE_DIRS})
+
+#ww # Create an imported target
+#ww add_library(LAMMPS::Library STATIC IMPORTED)
+#ww set_target_properties(LAMMPS::Library PROPERTIES
+#ww   IMPORTED_LOCATION "${LAMMPS_LIBRARIES}"
+#ww   INTERFACE_INCLUDE_DIRECTORIES "${LAMMPS_INCLUDE_DIR}"
+#ww )
+
+#ww # Specify the static library file
+#ww set(LAMMPS_LIBRARIES "${LAMMPS_LIBRARY_DIR}/liblammps.a")
+#ww 
+#ww # Create an imported target
+#ww add_library(LAMMPS::Library STATIC IMPORTED)
+#ww set_target_properties(LAMMPS::Library PROPERTIES
+#ww   IMPORTED_LOCATION "${LAMMPS_LIBRARIES}"
+#ww   INTERFACE_INCLUDE_DIRECTORIES "${LAMMPS_INCLUDE_DIR}"
+#ww )
