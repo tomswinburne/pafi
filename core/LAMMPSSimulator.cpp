@@ -16,7 +16,8 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p,
   // set up LAMMPS
   char str1[32];
   char **lmparg = new char*[5];
-  lmparg[0] = NULL; // required placeholder for program name
+  //OLD lmparg[0] = NULL; // required placeholder for program name
+  lmparg[0] = (char *) "dummy_program"; 
   lmparg[1] = (char *) "-screen";
   lmparg[2] = (char *) "none";
   lmparg[3] = (char *) "-log";
