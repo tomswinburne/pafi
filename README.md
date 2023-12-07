@@ -1,58 +1,59 @@
-         _______      _______      _______     _________
-        (  ____ )    (  ___  )    (  ____ \    \__   __/
-        | (    )|    | (   ) |    | (    \/       ) (
-        | (____)|    | (___) |    | (__           | |
-        |  _____)    |  ___  |    |  __)          | |
-        | (          | (   ) |    | (             | |
-        | )          | )   ( |    | )          ___) (___
-        |/           |/     \|    |/           \_______/
-        Projected    Average      Force        Integrator
+<img src="doc/pafi_title.png" width=500></img>
+<h2> PAFI: MD evaluation of free energy barriers beyond HTST</h2>
+v0.9 :copyright: TD Swinburne and M-C Marinica 2023 MIT License, thomas dot swinburne at cnrs.fr<br><br>
+<h3>Currently in beta, stable release available at https://github.com/tomswinburne/pafi</h3>
 
-# MD evaluation of free energy barriers beyond HTST
-v0.9 :copyright: TD Swinburne and M-C Marinica 2020 MIT License
+PAFI performs constrained sampling on [NEB](https://docs.lammps.org/fix_neb.html) hyperplanes in [LAMMPS](https://docs.lammps.org), 
+analytically reformulating an exact expression for the free energy gradient used in the
+[Adaptive Biasing Force](https://pubs.acs.org/doi/10.1021/jp506633n) method.
+This allows calculation of free energy barriers even when the minimum energy path (MEP)
+is not aligned with the minimum free energy path (MFEP). PAFI thus performs
+[stratified sampling](https://en.wikipedia.org/wiki/Stratified_sampling) of configuration 
+space for a particular metastable pathway, with the usual reductions in variance.
+For more details please see (and cite) [our paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503):
+```bibtex
+@article{PhysRevLett.120.135503,
+  title = {Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems},
+  author = {Swinburne, Thomas D. and Marinica, Mihai-Cosmin},
+  journal = {Phys. Rev. Lett.},
+  volume = {120},
+  issue = {13},
+  pages = {135503},
+  numpages = {6},
+  year = {2018},
+  month = {Mar},
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevLett.120.135503},
+  url = {https://link.aps.org/doi/10.1103/PhysRevLett.120.135503}
+}
+```
 
-thomas dot swinburne at cnrs dot fr
+## Quick build
+If you have cmake and mpi installed:
+```bash
+export PREFIX=${HOME}/.local # example
+git clone https://github.com/lammps/lammps.git
+git clone https://github.com/tomswinburne/pafi.git
 
-:rotating_light: New `equal` NEB style for `LAMMPS` on [github](https://github.com/lammps/lammps.git), ideal to produce pathways for PAFI [documentation](https://github.com/lammps/lammps/blob/develop/doc/src/fix_neb.rst) :rotating_light:
+# LAMMPS build
+mkdir lammps/build
+cd lammps/build
+cmake -C ../../pafi/cmake/lammps_options.cmake ../cmake
+make -j
+make install # to PREFIX
+make install python
 
-Using PAFI? Please cite [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503)
-> *Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems*   
-> T.D. Swinburne and M.-C. Marinica
-> Physical Review Letters 120 (13), 135503, 2018
+# back to parent
+cd ..
 
-Applications:
-> Namakian *et al.* Comp. Mat. Sci. 2023 [link](https://doi.org/10.1016/j.commatsci.2022.111971)
+# PAFI build
+cd pafi
+pip install -e .
+```
 
-> Sato *et al.* Mat. Res. Lett.  2021 [link](https://doi.org/10.1080/21663831.2021.1875079)
-
-
-## [Installation Instructions](INSTALL.md)
-
-## [Getting Started Tutorial](TUTORIAL.md)
-
-## General Tips
-
-- See the [tutorial](TUTORIAL.md) for information on the `pafi-path-test` routine
-
-- In general, we want a reference pathway with dense discretisation where energy gradients are large
-
-- The current non-smoothed spline implementation can oscillate between very similar image configurations, as a result, there should be non-negligible displacement between images
-
-- If your path isn't loading, try setting `LogLammps=1` in `config.xml` to check for bugs in `log.lammps`
-
-## Notes on choosing parameters
-
-- If `SampleSteps` is too large workers will make thermally activated "jumps" to nearby paths in the hyperplane. This will return a warning message `Reference path too unstable for sampling.`
- and increase error. If this happens, decrease `SampleSteps` and increase `nRepeats`
-
-- When running on `NPROCS` cores, we require `NPROCS%CoresPerWorker==0`, so we have an integer number of workers
-
-- The total number of force calls *per worker* is `nPlanes * (ThermSteps+SampleSteps) * nRepeats`, spatially parallelised by LAMMPS across `CoresPerWorker` cores for each worker.
-
-- Each PAFI worker runs at the same speed as LAMMPS. Increasing `CoresPerWorker` will typically decrease execution time but also reduce `nWorkers` and increase error, as we have less samples.
-
-- If you are core-limited, the `nRepeats` option forces workers to perform multiple independent sampling runs on each plane. For example, with all other parameters fixed, running on 32 cores with `nRepeats=3` is equivalent to running on 3*32=96 cores with  `nRepeats=1`, but the latter will finish in a third of the time.
-
+## [Detailed Installation Instructions](doc/INSTALL.md)
+## [Getting Started Tutorial](doc/TUTORIAL.md)
+## [Hints and Tips](doc/TIPS.md)
 
 ## External Libraries
 - [LAMMPS](https://lammps.sandia.gov) MD code
@@ -62,3 +63,7 @@ Applications:
 ## TODO
 1. Restart files from pathway deviations
 2. Smoothed spline interpolation for more general reference pathways
+3. print parameter object as csv also, or json
+4. have proper testing routine
+5. incorporate Arnauds path preparation scripts
+
