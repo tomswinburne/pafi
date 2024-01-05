@@ -67,7 +67,7 @@ class LAMMPSWorker(BaseWorker):
             self.L = lammps(comm=self.comm,cmdargs=cmdargs)
             self.check_lammps_compatibility()
         except Exception as ae:
-            print("Couldn't load LAMMPS!")
+            print("Couldn't load LAMMPS!",ae)
             self.has_errors = True
     
     def check_lammps_compatibility(self)->None:
