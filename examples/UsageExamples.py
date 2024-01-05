@@ -86,6 +86,10 @@ if __name__ == "__main__":
     
     parser.add_argument('-t', '--test', help='Must be in '+" ".join(options))
     args = parser.parse_args()
+    if args.test is None:
+        print("Must specify test option!")
+        print(parser.description)
+        exit()
     test = args.test.strip() 
     assert test in options
     
