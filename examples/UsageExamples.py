@@ -1,6 +1,5 @@
 import sys,glob
 import numpy as np
-sys.path.insert(1,'../')
 from mpi4py import MPI
 import argparse
 

@@ -1,16 +1,13 @@
 # Mac OSX indexing
 .DS_Store
 */.DS_Store
-*/__pycache__/
+*.egg-info
+pafi/__pycache__/
+pafi/*/__pycache__/
+
 # build data
 build*
 ext-*
 
 # test data
-example/pathway_test/*
-!example/pathway_test/run.sh
-!example/pathway_test/config.xml
-
-example/sample_run/*
-!example/sample_run/run.sh
-!example/sample_run/config.xml
+examples/dumps

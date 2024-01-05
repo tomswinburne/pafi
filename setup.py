@@ -14,6 +14,7 @@ setuptools.setup(
     url="https://github.com/tomswinburne/pafi",
     packages=setuptools.find_packages(),
     install_requires=['mpi4py>=3.1.4','scipy>=1.10','numpy>=1.17','pandas>=1.5.0','plotext>=5.2.8','tqdm>=4.50.0'],
+    include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
