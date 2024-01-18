@@ -32,26 +32,43 @@ For more details please see (and cite) [our paper](https://journals.aps.org/prl/
 If you have cmake and mpi installed:
 ```bash
 export PREFIX=${HOME}/.local # example
+export PYTHON=`which python` # to ensure same distribution
+export MPICC=`which mpicc` # for mpi4py, your C++ MPI compiler (e.g. mpicc / mpiicc for intel)
+
+# extract typical install location PLEASE CHECK THIS ON YOUR MACHINE!
+# (see below for why this hack can be useful)
+PYTHON_VERSION=`python --version | cut -f2 -d" " | cut -f2 -d"."`
+export INSTALL_LOCATION=${PREFIX}/lib/python3.${PYTHON_VERSION}/site-packages
+
+# get souces
 git clone https://github.com/lammps/lammps.git
 git clone https://github.com/tomswinburne/pafi.git
 
-# LAMMPS build
+# install python packages
+${PYTHON} -m pip install mpi4py numpy tqdm
+
+# LAMMPS build 
 cd /path/to/lammps
 mkdir build
 cd build
 cmake -C ../../pafi/cmake/lammps_options.cmake ../cmake
 make -j
-make install # to PREFIX
-make install python
 
-# back to parent
-cd ..
+# LAMMPS python install: 
+# whilst official command is 'make install python', can have env clashes
+# instead, we do it "by hand":
+cd ../python # within LAMMPS repository
+${PYTHON} -m pip install -U .
 
-# Build and test PAFI
+# manually provide binary for LAMMPS package
+cp ../build/liblammps.so ${INSTALL_LOCATION}/lammps
+
+# Install and test PAFI
 cd /path/to/pafi
 pip install -e .
-cd testing
+cd testing # within PAFI repository
 python run_tests.py
+
 ```
 
 ## [Detailed Installation Instructions](doc/INSTALL.md)
