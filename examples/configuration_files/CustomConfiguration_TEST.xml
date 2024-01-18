@@ -1,0 +1,115 @@
+<!-- 
+DEFAULT PARAMETERS FOR PAFI
+-->
+<PAFI>
+  <Axes>
+    <!--
+      Axes for sampling. 
+        If format is 
+          *float* *float* *int* 
+        then this is read as
+          min max length
+        otherwise, it is read as an array of floats
+      MUST include ReactionCoordinate and Temperature
+
+      Iteration sequence is nested, in order of appearance
+    -->
+    <Temperature>40.</Temperature>
+    <ReactionCoordinate>0.0 1.0 9</ReactionCoordinate>
+    <Lambda>0.0 1.0 5</Lambda>
+  </Axes>
+
+  <Parameters>
+   
+    <!-- Data gathering steps -->
+    <SampleSteps>10</SampleSteps>
+
+    <!-- Steps for thermalization -->
+    <ThermSteps> 10 </ThermSteps>
+    
+    <!-- Average last ThermWindow steps to check thermalization  -->
+    <ThermWindow> 10 </ThermWindow>
+
+    <!-- Number of samples per plane per worker -->
+    <nRepeats> 3 </nRepeats>
+
+    <!-- Max steps for optional in-plane minimizations (see below) -->
+    <MinSteps> 10 </MinSteps>
+
+    <Verbose>0</Verbose>
+
+  </Parameters>
+  
+  <!--
+    Sequential list of pathway configurations,
+    produced from e.g. a NEB configuration.
+    Loaded via LAMMPS read_data (see Scripts/Input below)
+    <Directory> can be omitted if using full paths in Files.
+  -->
+  <PathwayConfigurations>
+    <Directory>../examples/systems/EAM-SIA-Fe/</Directory>
+    <Files>image_*.dat</Files>
+    <Potential>
+    ../examples/systems/EAM-SIA-Fe/Fe.eam.fs
+    </Potential>
+  </PathwayConfigurations>
+
+  <Scripts>
+    
+    <!-- LAMMPS script to read in the first pathway
+        configuration and load the potential
+    -->
+    
+    <Input>
+      units metal
+      atom_style atomic
+      atom_modify map array sort 0 0.0
+      neigh_modify every 2 delay 10 check yes page 1000000 one 100000
+      read_data  ../examples/systems/EAM-SIA-Fe/image_1.dat
+      pair_style    hybrid/overlay eam/fs eam/fs
+      pair_coeff * * eam/fs 1 ../examples/systems/EAM-SIA-Fe/Fe.eam.fs Fe
+      pair_coeff * * eam/fs 2 ../examples/systems/EAM-SIA-Fe/Fe_mm.eam.fs Fe
+      run 0
+    </Input>
+    <!-- 
+      Apply any fixes e.g. external stresses before thermalization/sampling 
+      Order:
+      Input (once)
+
+      for each hyperplane:
+
+        PreRun Script
+        [apply fix_pafi()]
+        PreTherm Script
+        [run ThermSteps]
+        [initialize pafi averages]
+        constrained_average():
+          "run SampleSteps" in PAFIWorker
+        [collate pafi averages]
+        [unfix_pafi()]
+        PostRun Script
+    -->
+    <PreRun>
+    # V(lambda) = (1-lambda)*V_1 + lambda*V_2
+    variable l1 equal 1.0-%Lambda%
+    variable l2 equal 0.0+%Lambda%
+    run 0
+    fix escale1 all adapt 1 pair eam/fs:1 scale * * v_l1
+    fix escale2 all adapt 1 pair eam/fs:2 scale * * v_l2
+    run 0
+    compute V_1 all pair eam/fs 1
+    compute V_2 all pair eam/fs 2
+    # we have to divide by the lambda values to reverse the escale... HACK
+    variable V_1 equal (c_V_1/(0.000001+v_l1))
+    variable V_2 equal (c_V_2/(0.000001+v_l2))
+    variable dV equal v_V_2-v_V_1
+    </PreRun>
+    <PostRun>
+    variable dV delete
+    uncompute V_1
+    uncompute V_2
+    unfix escale1
+    unfix escale2
+    </PostRun>
+  </Scripts>
+</PAFI>

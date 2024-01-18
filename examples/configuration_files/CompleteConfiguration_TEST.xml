@@ -14,7 +14,7 @@ DEFAULT PARAMETERS FOR PAFI
 
       Iteration sequence is nested, in order of appearance
     -->
-    <Temperature>0. 100.0</Temperature>
+    <Temperature>0. 0.0</Temperature>
     <ReactionCoordinate>0.0 1.0 11</ReactionCoordinate>
   </Axes>
 
@@ -130,6 +130,9 @@ DEFAULT PARAMETERS FOR PAFI
     <Potential>
     ../examples/systems/EAM-SIA-Fe/Fe.eam.fs
     </Potential>
+    <Elements>
+    Fe
+    </Elements>
     <Directory>
     ../examples/systems/EAM-SIA-Fe/
     </Directory>
@@ -158,7 +161,7 @@ DEFAULT PARAMETERS FOR PAFI
       atom_modify map array sort 0 0.0
       read_data  %FirstPathConfiguration%
       pair_style    eam/fs
-      pair_coeff * * %Potential% Fe
+      pair_coeff * * %Potential% %Elements
       run 0
       thermo 10
       run 0

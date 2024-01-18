@@ -32,13 +32,12 @@ before the next major (2023) update. This gives optimal knot spacing for force i
          write_data neb_knot_file.$u
 ```
 
-3. Configure `config.xml` to load in your NEB images with the correct potential
+3. Modify one of the configuration files in`examples/configuration_files/*.xml` to load in your NEB images with the correct potential
 
-4. Run the test routine `pafi-path-test`, which runs PAFI with a single worker,
-at zero temperature, for one step per plane. Run with `CoresPerWorker` procs, e.g.
+4. Run the test routines of `UsageExamples.py`:
 ```bash
-         mkdir -p dumps
-         mpirun -np 2 ./pafi-path-test
+        NPROCS=2 # can be 
+        mpirun -np 2 python UsageExamples.py -
 ```
 where the first line ensures your dump folder (here the default value) actually exists.
 

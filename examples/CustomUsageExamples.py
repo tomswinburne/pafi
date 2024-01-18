@@ -1,5 +1,6 @@
 import sys,glob
 import numpy as np
+sys.path.insert(1,'../')
 from mpi4py import MPI
 import argparse
 
@@ -26,8 +27,7 @@ def test_integration():
             Temperature: {int_dat['Temperature']}
             Free Energy Barrier: {f_b} +- {f_e}eV
             """)
-    
-        
+
 def test_complete_input():
     """Load in complete configuration file
     """
@@ -67,6 +67,53 @@ def test_python_input():
     manager.run()
     manager.close()
 
+def test_custom_worker():
+    """Custom worker for thermodynamic integration
+    """
+    from pafi import PAFIManager,PAFIParser,PAFIWorker,ResultsHolder
+    from typing import List
+
+    class CustomPAFIWorker(PAFIWorker):
+        def __init__(self, comm: MPI.Intracomm, 
+                     parameters: PAFIParser, 
+                     tag: int, rank: int, roots: List[int]) -> None:
+            super().__init__(comm, parameters, tag, rank, roots)
+
+        def constrained_average(self,results:ResultsHolder)->ResultsHolder:
+            """Perform constrained PAFI average for thermodynamic integration
+            In CustomConfiguration.xml we establish a new axis, 'Lambda', 
+            and have a set of scripts to set the potential as 
+            V = Lambda*(V_1-V_2) + V_2
+            then evaluate <V_1-V_2 | Lambda > 
+            """
+            parameters = lambda k: results(k)\
+                if results.has_key(k) else self.parameters(k)
+    
+            steps = parameters("SampleSteps")
+        
+            fixname = self.setup_pafi_average(steps,"avepafi")
+
+            # set average fix, run for SampleSteps
+            self.run_commands(f"""
+            fix dV all ave/time 1 {steps} {steps} v_dV
+            run {steps}
+            """)
+
+            # extract average
+            ave_dV = self.extract_fix("dV",size=1)
+            results.set("ave_dV",ave_dV)
+
+            # remove fix
+            self.run_commands("unfix dV")
+            
+            results = self.extract_pafi_data(results,fixname)
+            return results
+    config = "./configuration_files/CustomConfiguration_TEST.xml"
+    manager = PAFIManager(MPI.COMM_WORLD,
+                          xml_path=config,Worker=CustomPAFIWorker)
+    manager.run(print_fields=\
+                ["Temperature","Lambda","ReactionCoordinate","FreeEnergyGradient","ave_dV"])
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="""
@@ -81,14 +128,10 @@ if __name__ == "__main__":
             python TestRoutines.py -t integrate
             """)
     
-    options =  ['complete','partial','python','integrate']
+    options =  ['complete','partial','python','integrate','custom']
     
     parser.add_argument('-t', '--test', help='Must be in '+" ".join(options))
     args = parser.parse_args()
-    if args.test is None:
-        print("Must specify test option!")
-        print(parser.description)
-        exit()
     test = args.test.strip() 
     assert test in options
     
@@ -100,9 +143,7 @@ if __name__ == "__main__":
         test_python_input()
     elif test==options[3]:
         test_integration()
+    elif test==options[4]:
+        test_custom_worker()
     
-
 exit()
-
-
-

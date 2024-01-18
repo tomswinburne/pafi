@@ -11,3 +11,4 @@ ext-*
 
 # test data
 examples/dumps
+testing/dumps

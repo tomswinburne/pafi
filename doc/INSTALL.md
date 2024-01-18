@@ -11,7 +11,6 @@ To run `PAFI`, you need the `LAMMPS` library. `PAFI` can be built using either t
 
 For `PAFI` installation using `cmake`  please follow the following steps. 
 
-
 **Note:**  Be sure that `cmake` is intalled on your system. Install `cmake` by [download](https://cmake.org/download/) or try e.g.
 `[conda/apt/brew] install cmake` or `module load cmake`. Attention:  the version should be newer than `3.20.0`.
 

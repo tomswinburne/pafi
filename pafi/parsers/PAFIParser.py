@@ -28,14 +28,18 @@ class PAFIParser(BaseParser):
     """
     def __init__(self,
             xml_path:None|os.PathLike[str]=None,
-            postprocessing:bool=False,rank:int=0) -> None:
+            postprocessing:bool=False,
+            rank:int=0) -> None:
         super().__init__(xml_path,postprocessing,rank)
+
         # initial seed, but must be different across workers...
         self.seeded = False
+        
         # repeats, valid bounds (see set_min_valid())
         self.nRepeats = self.parameters["nRepeats"]
         self.maxExtraRepeats = self.parameters["maxExtraRepeats"]         
         self.set_min_valid(1) # temporary
+        
     
     def set_min_valid(self,nWorkers:int)->None:
         """Set the minimum number of value samples 
@@ -154,6 +158,9 @@ class PAFIParser(BaseParser):
 
             Wildcard Potential:
                 {self.PotentialLocation}
+            
+            Wildcard Elements:
+                {self.Species}
 
             Pathway:
                 Directory:

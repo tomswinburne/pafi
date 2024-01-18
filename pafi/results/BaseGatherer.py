@@ -125,7 +125,7 @@ class BaseGatherer:
         line = self.get_line(fields)
         if not line is None:
             return {kv[0]:kv[1] for kv in zip(fields,line)}
-
+    
     def write_pandas(self,path:os.PathLike[str])->None:
         """Write data as pandas dataframe
 

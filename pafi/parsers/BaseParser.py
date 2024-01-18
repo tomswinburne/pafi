@@ -40,12 +40,11 @@ class BaseParser:
         self.set_default_scripts()
         self.xml_path = xml_path
         self.rank=rank
-        
+        self.PotentialLocation = None
+        self.Species = None
         if not xml_path is None:    
             assert os.path.exists(xml_path)
             xml_tree = ET.parse(xml_path)
-        
-            self.PotentialLocation = None
             for branch in xml_tree.getroot():
                 if branch.tag=="Axes":
                     self.read_axes(branch)
@@ -60,17 +59,23 @@ class BaseParser:
                 if self.postprocessing:
                     self.suffix = int(xml_path.split("_")[-1].split(".")[0])
                     self.has_suffix=True
-        
+        else:
+            if self.postprocessing:
+                # for test routine
+                print("Testing PAFI parser")
+                self.suffix=""
+                self.has_suffix=True
         self.suffix = -1
         self.xml_file = None
-        self.check()
-
+        
     def check(self)->None:
         """Internal check of parameters
         """
-        if self.has_path and self.has_potential:
+        if self.has_path and self.has_potential and self.has_species:
             self.check_output_location()
             self.check_axes()
+            return True
+        return False
     
     def ready(self)->bool:
         """Check if all parameters are set
@@ -79,8 +84,16 @@ class BaseParser:
         -------
         bool
         """
-        return self.has_path and self.has_potential and self.has_suffix
-    
+        if not self.has_path:
+            raise TypeError("\n\nNo Pathway set!\n")
+        if not self.has_potential:
+            raise TypeError("\n\nNo Potential set!\n")
+        if not self.has_species:
+            raise TypeError("\n\nNo Species set!\n")
+        if not self.has_suffix:
+            raise TypeError("\n\nNo output location set!\n")
+        return True
+        
     def check_axes(self)->None:
         """
             Ensure we have minimal axes for PAFI
@@ -321,6 +334,22 @@ class BaseParser:
         self.has_potential = True
         self.check()
 
+    def set_species(self,species:str|List[str])->None:
+        """Set element list
+            Must be in correct order for LAMMPS to read !
+            TODO: check this? 
+
+        Parameters
+        ----------
+        species : str | List[str]
+            string or list of species
+        """
+        if isinstance(species,str):
+            species = [species]
+        assert min([isinstance(s,str) for s in species])
+        self.Species = species
+        self.has_species = True
+        self.check()
 
     def set_default_pathway(self) -> None:
         """
@@ -328,6 +357,7 @@ class BaseParser:
         """
         self.has_path = False
         self.has_potential = False
+        self.has_species = False
         self.has_suffix = False
         
     def read_pathway(self,xml_path_data:ET.ElementTree) -> None:
@@ -350,6 +380,9 @@ class BaseParser:
                 dir = path_data.text.strip()
             if tag=="Files":
                 files = path_data.text.strip().splitlines()
+            if tag=="Species":
+                species = path_data.text.strip()
+        self.set_species(species)
         self.set_potential(potential)
         self.set_pathway(files,dir)
         
@@ -364,7 +397,7 @@ class BaseParser:
             atom_modify map array sort 0 0.0
             read_data  %FirstPathConfiguration%
             pair_style    eam/fs
-            pair_coeff * * %Potential% Fe
+            pair_coeff * * %Potential% %Species%
             run 0
             thermo 10
             run 0
@@ -442,6 +475,10 @@ class BaseParser:
         
         branch_branch = ET.Element("Potential")
         branch_branch.text = self.PotentialLocation
+        branch.append(branch_branch)
+
+        branch_branch = ET.Element("Species")
+        branch_branch.text = " ".join(self.Species)
         branch.append(branch_branch)
 
         branch_branch = ET.Element("Directory")
@@ -531,6 +568,8 @@ class BaseParser:
         _args["FirstPathConfiguration"] = self.PathwayConfigurations[0]
         if not self.PotentialLocation is None:
             _args["Potential"] = self.PotentialLocation
+        if not self.Species is None:
+            _args["Species"] = " ".join(self.Species)
         for key,value in _args.items():
             script = self.replace(script,key,value)
         return script

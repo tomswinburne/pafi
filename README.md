@@ -36,8 +36,9 @@ git clone https://github.com/lammps/lammps.git
 git clone https://github.com/tomswinburne/pafi.git
 
 # LAMMPS build
-mkdir lammps/build
-cd lammps/build
+cd /path/to/lammps
+mkdir build
+cd build
 cmake -C ../../pafi/cmake/lammps_options.cmake ../cmake
 make -j
 make install # to PREFIX
@@ -46,24 +47,20 @@ make install python
 # back to parent
 cd ..
 
-# PAFI build
-cd pafi
+# Build and test PAFI
+cd /path/to/pafi
 pip install -e .
+cd testing
+python run_tests.py
 ```
 
 ## [Detailed Installation Instructions](doc/INSTALL.md)
 ## [Getting Started Tutorial](doc/TUTORIAL.md)
 ## [Hints and Tips](doc/TIPS.md)
 
-## External Libraries
-- [LAMMPS](https://lammps.sandia.gov) MD code
-- [RapidXML](https://rapidxml.sourceforge.net) for reading `xml` files
-- This nice [library](https://github.com/ttk592/spline) for spline interpolation
-
 ## TODO
 1. Restart files from pathway deviations
 2. Smoothed spline interpolation for more general reference pathways
-3. print parameter object as csv also, or json
-4. have proper testing routine
-5. incorporate Arnauds path preparation scripts
+3. More unit tests...
+4. incorporate Arnauds path preparation scripts
 

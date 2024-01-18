@@ -47,7 +47,8 @@ class PAFIManager(BaseManager):
     
     
     def run(self,print_fields:List[str]|None=None,
-            width:int=10,precision:int=5)->None:
+            width:int=10,
+            precision:int=5)->None:
         """Basic parallel PAFI sampling
 
             Performs a nested loop over all <Axes>, in the order
@@ -102,6 +103,7 @@ class PAFIManager(BaseManager):
                 fields += [f if isstr else np.round(f,precision)]
             return format_string.format(*fields)
 
+        
         if self.rank==0:
             screen_out = f"""
             Initialized {self.nWorkers} workers with {self.CoresPerWorker} cores
@@ -113,6 +115,12 @@ class PAFIManager(BaseManager):
             """
             print(screen_out)
             print(line(print_fields))
+            
+            # return value
+            average_results = {k:[] for k in print_fields}
+            
+
+
         
         last_coord = None
         for axes_coord in itertools.product(*self.parameters.axes.values()):
@@ -147,6 +155,9 @@ class PAFIManager(BaseManager):
                 self.world.Barrier()
                 screen_out = self.Gatherer.get_dict(print_fields)
                 if self.rank == 0:
+                    for k in screen_out.keys():
+                        average_results[k].append(screen_out[k])
+                    
                     print(line(screen_out))
                     self.Gatherer.write_pandas(path=self.parameters.csv_file)
             
@@ -154,5 +165,9 @@ class PAFIManager(BaseManager):
         
         if self.rank==0:
             print(f"Data written to {self.parameters.csv_file}")
+            return average_results
+        else:
+            return None
+
         
     
