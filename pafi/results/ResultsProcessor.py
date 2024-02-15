@@ -1,9 +1,7 @@
 import pandas as pd
-import plotext as plt
-import os,glob,itertools
+import os,itertools
 import numpy as np
-from typing import Any,List
-from .ResultsHolder import ResultsHolder
+from typing import List
 from ..parsers.PAFIParser import PAFIParser
 from scipy.integrate import cumulative_trapezoid
 from scipy.interpolate import interp1d

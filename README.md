@@ -24,8 +24,10 @@ space for a particular metastable pathway, with the usual reductions in variance
 
 ## Quick Start
 - PAFI uses <a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a> with `mpi4py`, detailed in <a href="#full-installation">full installation</a>. 
+- Output are `pandas` CSV files.
 - You should be able to run the following code:
 	```python
+  import numpy, scipy, pandas # just test import
 	from mpi4py import MPI
 	from lammps import lammps
 	lmp = lammps(comm=MPI.COMM_WORLD)
@@ -64,7 +66,7 @@ where `simple_run.py`:
 ```
 
 ## Full installation
-PAFI uses `mpi4py`, `numpy`, `tqdm` and <b><a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a></b> with at least `MANYBODY` and `ML-SNAP`
+PAFI uses `mpi4py`, `numpy`, `scipy`, `tqdm` and <b><a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a></b> with at least `MANYBODY` and `ML-SNAP`
 
 If you have cmake and mpi installed:
 ```bash
