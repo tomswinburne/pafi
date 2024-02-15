@@ -24,12 +24,12 @@ space for a particular metastable pathway, with the usual reductions in variance
 
 ## Quick Start
 ### Installation
-- PAFI uses `mpi4py`, `numpy`, `scipy`, `tqdm` and <a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a>
+- PAFI uses `mpi4py`, `numpy`, `scipy`,`pandas` and <a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a>
 - You can try installing PAFI with `pip` (in an enviroment...) and run tests:
 	```bash
   cd /path/to/this/repo
   python -m pip install -e . # local install
-  python testing/run_tests.py -v
+  python unittests.py -v
 	```
 - If this fails, see <a href="#full-installation">full installation</a> instructions
 

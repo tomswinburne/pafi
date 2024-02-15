@@ -9,15 +9,18 @@ class PAFITestCase(unittest.TestCase):
         """
         Test case for importing necessary modules
         """
+        import numpy # just to check import
+        import scipy # just to check import
+        import pandas # just to check import
         from mpi4py import MPI
-        import numpy as np # just to check import
         from lammps import lammps
         self.assertTrue(MPI)
         self.assertTrue(lammps)
         comm = MPI.COMM_WORLD
         rank = comm.Get_rank()
         size = comm.Get_size()
-        lmp = lammps(comm=comm,cmdargs=["-log","none"])
+        lmp = lammps(comm=comm,\
+                     cmdargs=["-log","none","-screen","none"])
         lmp.close()
         self.assertTrue(rank >= 0)
         self.assertTrue(size > 0)
