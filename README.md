@@ -23,11 +23,11 @@ space for a particular metastable pathway, with the usual reductions in variance
 </h3>
 
 ## Quick Start
-- PAFI uses <a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a> with `mpi4py`, detailed in <a href="#full-installation">full installation</a>. 
-- Output are `pandas` CSV files.
-- You should be able to run the following code:
+### Installation
+- PAFI uses <a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a> with `mpi4py`, detailed in <a href="#full-installation">full installation</a>. Output are `pandas` CSV files.
+- You should be able to run the following python code with `mpirun`
 	```python
-  import numpy, scipy, pandas # just test import
+  import numpy, scipy, pandas # just to test import
   from mpi4py import MPI
   from lammps import lammps
   lmp = lammps(comm=MPI.COMM_WORLD)
@@ -41,15 +41,11 @@ space for a particular metastable pathway, with the usual reductions in variance
   cd testing # test suite
   python run_tests.py -v
 	```
-
+### Running Calculations
 - Provide some initial pathway using e.g. <a href="http://lammps.sandia.gov/doc/neb.html" target="_new">LAMMPS NEB</a>. 
-We have added a new `equal` NEB style to LAMMPS giving optimal knot spacing for force integration. Use with e.g. 
-```lammps
-  variable u equal part # partition for NEB image
-  fix neb_fix all neb 1.0 parallel equal # equal style optional but optimal
-  neb etol ftol N1 N2 Nevery file-style arg keyword
-  write_data neb_knot_file.$u
-```
+
+- New `equal` style gives optimal spacing for force integration- e.g. `fix neb all neb 1.0 parallel equal`
+
 - Modify one of `examples/configuration_files/*_REAL.xml` to load in your pathway and potential
 
 - Run with `mpirun`:
