@@ -75,7 +75,7 @@ where `simple_run.py`:
 ```
 
 ## Full installation
-PAFI uses `mpi4py`, `numpy`, `scipy`, `tqdm` and <b><a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a></b> with at least `MANYBODY` and `ML-SNAP`
+PAFI uses `mpi4py`, `numpy`, `scipy`, `pandas` and <b><a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a></b> with at least `MANYBODY` and `ML-SNAP`
 If you have cmake and mpi installed:
 ```bash
 export PREFIX=${HOME}/.local # example
@@ -92,7 +92,7 @@ git clone https://github.com/lammps/lammps.git
 git clone https://github.com/tomswinburne/pafi.git
 
 # install python packages
-${PYTHON} -m pip install mpi4py numpy tqdm
+${PYTHON} -m pip install mpi4py numpy pandas
 
 # LAMMPS build 
 cd /path/to/lammps
