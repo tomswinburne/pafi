@@ -49,6 +49,9 @@ DEFAULT PARAMETERS FOR PAFI
     <Directory> can be omitted if using full paths in Files.
   -->
   <PathwayConfigurations>
+    <PotentialType>
+    eam/fs
+    </PotentialType>
     <Potential>
     ../examples/systems/EAM-SIA-Fe/Fe.eam.fs
     </Potential>

@@ -48,7 +48,28 @@ where `simple_run.py`:
 ```python
   from mpi4py import MPI
   from pafi import PAFIManager
-  manager = PAFIManager(MPI.COMM_WORLD,"config_file.xml")
+  manager = PAFIManager(MPI.COMM_WORLD,"/path/to/config.xml")
+  manager.run()
+  manager.close()
+  ```
+
+- Alternatively, specify all custom options within python:
+```python
+  from mpi4py import MPI
+  from pafi import PAFIManager, PAFIParser
+
+  parameters = PAFIParser()
+  parameters.set_pathway("systems/EAM-SIA-Fe/image_*.dat") # NEB pathway
+  parameters.set_potential("systems/EAM-SIA-Fe/Fe.eam.fs","eam/fs",["Fe"]) # Potential
+  
+  # typical sampling values
+  parameters.axes["Temperature"] = [100.*i for i in range(7)] # temperature range
+  parameters.set("CoresPerWorker",1)
+  parameters.set("SampleSteps",2000)
+  parameters.set("ThermSteps",1000)
+  parameters.set("ThermWindow",500)
+
+  manager = PAFIManager(MPI.COMM_WORLD,parameters=parameters)
   manager.run()
   manager.close()
 ```
@@ -92,8 +113,7 @@ cp ../build/liblammps.so ${INSTALL_LOCATION}/lammps
 # Install and test PAFI
 cd /path/to/pafi
 pip install -e .
-cd testing # within PAFI repository
-python run_tests.py
+python unittests.py
 ```
 
 ## Hints and Tips

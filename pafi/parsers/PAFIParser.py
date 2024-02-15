@@ -155,7 +155,9 @@ class PAFIParser(BaseParser):
             result += f"""
                 {k} : {self.parse_script(v)}"""
         result += f"""
-
+            Wildcard Potential Type:
+                {self.PotentialType}
+            
             Wildcard Potential:
                 {self.PotentialLocation}
             

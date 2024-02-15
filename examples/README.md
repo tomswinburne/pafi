@@ -1,35 +1,49 @@
 # PAFI Examples
 
-More detailed / involved examples will be added soon !
+## Test Systems
+- `systems/EAM-SIA-Fe` : Dumbell SIA with Marinica07 EAM Fe
+- `systems/EAM-VAC-W` : Vacancy with Marinica04 EAM W
 
-## Systems
-We have two point defects relaxed with an EAM potential
-- `systems/EAM-SIA-Fe` : <br>
-    dumbell SIA with Marinica07 EAM Fe
-- `systems/EAM-VAC-W` : <br>
-    vacancy with Marinica04 EAM W
+## Test scripts
+- XML files can be used to overwrite default parameters, or they can be set in python
 
-## PAFI tests 
-Full unittests will be implemented in the future
+- `configuration_files/*_TEST.xml` are for quick testing- **DO NOT USE THESE FOR SCIENCE!** 
 
-! Example input files `configuration_files/PartialConfiguration_TEST.xml` and `configuration_files/CompleteConfiguration_TEST.xml` have **very short samples for testing at zero or very low temperature - DO NOT USE THESE FOR SCIENCE!** 
+- `configurations_files/*_REAL.xml` have realistic sampling values.
 
-! Please see `configuration_files/PartialConfiguration_REAL.xml` or `configuration_files/CompleteConfiguration_REAL.xml` for realistic values
+- All run with e.g. `export NPROCS=4;mpirun -np ${NPROCS} python input_python.py`
 
-Run test using "complete" input file with four workers:
-```bash
-cd examples/
-mpirun -np 4 python UsageExamples.py -t complete
+- Example XML usage in `input_xml.py`:
+```python
+    from mpi4py import MPI
+    from pafi import PAFIManager
+    config = "./configuration_files/PartialConfiguration_TEST.xml"
+    manager = PAFIManager(MPI.COMM_WORLD,config)
+    manager.run()
+    manager.close()
 ```
 
-Run test using python input with four workers:
-```bash
-cd examples/
-mpirun -np 4 python UsageExamples.py -t python
-```
+- Example python usage in `input_python.py`:
+```python
+    from mpi4py import MPI
+    from pafi import PAFIManager
+    # Overwrite parameters within python script
+    parameters = PAFIParser()
+    parameters.set_pathway("systems/EAM-SIA-Fe/image_*.dat")
+    parameters.set_potential("systems/EAM-SIA-Fe/Fe.eam.fs")
 
-Test postprocessing:
-```bash
-cd examples/
-python UsageExamples.py -t integrate
+    # TEST VALUES
+    parameters.axes["Temperature"] = [100.]
+    parameters.set("nRepeats",2)
+    parameters.set("SampleSteps",10)
+    parameters.set("ThermSteps",10)
+    parameters.set("ThermWindow",10)
+
+    manager = PAFIManager(MPI.COMM_WORLD,parameters=parameters)
+    manager.run()
+    manager.close()
 ```
+## Post processing
+- Can print integration results with `python post_processing.py`
+
+- See also jupyter notebook `PlottingExamples.ipynb`

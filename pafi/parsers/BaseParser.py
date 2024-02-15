@@ -321,17 +321,26 @@ class BaseParser:
         self.check()
 
     
-    def set_potential(self,path:os.PathLike[str])->None:
+    def set_potential(self,\
+                    path:os.PathLike[str]|list[os.PathLike[str]],\
+                    type="eam/fs",
+                    species=None)->None:
         """Set potential pathway
 
         Parameters
         ----------
-        path : os.PathLike[str]
-            path to potential
+        path : os.PathLike[str] or list[os.PathLike[str]]
+            path to potential file or list of files (for e.g. SNAP)
         """
-        assert os.path.exists(path)
-        self.PotentialLocation = path
+        path = [path] if not isinstance(path,list) else path
+        for p in path:
+            if not os.path.exists(p):
+                raise IOError(f"Potential {p} not found!")
+        self.PotentialLocation = " ".join(path)
+        self.PotentialType = type
         self.has_potential = True
+        if not species is None:
+            self.set_species(species)
         self.check()
 
     def set_species(self,species:str|List[str])->None:
@@ -396,7 +405,7 @@ class BaseParser:
             atom_style atomic
             atom_modify map array sort 0 0.0
             read_data  %FirstPathConfiguration%
-            pair_style    eam/fs
+            pair_style %PotentialType%
             pair_coeff * * %Potential% %Species%
             run 0
             thermo 10
@@ -405,6 +414,18 @@ class BaseParser:
         self.scripts["PreRun"] = """"""
         self.scripts["PostRun"] = """"""
         self.scripts["PreTherm"] = """"""
+    
+    def set_script(self,key:str,script:str) -> None:
+        """Set a script
+
+        Parameters
+        ----------
+        key : str
+            key for <Script> in XML file
+        script : str
+            script
+        """
+        self.scripts[key] = script
     
     def read_scripts(self,xml_scripts) -> None:
         """Read in scripts defined in the XML file 
@@ -476,6 +497,11 @@ class BaseParser:
         branch_branch = ET.Element("Potential")
         branch_branch.text = self.PotentialLocation
         branch.append(branch_branch)
+
+        branch_branch = ET.Element("PotentialType")
+        branch_branch.text = self.PotentialType
+        branch.append(branch_branch)
+
 
         branch_branch = ET.Element("Species")
         branch_branch.text = " ".join(self.Species)
@@ -568,6 +594,8 @@ class BaseParser:
         _args["FirstPathConfiguration"] = self.PathwayConfigurations[0]
         if not self.PotentialLocation is None:
             _args["Potential"] = self.PotentialLocation
+        if not self.PotentialType is None:
+            _args["PotentialType"] = self.PotentialType
         if not self.Species is None:
             _args["Species"] = " ".join(self.Species)
         for key,value in _args.items():
