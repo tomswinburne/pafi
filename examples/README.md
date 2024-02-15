@@ -1,29 +1,35 @@
 # PAFI Examples
-Please run `testing/run_tests.py` for unit tests
 
-## Configuration files
-- `configuration_files/*_TEST.xml`: unrealistic parameters for rapid testing **DO NOT USE THESE FOR SCIENCE!** 
-- `configuration_files/*_REAL.xml`: realistic parameters for most applications
+More detailed / involved examples will be added soon !
 
 ## Systems
 We have two point defects relaxed with an EAM potential
-- `systems/EAM-SIA-Fe` : dumbell SIA with Marinica07 EAM Fe
-- `systems/EAM-VAC-W` : vacancy with Marinica04 EAM W
+- `systems/EAM-SIA-Fe` : <br>
+    dumbell SIA with Marinica07 EAM Fe
+- `systems/EAM-VAC-W` : <br>
+    vacancy with Marinica04 EAM W
 
-## Example scripts
-- Simple test with complete or partial configuration file:
+## PAFI tests 
+Full unittests will be implemented in the future
+
+! Example input files `configuration_files/PartialConfiguration_TEST.xml` and `configuration_files/CompleteConfiguration_TEST.xml` have **very short samples for testing at zero or very low temperature - DO NOT USE THESE FOR SCIENCE!** 
+
+! Please see `configuration_files/PartialConfiguration_REAL.xml` or `configuration_files/CompleteConfiguration_REAL.xml` for realistic values
+
+Run test using "complete" input file with four workers:
 ```bash
-mpirun -np 4 python standard_input.py
+cd examples/
+mpirun -np 4 python UsageExamples.py -t complete
 ```
 
-- Overwriting default values within python script:
+Run test using python input with four workers:
 ```bash
-mpirun -np 4 python python_input.py
+cd examples/
+mpirun -np 4 python UsageExamples.py -t python
 ```
 
-- Post processing results (after running one of the above)
+Test postprocessing:
 ```bash
-python post_processing.py
+cd examples/
+python UsageExamples.py -t integrate
 ```
-
-- See also jupyter notebook `PlottingExamples.ipynb`
