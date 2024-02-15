@@ -15,49 +15,57 @@ is not aligned with the minimum free energy path (MFEP). PAFI thus performs
 <a href="https://en.wikipedia.org/wiki/Stratified_sampling" target="_new">stratified sampling</a> of configuration 
 space for a particular metastable pathway, with the usual reductions in variance.
 </br>
-</br>
+<h3 align="center">
+<a href="#quick-start">Quick Start</a>
+| <a href="#full-installation">Full installation</a>
+| <a href="#hints-and-tips">Hints and tips</a>
+| <a href="#citation">Citation</a>
+</h3>
 
-
-# Quick Installation
-- Python 3 with `numpy`, `mpi4py` and `tqdm` (optional)
-- <b><a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a></b> with at least `MANYBODY` and `ML-SNAP`
-- You should be able to run the following python code:
+## Quick Start
+- PAFI uses <a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a> with `mpi4py`, detailed in <a href="#full-installation">full installation</a>. 
+- You should be able to run the following code:
 	```python
 	from mpi4py import MPI
 	from lammps import lammps
-	comm = MPI.COMM_WORLD
-	lmp = lammps(comm=comm)
+	lmp = lammps(comm=MPI.COMM_WORLD)
 	lmp.close()
 	```
 - Local install with `pip` and testing:
 	```bash
 	cd /path/to/DeFAD # this repo
-	# conda activate defad_env # or similar, if using venv
+	# conda activate pafi_env # or similar, if using venv
 	python -m pip install -e . # local install
   cd testing # test suite
   python run_tests.py -v
 	```
 
-## Citation
-For more details please see <a href="https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503" target="_new">our paper</a>, citation:
-```bibtex
-@article{PhysRevLett.120.135503,
-  title = {Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems},
-  author = {Swinburne, Thomas D. and Marinica, Mihai-Cosmin},
-  journal = {Phys. Rev. Lett.},
-  volume = {120},
-  issue = {13},
-  pages = {135503},
-  numpages = {6},
-  year = {2018},
-  month = {Mar},
-  publisher = {American Physical Society},
-  doi = {10.1103/PhysRevLett.120.135503},
-  url = {https://link.aps.org/doi/10.1103/PhysRevLett.120.135503}
-}
+- Provide some initial pathway using e.g. <a href="http://lammps.sandia.gov/doc/neb.html" target="_new">LAMMPS NEB</a>. 
+We have added a new `equal` NEB style to LAMMPS giving optimal knot spacing for force integration. Use with e.g. 
+```lammps
+         variable u equal part # partition for NEB image
+         fix neb_fix all neb 1.0 parallel equal # equal style optional but optimal
+         neb etol ftol N1 N2 Nevery file-style arg keyword
+         write_data neb_knot_file.$u
+```
+- Modify one of `examples/configuration_files/*_REAL.xml` to load in your pathway and potential
+
+- Run with `mpirun`:
+```bash
+  mpirun -np ${NUM_PROCS} python simple_run.py
+```
+where `simple_run.py`:
+```python
+  from mpi4py import MPI
+  from pafi import PAFIManager
+  manager = PAFIManager(MPI.COMM_WORLD,"config_file.xml")
+  manager.run()
+  manager.close()
 ```
 
 ## Full installation
+PAFI uses `mpi4py`, `numpy`, `tqdm` and <b><a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a></b> with at least `MANYBODY` and `ML-SNAP`
+
 If you have cmake and mpi installed:
 ```bash
 export PREFIX=${HOME}/.local # example
@@ -100,13 +108,49 @@ python run_tests.py
 
 ```
 
-## [Detailed Installation Instructions](doc/INSTALL.md)
-## [Getting Started Tutorial](doc/TUTORIAL.md)
-## [Hints and Tips](doc/TIPS.md)
+## Hints and Tips
+
+- See the [tutorial](TUTORIAL.md) for information on the `pafi-path-test` routine
+
+- In general, we want a reference pathway with dense discretisation where energy gradients are large
+
+- The current non-smoothed spline implementation can oscillate between very similar image configurations, as a result, there should be non-negligible displacement between images
+
+- If your path isn't loading, try setting `LogLammps=1` in `config.xml` to check for bugs in `log.lammps`
+
+- If `SampleSteps` is too large workers will make thermally activated "jumps" to nearby paths in the hyperplane. This will return a warning message `Reference path too unstable for sampling.`
+ and increase error. If this happens, decrease `SampleSteps` and increase `nRepeats`
+
+- When running on `NPROCS` cores, we require `NPROCS%CoresPerWorker==0`, so we have an integer number of workers
+
+- The total number of force calls *per worker* is `nPlanes * (ThermSteps+SampleSteps) * nRepeats`, spatially parallelised by LAMMPS across `CoresPerWorker` cores for each worker.
+
+- Each PAFI worker runs at the same speed as LAMMPS. Increasing `CoresPerWorker` will typically decrease execution time but also reduce `nWorkers` and increase error, as we have less samples.
+
+- If you are core-limited, the `nRepeats` option forces workers to perform multiple independent sampling runs on each plane. For example, with all other parameters fixed, running on 32 cores with `nRepeats=3` is equivalent to running on 3*32=96 cores with  `nRepeats=1`, but the latter will finish in a third of the time.
+
+
+## Citation
+For more details please see <a href="https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503" target="_new">our paper</a>, citation:
+```bibtex
+@article{PhysRevLett.120.135503,
+  title = {Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems},
+  author = {Swinburne, Thomas D. and Marinica, Mihai-Cosmin},
+  journal = {Phys. Rev. Lett.},
+  volume = {120},
+  issue = {13},
+  pages = {135503},
+  numpages = {6},
+  year = {2018},
+  month = {Mar},
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevLett.120.135503},
+  url = {https://link.aps.org/doi/10.1103/PhysRevLett.120.135503}
+}
+```
+
 
 ## TODO
 1. Restart files from pathway deviations
 2. Smoothed spline interpolation for more general reference pathways
-3. More unit tests...
-4. incorporate Arnauds path preparation scripts
 
