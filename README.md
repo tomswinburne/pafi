@@ -24,23 +24,15 @@ space for a particular metastable pathway, with the usual reductions in variance
 
 ## Quick Start
 ### Installation
-- PAFI uses <a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a> with `mpi4py`, detailed in <a href="#full-installation">full installation</a>. Output are `pandas` CSV files.
-- You should be able to run the following python code with `mpirun`
-	```python
-  import numpy, scipy, pandas # just to test import
-  from mpi4py import MPI
-  from lammps import lammps
-  lmp = lammps(comm=MPI.COMM_WORLD)
-  lmp.close()
-	```
-- Local install with `pip` and testing:
+- PAFI uses `mpi4py`, `numpy`, `scipy`, `tqdm` and <a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a>
+- You can try installing PAFI with `pip` (in an enviroment...) and run tests:
 	```bash
-  cd /path/to/pafi # this repo
-  # conda activate pafi_env # or similar, if using venv
+  cd /path/to/this/repo
   python -m pip install -e . # local install
-  cd testing # test suite
-  python run_tests.py -v
+  python testing/run_tests.py -v
 	```
+- If this fails, see <a href="#full-installation">full installation</a> instructions
+
 ### Running Calculations
 - Provide some initial pathway using e.g. <a href="http://lammps.sandia.gov/doc/neb.html" target="_new">LAMMPS NEB</a>. 
 
@@ -63,7 +55,6 @@ where `simple_run.py`:
 
 ## Full installation
 PAFI uses `mpi4py`, `numpy`, `scipy`, `tqdm` and <b><a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a></b> with at least `MANYBODY` and `ML-SNAP`
-
 If you have cmake and mpi installed:
 ```bash
 export PREFIX=${HOME}/.local # example

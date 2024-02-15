@@ -1,3 +1,6 @@
+examples/dumps
+build*
+dist*
 # Mac OSX indexing
 .DS_Store
 */.DS_Store
@@ -5,10 +8,4 @@
 pafi/__pycache__/
 pafi/*/__pycache__/
 
-# build data
-build*
-ext-*
-
 # test data
-examples/dumps
-testing/dumps
