@@ -28,16 +28,16 @@ space for a particular metastable pathway, with the usual reductions in variance
 - You should be able to run the following code:
 	```python
   import numpy, scipy, pandas # just test import
-	from mpi4py import MPI
-	from lammps import lammps
-	lmp = lammps(comm=MPI.COMM_WORLD)
-	lmp.close()
+  from mpi4py import MPI
+  from lammps import lammps
+  lmp = lammps(comm=MPI.COMM_WORLD)
+  lmp.close()
 	```
 - Local install with `pip` and testing:
 	```bash
-	cd /path/to/pafi # this repo
-	# conda activate pafi_env # or similar, if using venv
-	python -m pip install -e . # local install
+  cd /path/to/pafi # this repo
+  # conda activate pafi_env # or similar, if using venv
+  python -m pip install -e . # local install
   cd testing # test suite
   python run_tests.py -v
 	```
@@ -45,10 +45,10 @@ space for a particular metastable pathway, with the usual reductions in variance
 - Provide some initial pathway using e.g. <a href="http://lammps.sandia.gov/doc/neb.html" target="_new">LAMMPS NEB</a>. 
 We have added a new `equal` NEB style to LAMMPS giving optimal knot spacing for force integration. Use with e.g. 
 ```lammps
-         variable u equal part # partition for NEB image
-         fix neb_fix all neb 1.0 parallel equal # equal style optional but optimal
-         neb etol ftol N1 N2 Nevery file-style arg keyword
-         write_data neb_knot_file.$u
+  variable u equal part # partition for NEB image
+  fix neb_fix all neb 1.0 parallel equal # equal style optional but optimal
+  neb etol ftol N1 N2 Nevery file-style arg keyword
+  write_data neb_knot_file.$u
 ```
 - Modify one of `examples/configuration_files/*_REAL.xml` to load in your pathway and potential
 
@@ -79,7 +79,7 @@ export MPICC=`which mpicc` # for mpi4py, your C++ MPI compiler (e.g. mpicc / mpi
 PYTHON_VERSION=`python --version | cut -f2 -d" " | cut -f2 -d"."`
 export INSTALL_LOCATION=${PREFIX}/lib/python3.${PYTHON_VERSION}/site-packages
 
-# get souces
+# get sources
 git clone https://github.com/lammps/lammps.git
 git clone https://github.com/tomswinburne/pafi.git
 
@@ -107,7 +107,6 @@ cd /path/to/pafi
 pip install -e .
 cd testing # within PAFI repository
 python run_tests.py
-
 ```
 
 ## Hints and Tips
