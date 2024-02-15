@@ -98,7 +98,7 @@ ${PYTHON} -m pip install mpi4py numpy pandas
 cd /path/to/lammps
 mkdir build
 cd build
-cmake -C ../../pafi/cmake/lammps_options.cmake ../cmake
+cmake -C ../../pafi/lammps_options.cmake ../cmake
 make -j
 
 # LAMMPS python install: 
