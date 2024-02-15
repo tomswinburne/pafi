@@ -35,7 +35,7 @@ space for a particular metastable pathway, with the usual reductions in variance
 	```
 - Local install with `pip` and testing:
 	```bash
-	cd /path/to/DeFAD # this repo
+	cd /path/to/pafi # this repo
 	# conda activate pafi_env # or similar, if using venv
 	python -m pip install -e . # local install
   cd testing # test suite
