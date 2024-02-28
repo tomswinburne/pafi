@@ -25,6 +25,14 @@ space for a particular metastable pathway, with the usual reductions in variance
 ## Quick Start
 ### Installation
 - PAFI uses `mpi4py`, `numpy`, `scipy`,`pandas` and <a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a>
+- If you can run the following python code
+  ```
+  from lammps import lammps
+  from mpi4py import MPI
+  comm = MPI.COMM_WORLD
+  lmp = lammps(comm=comm)
+  lmp.close()
+  ```
 - You can try installing PAFI with `pip` (in an enviroment...) and run tests:
 	```bash
   cd /path/to/this/repo
