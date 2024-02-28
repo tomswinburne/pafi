@@ -23,15 +23,27 @@ space for a particular metastable pathway, with the usual reductions in variance
 </h3>
 
 ## Quick Start
-### Installation
-- PAFI uses `mpi4py`, `numpy`, `scipy`,`pandas` and <a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a>
-- You can try installing PAFI with `pip` (in an enviroment...) and run tests:
+### Quick Installation (<a href="#full-installation">Full Installation</a>)
+- PAFI uses `mpi4py`, `numpy`, `scipy`,`pandas`, installed via e.g. pip, and `lammps`, 
+which requires compilation from source as described <a href="https://docs.lammps.org/Python_head.html" target="_new">here</a>.
+- If you can run the following python script without errors
+  ```python
+  import numpy,scipy # to test
+  import pandas #
+  from mpi4py import MPI
+  from lammps import lammps
+  comm = MPI.COMM_WORLD
+  lmp = lammps(comm=comm)
+  lmp.close()
+  ```
+- You can install PAFI with `pip` (in an enviroment...) and run tests:
 	```bash
   cd /path/to/this/repo
   python -m pip install -e . # local install
   python unittests.py -v
 	```
-- If this fails, see <a href="#full-installation">full installation</a> instructions
+ - If this fails please see  <a href="#full-installation">full installation</a> instructions
+ 
 
 ### Running Calculations
 - Provide some initial pathway using e.g. <a href="http://lammps.sandia.gov/doc/neb.html" target="_new">LAMMPS NEB</a>. 
