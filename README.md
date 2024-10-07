@@ -27,7 +27,7 @@ conda install  mpi4py lammps # conda-lammps has no MPI: one core/worker!
 pip install pafi # install PAFI (to be added before 14/10/24 !)
 ```
 *Temporary measure* instead of `pip install pafi` you can clone this repository:
-```bash 
+```shell
 git clone https://github.com/tomswinburne/pafi.git
 python -m pip install -e .
 cd tests
@@ -36,7 +36,7 @@ python unittests.py -v
 
 ## Running PAFI
 PAFI requires that you have already made some NEB calculation with some potential. You can then run
-```bash
+```shell
   mpirun -np ${NUM_PROCS} python simple_pafi_run.py
 ```
 `simple_pafi_run.py`:
@@ -69,7 +69,7 @@ PAFI requires that you have already made some NEB calculation with some potentia
 ## Full installation
 PAFI uses `mpi4py`, `numpy`, `scipy`, `pandas` and <b><a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a></b> with at least `MANYBODY` and `ML-SNAP`
 If you have cmake and mpi installed:
-```bash
+```shell
 export PREFIX=${HOME}/.local # example
 export PYTHON=`which python` # to ensure same distribution
 export MPICC=`which mpicc` # for mpi4py, your C++ MPI compiler (e.g. mpicc / mpiicc for intel)
