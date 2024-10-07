@@ -62,7 +62,7 @@ PAFI requires that you have already made some NEB calculation with some potentia
 ```
 This will return a `*.csv` file with data readable by `pandas`. Can easily collate multiple runs. 
 
-See the [examples](examples/README.md.md)  and <a href="#hints-and-tips">hints and tips</a> for more information
+See the [examples](examples/README.md) and <a href="#hints-and-tips">hints and tips</a> for more information
 
 ## Full installation
 See <a href="https://github.com/tomswinburne/pafi/tree/cpp-2023">here</a> (`cpp-2023` branch) for an older C++ implementation.
