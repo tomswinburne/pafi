@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pafi"
-version = "0.9.0"
+version = "0.9.1"
 description = "PAFI: A Python package for the evaluation of free energy barriers beyond Harmonic TST using LAMMPS"
 authors = [
     { name="TD Swinburne", email="thomas.swinburne@cnrs.fr" }

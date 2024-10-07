@@ -7,17 +7,27 @@ from lammps import lammps,LMP_STYLE_GLOBAL,LMP_TYPE_VECTOR,LMP_TYPE_SCALAR
 from .BaseWorker import BaseWorker
 from ..results.ResultsHolder import ResultsHolder
 
-
 class pafilammps(lammps):
     """
         Wrapper for lammps for safe MPI initialization
+
+        Try to pass MPI communicator to lammps, if fails 
+        we assume lammps is compiled without MPI support
+
+
     """
     def __init__(self,name='',cmdargs=None,ptr=None,comm=None):
         try:
             super().__init__(name=name,cmdargs=cmdargs,comm=comm)
+            self.has_mpi_comm = True
         except Exception as ae:
             # in case we have conda-lammps installed 
             super().__init__(name=name,cmdargs=cmdargs,comm=None)
+            self.has_mpi_comm = False
+            # check if we are only assigning one core if no MPI support
+            assert not self.lib.lammps_config_has_mpi_support()
+            if comm is not None:
+                assert comm.Get_size()==1
 
 
 
@@ -47,6 +57,12 @@ class LAMMPSWorker(BaseWorker):
         self.name = "LAMMPSWorker"
         self.last_error_message = ""
         self.start_lammps()
+
+        if (not self.L.has_mpi_comm) and comm.Get_size()>1:
+            self.has_errors = True
+            print("LAMMPS HAS NO MPI SUPPORT- ONE CORE/WORKER ONLY!")
+            return
+        
         if self.has_errors:
             print("ERROR STARTING LAMMPS!",self.last_error_message)
             return
