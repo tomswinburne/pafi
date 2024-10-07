@@ -10,6 +10,7 @@ is not aligned with the minimum free energy path (MFEP). PAFI thus performs
 <h3 align="center">
 <a href="#quick-start">Conda installation</a>
 | <a href="#running-pafi">Running PAFI</a>
+| <a href="#plotting-results">Plotting Results</a>
 | <a href="examples/README.md">Examples</a>
 | <a href="#full-installation">Full installation</a>
 | <a href="#hints-and-tips">Hints and tips</a>
@@ -61,8 +62,9 @@ PAFI requires that you have already made some NEB calculation with some potentia
   manager.close()
 ```
 This will return a `*.csv` file with data readable by `pandas`. Can easily collate multiple runs. 
-We can then plot in python:
 
+## Plotting Results
+We can load in multiple `csv` files from some run then plot in python:
 ```python 
 import matplotlib.pyplot as plt
 from glob import glob
