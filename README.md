@@ -17,22 +17,19 @@ is not aligned with the minimum free energy path (MFEP). PAFI thus performs
 </br>
 
 ## Conda  Installation
-**`conda-lammps` is quick and easy but best for local testing only!**<br>
-See <a href="#full-installation">full installation</a> for optimal use of HPC clusters. 
+**`conda-lammps` is quick but best for local testing only!** See <a href="#full-installation">full installation</a> for optimal use on HPC. 
 ```bash
 conda create -n pafi-env python=3.10 
 conda activate pafi-env # activate virtual env
 conda install numpy scipy pandas # install requirements (can use pip)
 conda install  mpi4py lammps # conda-lammps has no MPI: one core/worker!
-pip install pafi # install PAFI (to be added before 14/10/24 !)
-```
-*Temporary measure* instead of `pip install pafi` you can clone this repository:
-```shell
+# pip install pafi # will be possible by 14/10/24 !
 git clone https://github.com/tomswinburne/pafi.git
 python -m pip install -e .
 cd tests
 python unittests.py -v
 ```
+A `pip` only installation will be live very soon....
 
 ## Running PAFI
 PAFI requires that you have already made some NEB calculation with some potential. You can then run
@@ -67,6 +64,8 @@ PAFI requires that you have already made some NEB calculation with some potentia
 
 
 ## Full installation
+See <a href="https://github.com/tomswinburne/pafi/tree/cpp-2023">here</a> (`cpp-2023` branch) for an older C++ implementation.
+
 PAFI uses `mpi4py`, `numpy`, `scipy`, `pandas` and <b><a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a></b> with at least `MANYBODY` and `ML-SNAP`
 If you have cmake and mpi installed:
 ```shell
