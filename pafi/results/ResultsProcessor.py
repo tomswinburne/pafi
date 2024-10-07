@@ -101,19 +101,29 @@ class ResultsProcessor:
                     list(np.round(np.sort(np.unique(self.data[a])),4))
 
     def ensemble_collate(self,return_pd:bool=False)->None|pd.DataFrame:
-        """Perform ensemble averaging 
+        """Collate ensemble data and calculate averages and variances.
 
-       
-        Each non-axis field F is averaged and returned as 
-        F_ave and F_std, using only valid values. 
+        This method processes the stored data to calculate ensemble averages and variances
+        for each unique combination of axes values. It handles valid/invalid data points
+        and computes statistics only for valid entries.
+
         Parameters
         ----------
-            return_pd : bool, optional
-                Return stored pandas dataframe 'ave_data', default False
+        return_pd : bool, optional
+            If True, returns the collated data as a pandas DataFrame. Default is False.
+
         Returns
         -------
-        pd.DataFrame
-            average dataframe, if `return_pd` is True
+        pd.DataFrame or None
+            If return_pd is True, returns a pandas DataFrame containing the collated data.
+            Otherwise, returns None.
+
+        Notes
+        -----
+        - The method uses the 'Valid' column to determine which data points to include in calculations.
+        - Averages and variances are computed for all fields defined in self.fields.
+        - The results are stored in self.ave_data as a pandas DataFrame.
+        - A 'ValidCount' column is added to track the number of valid data points for each combination of axes values.
         """
         valid_key = 'Valid'
         self.count_key = 'ValidCount'
@@ -153,36 +163,50 @@ class ResultsProcessor:
                   variance:str='FreeEnergyGradientVariance',
                   remesh:int=5,
                   return_remeshed_array:bool=False)->pd.DataFrame:
-        
-        """Cumulative integration of data along an axis. 
-        Integration routine makes a spline interpolation
-        to increase the number of intergrand evaluations 
-        
+        """Integrate the target field over the argument field.
+
+        This method performs numerical integration of the target field (e.g., FreeEnergyGradient)
+        with respect to the argument field (e.g., ReactionCoordinate). It also calculates
+        the standard error of the integrated values.
+
         Parameters
         ----------
         argument : str, optional
-            integration argument, by default 'ReactionCoordinate'
+            The field to use as the x-axis for integration (default is 'ReactionCoordinate')
         target : str, optional
-            integral, by default 'FreeEnergyGradient'
+            The field to integrate (default is 'FreeEnergyGradient')
         variance : str, optional
-            error term, by default 'FreeEnergyGradientVariance'
-
+            The field containing the variance of the target (default is 'FreeEnergyGradientVariance')
         remesh : int, optional
-            the number of integrand evaluations between 
-            existing knot points, by default 5
-        return_remeshed_array : bool, optional,
-            return dense numpy array for plotting. Default False
+            Factor by which to increase the density of integration points (default is 5)
+        return_remeshed_array : bool, optional
+            If True, return a remeshed array of the integrated data (default is False)
+
         Returns
         -------
-            DataFrame with new field '`target`_ave_integrated'
-            if return_remeshed_array, also return dense numpy array
+        pd.DataFrame
+            A DataFrame containing the integrated values and their standard errors
+
+        If return_remeshed_array is True:
+        list of dict
+            A list of dictionaries, each containing the remeshed data for a set of auxiliary parameters
+
+        Notes
+        -----
+        The integration is performed using cubic spline interpolation. The method handles
+        multiple sets of data distinguished by auxiliary parameters (e.g., different temperatures).
+        The standard error of the integrated values is calculated using error propagation.
+
+        The integrated values are added to the DataFrame with keys:
+        - {target}_integrated: The integrated values
+        - {target}_integrated_err: The standard error of the integrated values
+        - {target}_integrated_u: Upper bound of the 95% confidence interval
+        - {target}_integrated_l: Lower bound of the 95% confidence interval
         """
         
         # redo ensemble average
         self.ensemble_collate(return_pd=False)
         data = self.ave_data.copy()
-        
-        # determine keys
         x_key = argument
         y_key = target
         y_key_std = target+"_err"
@@ -277,6 +301,40 @@ class ResultsProcessor:
             return data
     
     def plotting_data(self,remesh=10):
+        """Generate data suitable for plotting.
+
+        This method integrates the free energy gradient data to produce free energy profiles,
+        which are more suitable for visualization. It uses a remeshing technique to ensure
+        smooth curves.
+
+        Parameters
+        ----------
+        remesh : int, optional
+            The factor by which to increase the density of points along the reaction coordinate.
+            Default is 10.
+
+        Returns
+        -------
+        list of dict
+            A list of dictionaries, each containing the data for a single temperature.
+            Each dictionary has keys:
+            - 'Temperature': The temperature of this dataset.
+            - 'ReactionCoordinate': The x-values (reaction coordinate).
+            - 'FreeEnergyGradient_integrated': The y-values (integrated free energy).
+            - 'FreeEnergyGradient_integrated_std': The standard deviation of the integrated free energy.
+
+        str
+            The key for the x-axis data in the returned dictionaries ('ReactionCoordinate').
+
+        str
+            The key for the y-axis data in the returned dictionaries ('FreeEnergyGradient_integrated').
+
+        Notes
+        -----
+        This method internally calls the `integrate` method with specific parameters to generate
+        the plotting data. The integration is performed over the reaction coordinate using the
+        free energy gradient and its variance.
+        """
         _,ploting_data = self.integrate(remesh=10,return_remeshed_array=True,\
                 argument='ReactionCoordinate',\
                 target='FreeEnergyGradient',\
