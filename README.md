@@ -61,6 +61,42 @@ PAFI requires that you have already made some NEB calculation with some potentia
   manager.close()
 ```
 This will return a `*.csv` file with data readable by `pandas`. Can easily collate multiple runs. 
+We can then plot in python:
+
+```python 
+import matplotlib.pyplot as plt
+from glob import glob
+from pafi import ResultsProcessor
+
+p = ResultsProcessor(   data_path=glob("dumps/pafi_data_*.csv"),
+                        xml_path='dumps/config_0.xml', integrate=True)
+
+plotting_data,x_key,y_key = p.plotting_data()
+
+
+# Plotting
+fig = plt.figure(figsize=(5,3))
+ax = fig.add_subplot(111)
+ax.set_title("Short (10ps) test for vacancy in W, EAM potential")
+
+
+for i,row in enumerate(plotting_data):
+    # Plotting data    
+    x,y,e = row[x_key], row[y_key], row[y_key+"_err"]
+    T = int(row['Temperature'])
+    label = r"$\Delta\mathcal{F}$=%2.2f±%2.2f eV, T=%dK"% (y.max(),e.max(),T)
+    
+    # make plots
+    ax.fill_between(x,y-e,y+e,facecolor=f'C{i}',alpha=0.5)
+    ax.plot(x,y,f'C{i}-',lw=2,label=label)
+
+# save
+ax.legend(loc='best')
+ax.set_xlabel("Reaction coordinate")
+ax.set_ylabel("Free energy barrier (eV)")
+```
+<img src="https://raw.githubusercontent.com/tomswinburne/pafi/refs/heads/master/doc/test_output.png" width=300></img>
+
 
 See the [examples](examples/README.md) and <a href="#hints-and-tips">hints and tips</a> for more information
 
@@ -90,7 +126,7 @@ ${PYTHON} -m pip install mpi4py numpy pandas
 cd /path/to/lammps
 mkdir build
 cd build
-cmake -C ../../pafi/lammps_options.cmake ../cmake
+cmake -C ../../pafi/doc/lammps_options.cmake ../cmake
 make -j
 
 # LAMMPS python install: 

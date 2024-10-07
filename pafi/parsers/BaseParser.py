@@ -286,7 +286,7 @@ class BaseParser:
     
     def set_pathway(self,
                     paths:os.PathLike[str]|List[os.PathLike[str]],
-                    dir:os.PathLike[str]="./") -> None:
+                    directory:os.PathLike[str]="./") -> None:
         """Set the PathwayConfigurations
         
         Parameters
@@ -296,18 +296,18 @@ class BaseParser:
            For wildcard, files are ordered according to INDEX
            assuming file format `any_form_of_path_INDEX.dat`
 
-        dir : os.PathLike[str], optional
+        directory : os.PathLike[str], optional
             starting path, by default "./"
         """
         assert isinstance(paths,list) or isinstance(paths,str)
-        assert os.path.exists(dir)
-        self.PathwayDirectory = dir
+        assert os.path.exists(directory)
+        self.PathwayDirectory = directory
         
         if isinstance(paths,list) and len(paths)>1:
-            paths = [os.path.join(dir.strip(),f.strip()) for f in paths]
+            paths = [os.path.join(directory.strip(),f.strip()) for f in paths]
         else:
             paths = paths[0] if isinstance(paths,list) else paths
-            paths = glob.glob(os.path.join(dir.strip(),paths.strip()))
+            paths = glob.glob(os.path.join(directory.strip(),paths.strip()))
             paths = sorted(paths,key=lambda x:x.split("_")[-1])
         self.PathwayConfigurations = []
         for path in paths:
@@ -380,20 +380,20 @@ class BaseParser:
         """
         potential = None
         files = "*.dat"
-        dir = "./"
+        directory = "./"
         for path_data in xml_path_data:
             tag = path_data.tag.strip()
             if tag=="Potential":
                 potential = path_data.text.strip()
             if tag=="Directory":
-                dir = path_data.text.strip()
+                directory = path_data.text.strip()
             if tag=="Files":
                 files = path_data.text.strip().splitlines()
             if tag=="Species":
                 species = path_data.text.strip()
         self.set_species(species)
         self.set_potential(potential)
-        self.set_pathway(files,dir)
+        self.set_pathway(files,directory)
         
     
     def set_default_scripts(self) -> None:
@@ -653,19 +653,23 @@ class BaseParser:
             Search output directory to find unique suffix
             for XML file log and CSV output data
         """
+
         if not self.has_suffix:
-            df = self.parameters["DumpFolder"]
-            fl = glob.glob(os.path.join(df,"config_*.xml"))
-            self.suffix=-1
-            for f in fl:
-                suffix = int(f.split("_")[-1][:-4])
-                self.suffix = max(self.suffix,suffix)
-            self.suffix += 1
-            self.xml_file = os.path.join(df,f"config_{self.suffix}.xml")
-            self.csv_file = os.path.join(df,f"pafi_data_{self.suffix}.csv")
-            self.has_suffix=True
             if self.rank==0:
+                df = self.parameters["DumpFolder"]
+                fl = glob.glob(os.path.join(df,"config_*.xml"))
+                self.suffix=-1
+                for f in fl:
+                    suffix = int(f.split("_")[-1][:-4])
+                    self.suffix = max(self.suffix,suffix)
+                self.suffix += 1
+                self.xml_file = os.path.join(df,f"config_{self.suffix}.xml")
+                self.csv_file = os.path.join(df,f"pafi_data_{self.suffix}.csv")
                 self.to_xml_file()
-            
+            else:
+                self.suffix = None
+            self.has_suffix=True
+                
+                
 
 

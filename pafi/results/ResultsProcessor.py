@@ -10,7 +10,8 @@ class ResultsProcessor:
     def __init__(self,
                  data_path:os.PathLike[str]|List[os.PathLike[str]],
                  xml_path:None|os.PathLike[str]=None,
-                 axes:List[str]=None) -> None:
+                 axes:List[str]=None,
+                 integrate:bool=True) -> None:
         """Read in PAFI data and plot results
 
         Parameters
@@ -22,7 +23,8 @@ class ResultsProcessor:
         axes : List[str], optional
             List of axes, overwritten by data in xml_path if present,
             default : None, will be set to ["ReactionCoordinate","Temperature"]
-
+        integrate : bool, optional
+            perform integration with default arguments, default True
         Methods
         ----------
         append()
@@ -48,6 +50,11 @@ class ResultsProcessor:
             self.params = None
         
         self.extract_axes(axes=axes)
+
+        if self.integrate:
+            self.integrate(return_remeshed_array=True,remesh=10);
+
+
     
     def extract_axes(self,axes=None):
         self.fields = list(self.data.keys())[1:]
@@ -178,12 +185,13 @@ class ResultsProcessor:
         # determine keys
         x_key = argument
         y_key = target
-        v_key = target+"_var"
         y_key_std = target+"_err"
-
+        y_key_var = target+"_var"
+        v_key = variance
+        
         i_key = target+"_integrated"
         i_key_std = target+"_integrated_err"
-        
+    
         i_keys = [i_key,i_key_std,i_key+"_u",i_key+"_l"]
         i_data = np.zeros((data[x_key].size,4))
 
@@ -207,17 +215,22 @@ class ResultsProcessor:
                 sel *= np.isclose(data[a[0]].to_numpy(),a[1])
             sel_data = data[sel]
             
-
+            # find integration points, sorted
             x_val = np.sort(np.unique(sel_data[x_key]))
+            
+            # for each x, find y and v values
             y_val = np.zeros((x_val.size,2))
             for i,x in enumerate(x_val):
                 x_sel_data = sel_data[np.isclose(sel_data[x_key],x)]
-                y_val[i][0] = x_sel_data[y_key]
-                y_val[i][1] = x_sel_data[v_key]
+                y_val[i][0] = float(x_sel_data[y_key].iloc[0])
+                y_val[i][1] = float(x_sel_data[y_key_var].iloc[0])
+                y_val[i][1] += float(x_sel_data[v_key].iloc[0])
+                
 
             y_spl = interp1d(x_val,y_val,axis=0,kind='cubic')
             dense_x = np.linspace(x_val.min(),x_val.max(),remesh*x_val.size)
             dense_y = y_spl(dense_x)
+            
             dense_i = cumulative_trapezoid(dense_y,dense_x,axis=0,initial=0)
 
             i_spl = interp1d(dense_x,dense_i,axis=0,kind='cubic')
@@ -226,7 +239,7 @@ class ResultsProcessor:
                 out_row = {a[0]:a[1] for a in zip(auxs,pt)}
                 out_row[x_key] = dense_x
                 out_row[y_key] = dense_y[:,0]
-                out_row[v_key] = dense_y[:,1]
+                out_row[y_key_var] = dense_y[:,1]
                 out_row[y_key_std] = np.sqrt(np.abs(dense_y[:,1]))
                 out_row[i_key] = dense_i[:,0]
                 out_row[i_key_std] = np.sqrt(np.abs(dense_i[:,1]))
@@ -237,70 +250,35 @@ class ResultsProcessor:
                 i_row = [i_dat[0],i_dat[1],i_dat[0]+i_dat[1],i_dat[0]-i_dat[1]]
                 i_data[sel*np.isclose(data[x_key],x)] = i_row
             
-            
+        
         for i,k in enumerate(i_keys):
             data[k] = i_data[:,i]
+            if k=='FreeEnergyGradient_integrated':
+                data['FreeEnergyBarrier'] = i_data[:,i]
+            if k=='FreeEnergyGradient_integrated_err':
+                data['FreeEnergyBarrierErrors'] = i_data[:,i]    
+        
+        self.FreeEnergyData = []
+        for T in np.unique(data['Temperature']):
+            dd = data[data['Temperature']==T]
+            res = {'Temperature':T}
+            res['FreeEnergyGradient'] = \
+                dd['FreeEnergyGradient']
+            res['FreeEnergyBarrier'] = \
+                dd['FreeEnergyGradient_integrated']
+            res['ReactionCoordinate'] = dd['ReactionCoordinate']
+            res['FreeEnergyBarrierError'] = \
+                dd['FreeEnergyGradient_integrated_err']
+            self.FreeEnergyData += [res]
+        
         if return_remeshed_array:
             return data, out_array
         else:
             return data
-        """
-        # will be converted to dataframe
-        out_data = []
-        blank_row = {k:[] for k in list(axes)+[y_key,y_key+"_u",y_key+"_l"]}
-        if not v_key is None:
-            blank_row[v_key] = []
-            blank_row[v_key+"_u"] = []
-            blank_row[v_key+"_l"] = []
-        
-        # iterate over all aux axes
-        for pt in itertools.product(*[self.axes[a] for a in auxs]):
-            
-            # select data at constant aux values
-            sel = np.ones_like(data[x_key].to_numpy(),bool)
-            row = blank_row.copy()
-            for a in zip(auxs,pt):
-                sel *= np.isclose(data[a[0]].to_numpy(),a[1])
-            sel_data = data[sel]
-            
-                   
-            # find integration points, sorted
-            x_val = np.sort(np.unique(sel_data[x_key]))
-            for a in zip(auxs,pt):
-                row[a[0]] = a[1] * np.ones_like(x_val)
-
-
-            if not v_key is None:
-                y_val = np.zeros((x_val.size,4))
-            else:
-                y_val = np.zeros((x_val.size,2))
-            
-            for i,x in enumerate(x_val):
-                raw_match = sel_data[np.isclose(sel_data[x_key],x)]
-                valid_r = raw_match[valid_key]
-                y_r = raw_match[y_key][valid_r]
-                # see write up for derivation of additional 1/N factor
-                y_val[i][:2] = np.r_[[y_r.mean(), y_r.var() / y_r.size]]
-                if not v_key is None:
-                    v_r = sel_data[np.isclose(sel_data[x_key],x)][v_key]
-                    y_val[i][2:] = np.r_[[v_r.mean(), v_r.var() / v_r.size]]
-
-            
-            y_spl = interp1d(x_val,y_val,axis=0)
-            x_val = np.linspace(x_val.min(),x_val.max(),remesh*x_val.size)
-            y_val = y_spl(x_val)
-            
-            row[x_key] = x_val
-            row[y_key] = np.append(0.,cumtrapz(y_val[:,0],x_val))
-            row[y_key+"_u"] = np.append(0.,cumtrapz(y_val[:,1],x_val))
-            row[y_key+"_u"] = np.sqrt(row[y_key+"_u"])+row[y_key]
-            row[y_key+"_l"] = 2.0*row[y_key] - row[y_key+"_u"]
-            if not v_key is None:
-                row[v_key] = np.append(0.,cumtrapz(y_val[:,2],x_val))
-                row[v_key+"_u"] = np.append(0.,cumtrapz(y_val[:,3],x_val))
-                row[v_key+"_u"] = np.sqrt(row[v_key+"_u"])+row[v_key]
-                row[v_key+"_l"] = 2.0*row[v_key] - row[v_key+"_u"]
-            out_data += [row]
-        
-        return out_data
-        """
+    
+    def plotting_data(self,remesh=10):
+        _,ploting_data = self.integrate(remesh=10,return_remeshed_array=True,\
+                argument='ReactionCoordinate',\
+                target='FreeEnergyGradient',\
+                variance='FreeEnergyGradientVariance')
+        return ploting_data,'ReactionCoordinate','FreeEnergyGradient_integrated'

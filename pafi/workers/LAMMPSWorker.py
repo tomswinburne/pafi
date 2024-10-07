@@ -7,7 +7,7 @@ from lammps import lammps,LMP_STYLE_GLOBAL,LMP_TYPE_VECTOR,LMP_TYPE_SCALAR
 from .BaseWorker import BaseWorker
 from ..results.ResultsHolder import ResultsHolder
 
-class pafilammps(lammps):
+class wrappedlammps(lammps):
     """
         Wrapper for lammps for safe MPI initialization
 
@@ -94,7 +94,7 @@ class LAMMPSWorker(BaseWorker):
             logfile = 'none'
         try:
             cmdargs = ['-screen','none','-log',logfile]
-            self.L = pafilammps(comm=self.comm,cmdargs=cmdargs)
+            self.L = wrappedlammps(comm=self.comm,cmdargs=cmdargs)
             self.check_lammps_compatibility()
         except Exception as ae:
             print("Couldn't load LAMMPS!",ae)

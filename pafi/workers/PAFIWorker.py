@@ -213,7 +213,7 @@ class PAFIWorker(LAMMPSWorker):
         pre_therm_hp = self.extract_fix("pafi",size=4)
         steps = parameters("ThermSteps")
         ave_steps = parameters("ThermWindow")
-        f_T = "c_pe" if overdamped==1 else "c_thermo_temp"
+        f_T = "c_thermo_pe" if overdamped==1 else "c_thermo_temp"
         self.run_commands(f"""
             reset_timestep 0
             fix __ae all ave/time 1 {ave_steps} {steps} {f_T}
