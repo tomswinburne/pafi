@@ -24,8 +24,16 @@ conda create -n pafi-env python=3.10
 conda activate pafi-env # activate virtual env
 conda install numpy scipy pandas # install requirements (can use pip)
 conda install  mpi4py lammps # conda-lammps has no MPI: one core/worker!
-pip install pafi # install PAFI
+pip install pafi # install PAFI (to be added before 14/10/24 !)
 ```
+*Temporary measure* instead of `pip install pafi` you can clone this repository:
+```bash 
+git clone https://github.com/tomswinburne/pafi.git
+python -m pip install -e .
+cd tests
+python unittests.py -v
+```
+
 ## Running PAFI
 PAFI requires that you have already made some NEB calculation with some potential. You can then run
 ```bash
