@@ -10,6 +10,7 @@ is not aligned with the minimum free energy path (MFEP). PAFI thus performs
 <h3 align="center">
 <a href="#quick-start">Conda installation</a>
 | <a href="#running-pafi">Running PAFI</a>
+| <a href="examples/README.md">Examples</a>
 | <a href="#full-installation">Full installation</a>
 | <a href="#hints-and-tips">Hints and tips</a>
 | <a href="#citation">Citation</a>
@@ -48,20 +49,24 @@ PAFI requires that you have already made some NEB calculation with some potentia
   
   parameters.set_pathway("neb_pathway/image_*.dat") # NEB pathway of LAMMPS dat files
   
+
   parameters.axes["Temperature"] = [100.*i for i in range(7)] # temperature range
   parameters.set("CoresPerWorker",1) # Will force to 1 for conda installation of lammps
+  
+  # Typical production values
   parameters.set("SampleSteps",2000) # Sampling steps per worker
   parameters.set("ThermSteps",1000) # Thermalization steps per worker
   parameters.set("ThermWindow",500) # Averaging window to check temperature
   parameters.set("nRepeats",1) # Number of times to repeat process (if CPU limited)
 
+  # Establish PAFIManager
   manager = PAFIManager(MPI.COMM_WORLD,parameters=parameters)
   manager.run()
   manager.close()
 ```
+This will return a `*.csv` file with data readable by `pandas`. Can easily collate multiple runs. 
 
-- See the [tutorial](TUTORIAL.md) and <a href="#hints-and-tips">hints and tips</a> for more information
-
+See the [examples](examples/README.md.md)  and <a href="#hints-and-tips">hints and tips</a> for more information
 
 ## Full installation
 See <a href="https://github.com/tomswinburne/pafi/tree/cpp-2023">here</a> (`cpp-2023` branch) for an older C++ implementation.
