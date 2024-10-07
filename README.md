@@ -1,86 +1,62 @@
-<img src="doc/pafi_title.png" width=500></img>
+<img src="https://raw.githubusercontent.com/tomswinburne/pafi/refs/heads/master/doc/pafi_title.png" width=500></img>
 <h2> PAFI: Evaluation of free energy barriers beyond Harmonic TST</h2>
-<h3 align='center'>
-Python implementation (2024), (c) Swinburne & Marinica 2024<br><br>
-<a href="https://github.com/tomswinburne/pafi/tree/cpp-2023">C++ implementation (2023) available here</a>
-<h3 align="center">If using PAFI, please cite (<a href="#citation">bibtex</a>). Details in 
-<a href="https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503" target="_new">Swinburne & Marinica PRL 2018</a>.
-</h3>
-PAFI performs constrained sampling on <a href="https://docs.lammps.org/fix_neb.html" target="_new">NEB</a> hyperplanes in 
-<a href="https://docs.lammps.org" target="_new">LAMMPS</a>, 
+<h4 align="center">Swinburne and Marinica, Phys. Rev. Lett 2018 (<a href="#citation">bibtex citation</a>).</h4>
+PAFI performs constrained sampling on <a href="https://docs.lammps.org/fix_neb.html" target="_new">NEB</a> hyperplanes in <a href="https://docs.lammps.org" target="_new">LAMMPS</a>, 
 analytically reformulating an exact expression for the free energy gradient used in the
 <a href="https://pubs.acs.org/doi/10.1021/jp506633n" target="_new">Adaptive Biasing Force</a> method.
 This allows calculation of free energy barriers even when the minimum energy path (MEP)
 is not aligned with the minimum free energy path (MFEP). PAFI thus performs
-<a href="https://en.wikipedia.org/wiki/Stratified_sampling" target="_new">stratified sampling</a> of configuration 
-space for a particular metastable pathway, with the usual reductions in variance.
-</br>
+<a href="https://en.wikipedia.org/wiki/Stratified_sampling" target="_new">stratified sampling</a> of configuration space for a particular metastable pathway, with the usual reductions in variance.
 <h3 align="center">
-<a href="#quick-start">Quick Start</a>
+<a href="#quick-start">Conda installation</a>
+| <a href="#running-pafi">Running PAFI</a>
 | <a href="#full-installation">Full installation</a>
 | <a href="#hints-and-tips">Hints and tips</a>
 | <a href="#citation">Citation</a>
 </h3>
+</br>
 
-## Quick Start
-### Installation
-- PAFI uses `mpi4py`, `numpy`, `scipy`,`pandas` and <a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a>
-- If you can run the following python code
-  ```
-  from lammps import lammps
-  from mpi4py import MPI
-  comm = MPI.COMM_WORLD
-  lmp = lammps(comm=comm)
-  lmp.close()
-  ```
-- You can try installing PAFI with `pip` (in an enviroment...) and run tests:
-	```bash
-  cd /path/to/this/repo
-  python -m pip install -e . # local install
-  python unittests.py -v
-	```
-- If this fails, see <a href="#full-installation">full installation</a> instructions
-
-### Running Calculations
-- Provide some initial pathway using e.g. <a href="http://lammps.sandia.gov/doc/neb.html" target="_new">LAMMPS NEB</a>. 
-
-- New `equal` style gives optimal spacing for force integration- e.g. `fix neb all neb 1.0 parallel equal`
-
-- Modify one of `examples/configuration_files/*_REAL.xml` to load in your pathway and potential
-
-- Run with `mpirun`:
+## Conda  Installation
+**`conda-lammps` is quick and easy but best for local testing only!**<br>
+See <a href="#full-installation">full installation</a> for optimal use of HPC clusters. 
 ```bash
-  mpirun -np ${NUM_PROCS} python simple_run.py
+conda create -n pafi-env python=3.10 
+conda activate pafi-env # activate virtual env
+conda install numpy scipy pandas # install requirements (can use pip)
+conda install  mpi4py lammps # conda-lammps has no MPI: one core/worker!
+pip install pafi # install PAFI
 ```
-where `simple_run.py`:
-```python
-  from mpi4py import MPI
-  from pafi import PAFIManager
-  manager = PAFIManager(MPI.COMM_WORLD,"/path/to/config.xml")
-  manager.run()
-  manager.close()
-  ```
-
-- Alternatively, specify all custom options within python:
+## Running PAFI
+PAFI requires that you have already made some NEB calculation with some potential. You can then run
+```bash
+  mpirun -np ${NUM_PROCS} python simple_pafi_run.py
+```
+`simple_pafi_run.py`:
 ```python
   from mpi4py import MPI
   from pafi import PAFIManager, PAFIParser
 
   parameters = PAFIParser()
-  parameters.set_pathway("systems/EAM-SIA-Fe/image_*.dat") # NEB pathway
-  parameters.set_potential("systems/EAM-SIA-Fe/Fe.eam.fs","eam/fs",["Fe"]) # Potential
+  parameters.set_potential(["neb_pathway/Fe.eam.fs"], # List of potential files
+                                            "eam/fs", # LAMMPS pair style
+                                             ["Fe"])  # List of Elements
   
-  # typical sampling values
+  parameters.set_pathway("neb_pathway/image_*.dat") # NEB pathway of LAMMPS dat files
+  
   parameters.axes["Temperature"] = [100.*i for i in range(7)] # temperature range
-  parameters.set("CoresPerWorker",1)
-  parameters.set("SampleSteps",2000)
-  parameters.set("ThermSteps",1000)
-  parameters.set("ThermWindow",500)
+  parameters.set("CoresPerWorker",1) # Will force to 1 for conda installation of lammps
+  parameters.set("SampleSteps",2000) # Sampling steps per worker
+  parameters.set("ThermSteps",1000) # Thermalization steps per worker
+  parameters.set("ThermWindow",500) # Averaging window to check temperature
+  parameters.set("nRepeats",1) # Number of times to repeat process (if CPU limited)
 
   manager = PAFIManager(MPI.COMM_WORLD,parameters=parameters)
   manager.run()
   manager.close()
 ```
+
+- See the [tutorial](TUTORIAL.md) and <a href="#hints-and-tips">hints and tips</a> for more information
+
 
 ## Full installation
 PAFI uses `mpi4py`, `numpy`, `scipy`, `pandas` and <b><a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a></b> with at least `MANYBODY` and `ML-SNAP`
@@ -125,6 +101,18 @@ python unittests.py
 ```
 
 ## Hints and Tips
+- See <a href="http://lammps.sandia.gov/doc/neb.html" target="_new">LAMMPS NEB</a> for making a pathway
+
+- New `equal` style gives optimal spacing for force integration- e.g. `fix neb all neb 1.0 parallel equal`
+
+- Modify one of `examples/configuration_files/*_REAL.xml` to load in your pathway and potential:
+```python
+  from mpi4py import MPI
+  from pafi import PAFIManager
+  manager = PAFIManager(MPI.COMM_WORLD,"/path/to/config.xml")
+  manager.run()
+  manager.close()
+  ```
 
 - See the [tutorial](TUTORIAL.md) for information on the `pafi-path-test` routine
 

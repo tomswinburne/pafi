@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pafi"
+version = "0.9.0"
+description = "PAFI: A Python package for the evaluation of free energy barriers beyond Harmonic TST using LAMMPS"
+authors = [
+    { name="TD Swinburne", email="thomas.swinburne@cnrs.fr" }
+]
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy>=1.21",
+    "scipy>=1.7",
+    "mpi4py>=3.1",
+    "matplotlib>=3.4",
+    "pandas>=1.3"
+]
+
+[project.urls]
+Homepage = "https://github.com/tomswinburne/pafi"
+Documentation = "https://github.com/tomswinburne/pafi"
+Source = "https://github.com/tomswinburne/pafi"

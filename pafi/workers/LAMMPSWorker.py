@@ -7,6 +7,20 @@ from lammps import lammps,LMP_STYLE_GLOBAL,LMP_TYPE_VECTOR,LMP_TYPE_SCALAR
 from .BaseWorker import BaseWorker
 from ..results.ResultsHolder import ResultsHolder
 
+
+class pafilammps(lammps):
+    """
+        Wrapper for lammps for safe MPI initialization
+    """
+    def __init__(self,name='',cmdargs=None,ptr=None,comm=None):
+        try:
+            super().__init__(name=name,cmdargs=cmdargs,comm=comm)
+        except Exception as ae:
+            # in case we have conda-lammps installed 
+            super().__init__(name=name,cmdargs=cmdargs,comm=None)
+
+
+
 class LAMMPSWorker(BaseWorker):
     """LAMMPS worker for PAFI, inheriting BaseWorker
 
@@ -64,7 +78,7 @@ class LAMMPSWorker(BaseWorker):
             logfile = 'none'
         try:
             cmdargs = ['-screen','none','-log',logfile]
-            self.L = lammps(comm=self.comm,cmdargs=cmdargs)
+            self.L = pafilammps(comm=self.comm,cmdargs=cmdargs)
             self.check_lammps_compatibility()
         except Exception as ae:
             print("Couldn't load LAMMPS!",ae)
