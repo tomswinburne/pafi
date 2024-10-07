@@ -20,6 +20,7 @@ is not aligned with the minimum free energy path (MFEP). PAFI thus performs
 ## Conda  Installation
 **`conda-lammps` is quick but best for local testing only!** See <a href="#full-installation">full installation</a> for optimal use on HPC. 
 ```bash
+conda config --add channels conda-forge # add conda-forge channel
 conda create -n pafi-env python=3.10 
 conda activate pafi-env # activate virtual env
 conda install numpy scipy pandas # install requirements (can use pip)
