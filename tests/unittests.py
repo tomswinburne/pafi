@@ -13,14 +13,14 @@ class PAFITestCase(unittest.TestCase):
 		import scipy # just to check import
 		import pandas # just to check import
 		from mpi4py import MPI
-		from pafi import pafilammps
+		from pafi.workers.LAMMPSWorker import wrappedlammps
 		self.assertTrue(MPI)
-		self.assertTrue(pafilammps)
+		self.assertTrue(wrappedlammps)
 		comm = MPI.COMM_WORLD
 		rank = comm.Get_rank()
 		size = comm.Get_size()
 		
-		lmp = pafilammps(comm=comm,\
+		lmp = wrappedlammps(comm=comm,\
 					 cmdargs=["-log","none","-screen","none"])
 		lmp.close()
 		
