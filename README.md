@@ -43,11 +43,9 @@ pip install pafi
 # ensure lammps can be loaded
 conda activate pafi-env 
 pafi-check-deps 
-
-# testing
-pip install pytest
-pafi-run-tests # run tests
 ```
+Test routines can be found in this repository at `tests/`
+
 For best performance on HPC, please see [here](INSTALL.md) for detailed installation instructions.
 
 ## Running PAFI

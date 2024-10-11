@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pafi"
-version = "0.9.8.3"
+version = "0.9.9.1"
 description = "PAFI: A Python package for the evaluation of free energy barriers beyond Harmonic TST using LAMMPS"
 authors = [
     { name="TD Swinburne", email="thomas.swinburne@cnrs.fr" }
@@ -37,14 +37,6 @@ Source = "https://github.com/tomswinburne/pafi"
 
 [project.scripts]
 pafi-check-deps = "pafi.check_dependencies:main"
-pafi-run-tests = "pafi.run_tests:main"  # Use our custom test runner
 
 [tool.setuptools.package-data]
-pafi = ["README.md",
-        "tests/EAM-SIA-Fe/**/*",
-        "tests/configuration_files/**/*"
-        ]
-
-[tool.pytest.ini_options]
-addopts = "-v"
-testpaths = ["tests"]
+pafi = ["README.md"]
