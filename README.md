@@ -41,7 +41,8 @@ conda activate pafi-env # activate virtual env
 conda install numpy scipy pandas # install requirements (can use pip)
 conda install  mpi4py lammps # conda-lammps has no MPI: one core/worker!
 pip install pafi
-pafi-check-deps
+pafi-check-deps # ensure lammps can be loaded
+pafi-run-tests # run tests
 ```
 See <a href="#full-installation">full installation</a> for optimal use on HPC. 
 
@@ -158,8 +159,8 @@ cp ../build/liblammps.so ${INSTALL_LOCATION}/lammps
 
 # Install and test PAFI
 cd /path/to/pafi
-pip install -e .
-python unittests.py
+pip install .
+python pafi/run_tests.py
 ```
 
 ## Hints and Tips
