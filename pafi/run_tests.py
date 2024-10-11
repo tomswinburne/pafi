@@ -1,5 +1,4 @@
-import sys
-import pytest
+import sys,os,pytest
 
 def main():
     # Run pytest on the tests directory
