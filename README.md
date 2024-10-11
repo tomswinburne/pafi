@@ -26,7 +26,7 @@ conda create -n pafi-env python=3.10
 conda activate pafi-env # activate virtual env
 conda install numpy scipy pandas # install requirements (can use pip)
 conda install  mpi4py lammps # conda-lammps has no MPI: one core/worker!
-pip install -i https://test.pypi.org/simple/ pafi # on main pypi asap....
+pip install pafi
 ```
 
 ## Running PAFI
@@ -117,7 +117,7 @@ export MPICC=`which mpicc` # for mpi4py, your C++ MPI compiler (e.g. mpicc / mpi
 PYTHON_VERSION=`python --version | cut -f2 -d" " | cut -f2 -d"."`
 export INSTALL_LOCATION=${PREFIX}/lib/python3.${PYTHON_VERSION}/site-packages
 
-# get sources
+# get LAMMPS and PAFI source
 git clone https://github.com/lammps/lammps.git
 git clone https://github.com/tomswinburne/pafi.git
 

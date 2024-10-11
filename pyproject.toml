@@ -22,6 +22,7 @@ dependencies = [
     "scipy>=1.7",
     "mpi4py>=3.1",
     "matplotlib>=3.4",
+    "lammps>=20240829",
     "pandas>=1.3"
 ]
 
