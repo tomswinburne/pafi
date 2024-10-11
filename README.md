@@ -18,8 +18,22 @@ is not aligned with the minimum free energy path (MFEP). PAFI thus performs
 </h3>
 </br>
 
-## Conda  Installation
-**`conda-lammps` is quick but best for local testing only!** See <a href="#full-installation">full installation</a> for optimal use on HPC. 
+## Quick Usage
+If you can already run
+```python
+from mpi4py import MPI
+from lammps import lammps
+lmp = lammps()
+lmp.close()
+```
+Then you can install PAFI:
+```bash
+pip install pafi
+pafi-check-deps
+pafi-run-tests
+```
+
+Otherwise, we can use `conda-lammps`, but **best for local testing only!** 
 ```bash
 conda config --add channels conda-forge # add conda-forge channel
 conda create -n pafi-env python=3.10 
@@ -27,7 +41,9 @@ conda activate pafi-env # activate virtual env
 conda install numpy scipy pandas # install requirements (can use pip)
 conda install  mpi4py lammps # conda-lammps has no MPI: one core/worker!
 pip install pafi
+pafi-check-deps
 ```
+See <a href="#full-installation">full installation</a> for optimal use on HPC. 
 
 ## Running PAFI
 PAFI requires that you have already made some NEB calculation with some potential. You can then run

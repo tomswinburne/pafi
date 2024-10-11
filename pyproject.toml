@@ -25,10 +25,23 @@ dependencies = [
     "pandas>=1.3"
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.2,<7.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/tomswinburne/pafi"
 Documentation = "https://github.com/tomswinburne/pafi"
 Source = "https://github.com/tomswinburne/pafi"
 
+[project.scripts]
+pafi-check-deps = "pafi.check_dependencies:main"
+pafi-run-tests = "pafi.run_tests:main"  # Use our custom test runner
+
 [tool.setuptools.package-data]
 pafi = ["README.md"]
+
+[tool.pytest.ini_options]
+addopts = "-v"
+testpaths = ["tests"]
