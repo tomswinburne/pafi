@@ -22,7 +22,6 @@ dependencies = [
     "scipy>=1.7",
     "mpi4py>=3.1",
     "matplotlib>=3.4",
-    "lammps>=20240829",
     "pandas>=1.3"
 ]
 
@@ -30,3 +29,6 @@ dependencies = [
 Homepage = "https://github.com/tomswinburne/pafi"
 Documentation = "https://github.com/tomswinburne/pafi"
 Source = "https://github.com/tomswinburne/pafi"
+
+[tool.setuptools.package-data]
+pafi = ["README.md"]
