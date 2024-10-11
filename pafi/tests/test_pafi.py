@@ -1,7 +1,6 @@
 import unittest,os
 SELF_DIR = os.path.dirname(os.path.abspath(__file__))
 DUMP_DIR = os.path.join(SELF_DIR,"./")
-SYSTEM_DIR = os.path.join(SELF_DIR,"systems")
 
 class PAFITestCase(unittest.TestCase):
 	def test_import(self):
@@ -35,16 +34,16 @@ class PAFITestCase(unittest.TestCase):
 		"""
 		Test case for loading parameters
 		"""
-		from pafi import PAFIParser
+		from pafi.parsers.PAFIParser import PAFIParser
 		self.assertTrue(PAFIParser)
 		self.parameters = PAFIParser(postprocessing=nowrite)
 		self.parameters.set("DumpFolder",DUMP_DIR)
 		# set path wildcard for Fe SIA
 		self.parameters.set_pathway(\
-			os.path.join(SYSTEM_DIR,"EAM-SIA-Fe/image_*.dat"))
+			os.path.join(SELF_DIR,"EAM-SIA-Fe/image_*.dat"))
 		# set EAM interatomic potential
 		self.parameters.set_potential(\
-			os.path.join(SYSTEM_DIR,"EAM-SIA-Fe/Fe.eam.fs"))
+			os.path.join(SELF_DIR,"EAM-SIA-Fe/Fe.eam.fs"))
 		# set potential species
 		self.parameters.set_species(["Fe"])
 		# restrict to zero temperature for testing 
@@ -71,7 +70,7 @@ class PAFITestCase(unittest.TestCase):
 		"""
 		import numpy as np
 		from mpi4py import MPI
-		from pafi import PAFIManager
+		from pafi.managers.PAFIManager import PAFIManager
 		self.assertTrue(PAFIManager)
 		self.test_load_parameters(False)
 		manager = PAFIManager(world=MPI.COMM_WORLD,parameters=self.parameters)
