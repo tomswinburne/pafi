@@ -1,0 +1,195 @@
+<!-- 
+DEFAULT PARAMETERS FOR PAFI
+-->
+<PAFI>
+  <Axes>
+    <!--
+      Axes for sampling. 
+        If format is 
+          *float* *float* *int* 
+        then this is read as
+          min max length
+        otherwise, it is read as an array of floats
+      MUST include ReactionCoordinate and Temperature
+
+      Iteration sequence is nested, in order of appearance
+    -->
+    <Temperature>0. 0.0</Temperature>
+    <ReactionCoordinate>0.0 1.0 11</ReactionCoordinate>
+  </Axes>
+
+  <Parameters>
+    <!-- MUST include trailing forward slash -->
+    <DumpFolder>./dumps/</DumpFolder>
+
+    <!-- Global random number seed used to set worker seeds.
+    If all parameters are left unchanged, simulation results should be
+    identical up to MD integration error for the same GlobalSeed
+    -->
+    <GlobalSeed>137</GlobalSeed>
+
+    <!-- do we dump deviation files? can be large -->
+    <WriteDev>0</WriteDev>
+
+    <!--If FreshSeed==1, a new seed is set for each sampling run.
+      With FreshSeed==0, a worker uses the same seed for all planes.
+      This may reduce error in stochastic gradients... -->
+    <FreshSeed>0</FreshSeed>
+
+    <!-- We require nprocs % CoresPerWorker==0 -->
+    <CoresPerWorker> 1 </CoresPerWorker>
+
+    <!-- Number of samples per plane per worker -->
+    <nRepeats> 2 </nRepeats>
+
+    <!-- Data gathering steps -->
+    <SampleSteps>100</SampleSteps>
+
+    <!-- Steps for thermalization -->
+    <ThermSteps> 50 </ThermSteps>
+    
+    <!-- Average last ThermWindow steps to check thermalization  -->
+    <ThermWindow> 50 </ThermWindow>
+
+    <!-- Max steps for optional in-plane minimizations (see below) -->
+    <MinSteps> 1000 </MinSteps>
+
+    <!--
+      RELATIVE thermal expansion coefficients, in form 
+      a(T) = a_0 * ( 1 + LinearThermalExpansion*T + QuadraticThermalExpansion*T^2 )
+      should be single number OR triplet of numbers for anisotropy.
+    -->
+    <LinearThermalExpansion>0.0 0. 0.</LinearThermalExpansion>
+    <QuadraticThermalExpansion>0.0 0. 0.</QuadraticThermalExpansion>
+    
+    <!-- perform overdamped/Brownian or Langevin dynamics on hyperplane. 
+    If OverDamped==1, temperature measurement will be approximate -->
+    <OverDamped> 0 </OverDamped>
+
+    <!--
+    Friction parameter as used by MD engine (here LAMMPS : 1/strength)
+    Typical 'units metal' value : 0.1 == 100 time steps decay time
+    If OverDamped=1, we set a strong friction i.e. < 0.1, e.g. 0.05
+    -->
+    <Friction> 0.05 </Friction>
+
+    <!-- 0/1 Output LAMMPS logfiles for error checking purposes -->
+    <LogLammps> 0 </LogLammps>
+
+    <!--
+    0 : (Default) Output time-and-ensemble averaged in-plane deviation from reference pathway. Can indicate finite temperature path but will have sampling noise
+    1 : Output ensemble averaged in-plane deviation following in-plane minimization post-run. No noise but will lose some/all features of path
+    -->
+    <PostDump> 0 </PostDump>
+
+    <!--
+    Perform an in-plane minimization before thermalization/sampling.
+    If pathway is a well-converged NEB/MEP this should not produce any change
+    -->
+    <PreMin> 0 </PreMin>
+
+    <!-- Determine scipy.interpolate.CubicSpline boundary conditions,
+    which for PAFI *must be a string*. 
+      'natural': the second derivative is set to zero
+      'not-a-knot': a good choice if unsure
+    See https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.CubicSpline.html
+    -->
+    <CubicSplineBoundaryConditions>not-a-knot</CubicSplineBoundaryConditions>
+    
+    <!-- If == 0 ignore ReactionCoordinate parameter,
+    sample only at provided pathway configurations. Test feature -->
+    <ReDiscretize>1</ReDiscretize>
+
+    <!-- Use geometric distance for MEP coordinate (Default: 1) -->
+    <RealMEPDist>1</RealMEPDist>
+
+    <!-- Maximum Atomic Displacement between local in-plane minima
+    before and after sampling run which can still be considered "in basin"
+    Check for shallow metastability on hyperplane
+    -->
+    <MaxJumpThresh> 0.4 </MaxJumpThresh>
+
+    <!-- Resample a batch if less than this proportion are "in-basin" -->
+    <ReSampleThresh> 0.8 </ReSampleThresh>
+
+    <!-- How many resample attempts -->
+    <maxExtraRepeats> 1 </maxExtraRepeats>
+
+    <!-- Spline pathway? YES -->
+    <SplinePath>1</SplinePath>
+
+  </Parameters>
+  
+  <!--
+    Sequential list of pathway configurations,
+    produced from e.g. a NEB configuration.
+    Loaded via LAMMPS read_data (see Scripts/Input below)
+    <Directory> can be omitted if using full paths in Files.
+  -->
+  <PathwayConfigurations>
+    <PotentialType>
+    eam/fs
+    </PotentialType>
+    <Potential>
+    ../examples/systems/EAM-SIA-Fe/Fe.eam.fs
+    </Potential>
+    <Elements>
+    Fe
+    </Elements>
+    <Directory>
+    ../examples/systems/EAM-SIA-Fe/
+    </Directory>
+    <Files>
+      image_1.dat
+      image_2.dat
+      image_3.dat
+      image_4.dat
+      image_5.dat
+      image_6.dat
+      image_7.dat
+      image_8.dat
+      image_9.dat
+    </Files>
+  </PathwayConfigurations>
+
+  <Scripts>
+    
+    <!-- LAMMPS script to read in the first pathway
+        configuration and load the potential
+    -->
+    
+    <Input>
+      units metal
+      atom_style atomic
+      atom_modify map array sort 0 0.0
+      read_data  %FirstPathConfiguration%
+      pair_style    eam/fs
+      pair_coeff * * %Potential% %Elements
+      run 0
+      thermo 10
+      run 0
+    </Input>
+    <!-- 
+      Apply any fixes e.g. external stresses before thermalization/sampling 
+      Order:
+      Input (once)
+
+      for each hyperplane:
+
+        PreRun Script
+        [apply fix_pafi()]
+        PreTherm Script
+        [run ThermSteps]
+        [initialize pafi averages]
+        constrained_average():
+          "run SampleSteps" in PAFIWorker
+        [collate pafi averages]
+        [unfix_pafi()]
+        PostRun Script
+    -->
+    <PreRun/>
+    <PreTherm/>
+    <PostTherm/>
+    <PostRun/>
+  </Scripts>
+</PAFI>

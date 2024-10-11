@@ -31,18 +31,24 @@ pafi-check-deps
 pafi-run-tests
 ```
 
-We can also use `conda-lammps`
+We can also use `conda-lammps`, but this limits us to one CPU/worker
 ```bash
 conda config --add channels conda-forge # add conda-forge channel
 conda create -n pafi-env python=3.10 
-conda activate pafi-env # activate virtual env
-conda install numpy scipy pandas # install requirements (can use pip)
-conda install  mpi4py lammps # conda-lammps has no MPI: one core/worker!
+conda activate pafi-env 
+conda install numpy scipy pandas 
+conda install mpi4py lammps 
 pip install pafi
-pafi-check-deps # ensure lammps can be loaded
+
+# ensure lammps can be loaded
+conda activate pafi-env 
+pafi-check-deps 
+
+# testing
+pip install pytest
 pafi-run-tests # run tests
 ```
-However, for best performance on HPC, please see [here](INSTALL.md) for detailed installation instructions.
+For best performance on HPC, please see [here](INSTALL.md) for detailed installation instructions.
 
 ## Running PAFI
 See [here](examples/README.md) for PAFI example scripts.

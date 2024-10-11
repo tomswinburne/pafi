@@ -1,0 +1,65 @@
+<!-- 
+DEFAULT PARAMETERS FOR PAFI
+-->
+<PAFI>
+  <Axes>
+    <!--
+      Axes for sampling. 
+        If format is 
+          *float* *float* *int* 
+        then this is read as
+          min max length
+        otherwise, it is read as an array of floats
+      MUST include ReactionCoordinate and Temperature
+
+      Iteration sequence is nested, in order of appearance
+    -->
+    <Temperature>0. 500. 6</Temperature>
+    <ReactionCoordinate>0.0 1.0 11</ReactionCoordinate>
+  </Axes>
+
+  <Parameters>
+    <!-- MUST include trailing forward slash -->
+    <DumpFolder>./dumps/</DumpFolder>
+
+    <!-- Global random number seed used to set worker seeds.
+    If all parameters are left unchanged, simulation results should be
+    identical up to MD integration error for the same GlobalSeed
+    -->
+    <GlobalSeed>137</GlobalSeed>
+
+    <!-- Number of samples per plane per worker -->
+    <nRepeats> 2 </nRepeats>
+
+    <!-- Data gathering steps -->
+    <SampleSteps>1500</SampleSteps>
+
+    <!-- Steps for thermalization -->
+    <ThermSteps> 1000 </ThermSteps>
+    
+    <!-- Average last ThermWindow steps to check thermalization  -->
+    <ThermWindow> 200 </ThermWindow>
+
+    <!-- Max steps for optional in-plane minimizations (see below) -->
+    <MinSteps> 1000 </MinSteps>
+
+  </Parameters>
+  
+  <!--
+    Sequential list of pathway configurations,
+    produced from e.g. a NEB configuration.
+    Loaded via LAMMPS read_data (see Scripts/Input below)
+    <Directory> can be omitted if using full paths in Files.
+  -->
+  <PathwayConfigurations>
+    <PotentialType>
+    eam/fs
+    </PotentialType>
+    <Potential>
+    ../examples/systems/EAM-SIA-Fe/Fe.eam.fs
+    </Potential>
+    <Directory>
+    ../examples/systems/EAM-SIA-Fe/
+    </Directory>
+  </PathwayConfigurations>
+</PAFI>
