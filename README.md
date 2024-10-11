@@ -8,17 +8,15 @@ This allows calculation of free energy barriers even when the minimum energy pat
 is not aligned with the minimum free energy path (MFEP). PAFI thus performs
 <a href="https://en.wikipedia.org/wiki/Stratified_sampling" target="_new">stratified sampling</a> of configuration space for a particular metastable pathway, with the usual reductions in variance.
 <h3 align="center">
-<a href="#quick-start">Conda installation</a>
+<a href="#installation">Installation</a>
 | <a href="#running-pafi">Running PAFI</a>
 | <a href="#plotting-results">Plotting Results</a>
-| <a href="examples/README.md">Examples</a>
-| <a href="#full-installation">Full installation</a>
 | <a href="#hints-and-tips">Hints and tips</a>
-| <a href="#citation">Citation</a>
+| <a href="#citation">Citation / PAFI studies</a>
 </h3>
 </br>
 
-## Quick Usage
+## Installation
 If you can already run
 ```python
 from mpi4py import MPI
@@ -33,7 +31,7 @@ pafi-check-deps
 pafi-run-tests
 ```
 
-Otherwise, we can use `conda-lammps`, but **best for local testing only!** 
+We can also use `conda-lammps`
 ```bash
 conda config --add channels conda-forge # add conda-forge channel
 conda create -n pafi-env python=3.10 
@@ -44,9 +42,11 @@ pip install pafi
 pafi-check-deps # ensure lammps can be loaded
 pafi-run-tests # run tests
 ```
-See <a href="#full-installation">full installation</a> for optimal use on HPC. 
+However, for best performance on HPC, please see [here](INSTALL.md) for detailed installation instructions.
 
 ## Running PAFI
+See [here](examples/README.md) for PAFI example scripts.
+
 PAFI requires that you have already made some NEB calculation with some potential. You can then run
 ```shell
   mpirun -np ${NUM_PROCS} python simple_pafi_run.py
@@ -119,50 +119,6 @@ ax.set_ylabel("Free energy barrier (eV)")
 
 See the [examples](examples/README.md) and <a href="#hints-and-tips">hints and tips</a> for more information
 
-## Full installation
-See <a href="https://github.com/tomswinburne/pafi/tree/cpp-2023">here</a> (`cpp-2023` branch) for an older C++ implementation.
-
-PAFI uses `mpi4py`, `numpy`, `scipy`, `pandas` and <b><a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS-Python</a></b> with at least `MANYBODY` and `ML-SNAP`
-If you have cmake and mpi installed:
-```shell
-export PREFIX=${HOME}/.local # example
-export PYTHON=`which python` # to ensure same distribution
-export MPICC=`which mpicc` # for mpi4py, your C++ MPI compiler (e.g. mpicc / mpiicc for intel)
-
-# extract typical install location PLEASE CHECK THIS ON YOUR MACHINE!
-# (see below for why this hack can be useful)
-PYTHON_VERSION=`python --version | cut -f2 -d" " | cut -f2 -d"."`
-export INSTALL_LOCATION=${PREFIX}/lib/python3.${PYTHON_VERSION}/site-packages
-
-# get LAMMPS and PAFI source
-git clone https://github.com/lammps/lammps.git
-git clone https://github.com/tomswinburne/pafi.git
-
-# install python packages
-${PYTHON} -m pip install mpi4py numpy pandas
-
-# LAMMPS build 
-cd /path/to/lammps
-mkdir build
-cd build
-cmake -C ../../pafi/doc/lammps_options.cmake ../cmake
-make -j
-
-# LAMMPS python install: 
-# whilst official command is 'make install python', can have env clashes
-# instead, we do it "by hand":
-cd ../python # within LAMMPS repository
-${PYTHON} -m pip install -U .
-
-# manually provide binary for LAMMPS package
-cp ../build/liblammps.so ${INSTALL_LOCATION}/lammps
-
-# Install and test PAFI
-cd /path/to/pafi
-pip install .
-python pafi/run_tests.py
-```
-
 ## Hints and Tips
 - See <a href="http://lammps.sandia.gov/doc/neb.html" target="_new">LAMMPS NEB</a> for making a pathway
 
@@ -198,7 +154,11 @@ python pafi/run_tests.py
 
 
 ## Citation
-For more details please see <a href="https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503" target="_new">our paper</a>, citation:
+For more details please see 
+
+Swinburne and Marinica, *Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems*, Phys. Rev. Lett., 2018 [link](https://link.aps.org/doi/10.1103/PhysRevLett.120.135503)
+
+Citation:
 ```bibtex
 @article{PhysRevLett.120.135503,
   title = {Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems},
@@ -215,6 +175,20 @@ For more details please see <a href="https://journals.aps.org/prl/abstract/10.11
   url = {https://link.aps.org/doi/10.1103/PhysRevLett.120.135503}
 }
 ```
+
+
+Some use cases of PAFI:
+
+- Allera et al., *Activation entropy of dislocation glide*, arXiv, 2024 [link](https://arxiv.org/abs/2410.04813)
+- Nahavandian et al., *From anti-Arrhenius to Arrhenius behavior in a dislocation-obstacle bypass: Atomistic Simulations and Theoretical Investigation*, Computational Materials Science, 2024 [link](https://doi.org/10.1016/j.commatsci.2023.112954)
+- Namakian et al., *Temperature dependence of generalized stacking fault free energy profiles and dissociation mechanisms of slip systems in Mg*, Computational Materials Science, 2024 [link](https://doi.org/10.1016/j.commatsci.2023.112569)
+- Namakian et al., *Temperature dependent stacking fault free energy profiles and partial dislocation separation in FCC Cu*, Computational Materials Science, 2023 [link](https://doi.org/10.1016/j.commatsci.2023.111971)
+- Baima et al., *Capabilities and limits of autoencoders for extracting collective variables in atomistic materials science*, Physical Chemistry Chemical Physics, 2022 [link](https://doi.org/10.1039/D2CP02765K)
+- Sato et al., *Anharmonic effect on the thermally activated migration of {101̄2} twin interfaces in magnesium*, Materials Research Letters, 2021 [link](https://doi.org/10.1080/21663831.2021.1873300)
+
+
+
+
 
 
 ## TODO
