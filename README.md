@@ -27,8 +27,6 @@ lmp.close()
 Then you can install PAFI:
 ```bash
 pip install pafi
-pafi-check-deps
-pafi-run-tests
 ```
 
 We can also use `conda-lammps`, but this limits us to one CPU/worker
@@ -42,10 +40,8 @@ pip install pafi
 
 # ensure lammps can be loaded
 conda activate pafi-env 
-pafi-check-deps 
 ```
 Test routines can be found in this repository at `tests/`
-
 For best performance on HPC, please see [here](INSTALL.md) for detailed installation instructions.
 
 ## Running PAFI
