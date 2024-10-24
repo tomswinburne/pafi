@@ -17,32 +17,31 @@ is not aligned with the minimum free energy path (MFEP). PAFI thus performs
 </br>
 
 ## Installation
-If you can already run
+PAFI uses <a href="https://docs.lammps.org/Python_head.html" target="_new">LAMMPS</a> and `mpi4py`,
+in addition to `numpy scipy pandas`. If you can run
 ```python
 from mpi4py import MPI
 from lammps import lammps
-lmp = lammps()
+lmp = lammps(comm=MPI.COMM_WORLD)
 lmp.close()
 ```
 Then you can install PAFI:
 ```bash
 pip install pafi
 ```
+Test routines can be found in this repository at `tests/`.
 
-We can also use `conda-lammps`, but this limits us to one CPU/worker
+Otherwise, see [here](INSTALL.md) for installation on HPC clusters. 
+For **local** testing you can install LAMMPS via `conda-lammps` (one CPU/worker)
 ```bash
 conda config --add channels conda-forge # add conda-forge channel
 conda create -n pafi-env python=3.10 
 conda activate pafi-env 
-conda install numpy scipy pandas 
-conda install mpi4py lammps 
+pip install numpy scipy pandas 
+conda install mpi4py lammps
 pip install pafi
-
-# ensure lammps can be loaded
-conda activate pafi-env 
 ```
-Test routines can be found in this repository at `tests/`
-For best performance on HPC, please see [here](INSTALL.md) for detailed installation instructions.
+We emphasize `conda-lammps` will not give optimal performance on HPC!
 
 ## Running PAFI
 See [here](examples/README.md) for PAFI example scripts.
@@ -185,10 +184,6 @@ Some use cases of PAFI:
 - Namakian et al., *Temperature dependent stacking fault free energy profiles and partial dislocation separation in FCC Cu*, Computational Materials Science, 2023 [link](https://doi.org/10.1016/j.commatsci.2023.111971)
 - Baima et al., *Capabilities and limits of autoencoders for extracting collective variables in atomistic materials science*, Physical Chemistry Chemical Physics, 2022 [link](https://doi.org/10.1039/D2CP02765K)
 - Sato et al., *Anharmonic effect on the thermally activated migration of {101̄2} twin interfaces in magnesium*, Materials Research Letters, 2021 [link](https://doi.org/10.1080/21663831.2021.1873300)
-
-
-
-
 
 
 ## TODO
