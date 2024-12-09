@@ -5,12 +5,34 @@ from pafi import PAFIManager,PAFIParser
 """
     More flexible implementation for custom pair styles
 
-    Here, redundant example mixing the same potential twice 
+    Here, redundant example mixing the same potential twice
 
+    Users can set fives scripts:
+        Input, PreRun, PreTherm, PostTherm, PostRun
+
+    The PAFI workflow is:
+    
+        "Input"
+
+        For each hyperplane:
+            "PreRun"
+            [apply fix_pafi()]
+            "PreTherm"
+            [run ThermSteps]
+            "PostTherm"
+            [initialize pafi averages]
+            [run pafi averages]
+            [collate pafi averages]
+            [unfix_pafi()]
+            "PostRun"
+
+    Here, we specify "Input" and "PreRun" as an example
 """
+
 rank = MPI.COMM_WORLD.Get_rank()
 parameters = PAFIParser(rank=rank)
 
+# Read input pathway
 parameters.set_pathway("image_*.dat",directory="systems/EAM-VAC-W")
 
 # Currently also need to give species to PAFI here (will be made redundant) 
@@ -30,10 +52,17 @@ parameters.set_script("Input","""
             run 0
 """)
 
+parameters.set_script("PreRun", """ 
+    # Perhaps apply groups here if needed
+    group dummy id <= 150
+    pair_style hybrid/scaled 0.5 eam/fs 0.5 eam/fs
+    pair_coeff * * eam/fs 1 systems/EAM-VAC-W/W.eam.fs W
+    pair_coeff * * eam/fs 2 systems/EAM-VAC-W/W.eam.fs W
+""")
+
 # TEST VALUES
 parameters.axes["Temperature"] = [0.,1000.,2000.]
 parameters.set("nRepeats",1)
-
 parameters.set("OverDamped",0) # Brownian or Langevin
 parameters.set("SampleSteps",2000)
 parameters.set("ThermSteps",2000)
