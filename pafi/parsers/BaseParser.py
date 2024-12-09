@@ -42,6 +42,7 @@ class BaseParser:
         self.rank=rank
         self.PotentialLocation = None
         self.Species = None
+        self.PotentialType = None
         if not xml_path is None:    
             assert os.path.exists(xml_path)
             xml_tree = ET.parse(xml_path)
@@ -78,6 +79,7 @@ class BaseParser:
         return False
     
     def ready(self)->bool:
+        self.check()
         """Check if all parameters are set
 
         Returns
@@ -323,7 +325,7 @@ class BaseParser:
     
     def set_potential(self,\
                     path:os.PathLike[str]|list[os.PathLike[str]],\
-                    type="eam/fs",
+                    pot_type="eam/fs",
                     species=None)->None:
         """Set potential pathway
 
@@ -337,7 +339,7 @@ class BaseParser:
             if not os.path.exists(p):
                 raise IOError(f"Potential {p} not found!")
         self.PotentialLocation = " ".join(path)
-        self.PotentialType = type
+        self.PotentialType = pot_type
         self.has_potential = True
         if not species is None:
             self.set_species(species)
@@ -425,8 +427,14 @@ class BaseParser:
         script : str
             script
         """
+        if key == "Input":
+            # little hack here
+            if not "%PotentialType%" in script:
+                self.has_potential = True
         self.scripts[key] = script
-    
+        
+
+
     def read_scripts(self,xml_scripts) -> None:
         """Read in scripts defined in the XML file 
 

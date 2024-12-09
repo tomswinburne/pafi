@@ -5,7 +5,7 @@ from pafi import PAFIManager,PAFIParser
 rank = MPI.COMM_WORLD.Get_rank()
 parameters = PAFIParser(rank=rank)
 parameters.set_pathway("image_*.dat",directory="systems/EAM-VAC-W")
-parameters.set_potential("systems/EAM-VAC-W/W.eam.fs",type="eam/fs")
+parameters.set_potential("systems/EAM-VAC-W/W.eam.fs",pot_type="eam/fs")
 parameters.set_species("W")
 
 # TEST VALUES
