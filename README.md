@@ -115,10 +115,13 @@ ax.legend(loc='best')
 ax.set_xlabel("Reaction coordinate")
 ax.set_ylabel("Free energy barrier (eV)")
 ```
-<img src="./doc/test_output.png" width=300></img>
+<img src="./doc/test_output_vac.png" width=400></img>
+<img src="./doc/test_output_expansion.png" width=400></img>
 
 
 See the [examples](examples/README.md) and <a href="#hints-and-tips">hints and tips</a> for more information
+
+
 
 ## Hints and Tips
 - See <a href="http://lammps.sandia.gov/doc/neb.html" target="_new">LAMMPS NEB</a> for making a pathway

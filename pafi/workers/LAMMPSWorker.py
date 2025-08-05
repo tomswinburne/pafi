@@ -404,8 +404,7 @@ class LAMMPSWorker(BaseWorker):
         type = LMP_TYPE_VECTOR if size>1 else LMP_TYPE_SCALAR
         assert hasattr(self.L,"numpy")
         try:
-            res = lambda i: np.ctypeslib.as_array(self.L.extract_fix(id,style,type,ncol=i))
-            
+            res = lambda i: self.L.numpy.extract_fix(id,style,type,ncol=i)
             if size>1:
                 return np.array([res(i) for i in range(size)])
             else:

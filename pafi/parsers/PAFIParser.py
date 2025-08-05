@@ -55,6 +55,7 @@ class PAFIParser(BaseParser):
         self.minValidResults *= self.parameters["nRepeats"]
         self.minValidResults *= nWorkers
         self.minValidResults = int(self.minValidResults)
+    
     def set(self,key:str,value:Any,create:bool=False)->None:
         """Set a parameter
 

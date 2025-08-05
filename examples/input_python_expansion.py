@@ -11,6 +11,9 @@ parameters = PAFIParser(rank=rank)
 parameters.set_potential("systems/EAM-VAC-W/W.eam.fs",pot_type="eam/fs")
 parameters.set_species("W")
 
+# dump location
+parameters.set("DumpFolder","./expansion_output")
+
 # set file list 
 file_dir = "systems/EAM-EXPAND-W"
 file_wildcard = "strain_*.dat"

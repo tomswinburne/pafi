@@ -154,7 +154,6 @@ class ResultsProcessor:
                     ave_data[f] += [valid_d.mean()]
                     var_data[f+"_var"] += [valid_d.var()/valid_c]
 
-        
         self.ave_data = pd.DataFrame({**ave_data,**count_data,**var_data})
         if return_pd:
             return self.ave_data
@@ -206,8 +205,6 @@ class ResultsProcessor:
         - {target}_integrated_u: Upper bound of the 95% confidence interval
         - {target}_integrated_l: Lower bound of the 95% confidence interval
         """
-        if starting_point is None:
-            starting_point = self.starting_point
         # redo ensemble average
         self.ensemble_collate(return_pd=False)
         data = self.ave_data.copy()
@@ -251,18 +248,19 @@ class ResultsProcessor:
             for i,x in enumerate(x_val):
                 x_sel_data = sel_data[np.isclose(sel_data[x_key],x)]
                 y_val[i][0] = float(x_sel_data[y_key].iloc[0])
+                # Both variance terms decay as 1/sample count from standard error
                 y_val[i][1] = float(x_sel_data[y_key_var].iloc[0])
                 y_val[i][1] += float(x_sel_data[v_key].iloc[0])
+                y_val[i][1] /= float(x_sel_data['ValidCount'].iloc[0])
                 
-
+                
             y_spl = interp1d(x_val,y_val,axis=0,kind='cubic')
             dense_x = np.linspace(x_val.min(),x_val.max(),remesh*x_val.size)
             dense_y = y_spl(dense_x)
-
-            from_index = np.abs(dense_x-starting_point).argmin()
             dense_i = cumulative_trapezoid(dense_y,dense_x,axis=0,initial=0)
 
-            if from_index>0:
+            if starting_point is not None:
+                from_index = np.abs(dense_x-starting_point).argmin()
                 dense_i[from_index:] = \
                     cumulative_trapezoid(dense_y[from_index:],dense_x[from_index:],axis=0,initial=0)
                 dense_i[:from_index+1] = \

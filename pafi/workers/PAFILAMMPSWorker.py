@@ -130,13 +130,19 @@ class PAFILAMMPSWorker(LAMMPSWorker):
         """
         self.setup_stress_average(ave_steps)
         self.run_commands(f"""
-            fix {fixname} all ave/time 1 {ave_steps} {ave_steps} f_pafi[*]
+            fix {fixname}_1 all ave/time 1 {ave_steps} {ave_steps} f_pafi[1]
+            fix {fixname}_2 all ave/time 1 {ave_steps} {ave_steps} f_pafi[2]
+            fix {fixname}_3 all ave/time 1 {ave_steps} {ave_steps} f_pafi[3]
+            fix {fixname}_4 all ave/time 1 {ave_steps} {ave_steps} f_pafi[4]
         """)
         return fixname
     
     def unset_pafi_average(self,fixname="avepafi")->None:
         self.run_commands(f"""
-            unfix {fixname}
+            unfix {fixname}_1
+            unfix {fixname}_2
+            unfix {fixname}_3
+            unfix {fixname}_4
         """)
         self.unset_stress_average()
 
@@ -156,11 +162,13 @@ class PAFILAMMPSWorker(LAMMPSWorker):
         ResultsHolder instance
         """
         res = {}
-        fix_data = self.extract_fix(name,size=4) # pure configuration
-        res['FreeEnergyGradient'] = -fix_data[0] * self.norm_T
-        res['FreeEnergyGradientVariance'] = fix_data[1]**2 * self.norm_T**2  - res['FreeEnergyGradient']**2
-        res['avePsi'] = 1.0-fix_data[2]
+        fix_data = np.zeros(4)
+        for i in range(fix_data.size):
+            fix_data[i] = self.extract_fix(name+f"_{i+1}") # pure configuration
         
+        res['FreeEnergyGradient'] = -fix_data[0] * self.norm_T
+        res['FreeEnergyGradientVariance'] = (fix_data[1]-fix_data[0]**2) * self.norm_T**2
+        res['avePsi'] = fix_data[2]
         res['dXTangent'] = fix_data[3]
         
         # add cell force in NVT setting
@@ -174,11 +182,14 @@ class PAFILAMMPSWorker(LAMMPSWorker):
                          stress[3] * self.depsilon[0][1] + \
                          stress[4] * self.depsilon[0][2] + \
                          stress[5] * self.depsilon[1][2]
+        
         res['FreeEnergyGradient'] += 1.0 * float(sigma_depsilon) * res['avePsi']
 
         # Jacobian / Grammian terms
-        res['FreeEnergyGradient'] += self.natoms * self.kB * results("Temperature") * res['avePsi'] * \
-                                    -1.0 * (self.depsilon[0][0]+self.depsilon[1][1]+self.depsilon[2][2])
+        res['FreeEnergyGradient'] += \
+            self.natoms * self.kB * results("Temperature") * res['avePsi'] * \
+            -1.0 * (self.depsilon[0][0]+self.depsilon[1][1]+self.depsilon[2][2])
+        
         # Add in post-processing
         # res['FreeEnergyGradient'] += self.kB * results("Temperature") * np.log(res['avePsi'])
 
@@ -317,14 +328,15 @@ class PAFILAMMPSWorker(LAMMPSWorker):
                 min_style fire
                 minimize 0 0.0001 {min_steps} {min_steps}
             """)
-        self.change_x += self.gather("x",1,3)
+        self.change_x = self.gather("x",1,3) - self.change_x
         jumps = np.linalg.norm(self.pbc(self.change_x),axis=1)
         
         max_jump = jumps.max()
         max_jump_thresh = parameters("MaxJumpThresh")
+        
         if not parameters("PostMin"):
-            max_jump_thresh += jumps.std() * np.sqrt(2.0)
-            
+            max_jump_thresh += jumps.std() * 2.0
+        
         valid_sample = bool(max_jump < max_jump_thresh)
         
         

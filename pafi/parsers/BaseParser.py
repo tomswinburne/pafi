@@ -70,7 +70,8 @@ class BaseParser:
         self.xml_file = None
         
     def check(self)->None:
-        """Internal check of parameters
+        """
+        Internal check of parameters
         """
         if self.has_path and self.has_potential and self.has_species:
             self.check_output_location()
@@ -321,8 +322,7 @@ class BaseParser:
                 raise AssertionError
             self.PathwayConfigurations += [path]
         self.has_path = True
-        self.check()
-
+        
     
     def set_potential(self,\
                     path:os.PathLike[str]|list[os.PathLike[str]],\
@@ -344,7 +344,7 @@ class BaseParser:
         self.has_potential = True
         if not species is None:
             self.set_species(species)
-        self.check()
+        
 
     def set_species(self,species:str|List[str])->None:
         """Set element list
@@ -361,7 +361,7 @@ class BaseParser:
         assert min([isinstance(s,str) for s in species])
         self.Species = species
         self.has_species = True
-        self.check()
+        
 
     def set_default_pathway(self) -> None:
         """
