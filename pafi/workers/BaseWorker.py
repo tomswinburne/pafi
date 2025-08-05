@@ -26,6 +26,9 @@ class BaseWorker:
                  worker_instance:int,
                  rank:int,
                  roots:List[int]) -> None:
+
+        self.kB = 8.617e-5 # where should I put this...
+
         self.worker_instance = worker_instance
         self.comm = comm
         self.local_rank = comm.Get_rank()
@@ -33,21 +36,45 @@ class BaseWorker:
         self.rank = rank
         self.parameters = parameters
         self.error_count = 0
-        self.scale = np.ones(3)
+        self.scale = np.eye(3)
         self.out_width=16
         self.natoms=0
         self.nlocal=0
         self.offset=0
-        self.x=None
         self.name="BaseWorker"
         self.has_errors = False
-        self.has_cell_data=False
-        self.Cell = None
-        self.Periodicity = None
-        self.invCell = None
+        
+        self.alpha = 1.0 # mixing of cell and position distance
+        
+
+        self.Cell = np.eye(3)
+        self.X = np.zeros((1,3))
+        self.Volume = 1.0
+        self.Periodicity = np.zeros(3,bool)
+        self.invCell = np.zeros((3,3))
+        self.dCell = np.zeros((3,3))
+        self.depsilon = np.zeros((3,3))
+        
         self.parameters.seed(worker_instance)
     
-    def load_config(self,file_path:os.PathLike[str]) -> np.ndarray:
+    def thermal_expansion(self,T:float=0) -> None:
+        """Rescale the LAMMPS supercell *not coordinates*
+            according to the provided thermal expansion data
+
+        Parameters
+        ----------
+        T : float, optional
+            temperature in K, by default 0
+        """
+        s = self.parameters.expansion(T)
+        if isinstance(s,float):
+            self.scale = np.eye(3) * scale
+        elif isinstance(s,np.ndarray):
+            assert s.size==3, "expansion must be 3-array or float"
+            self.scale = np.diag(s)
+        return self.scale
+
+    def load_and_update(self,file_path:os.PathLike[str]) -> np.ndarray:
         """Placeholder function to load in file and return configuration
         Overwritten by LAMMPSWorker
         
@@ -79,14 +106,12 @@ class BaseWorker:
         np.ndarray
             wrapped vector
         """
-        if not self.has_cell_data:
-            return X
-        else:
-            sX = X.reshape((-1,3))@self.invCell
-            sX -= np.floor(sX+0.5*int(central))@np.diag(self.Periodicity)
-            return (sX@self.Cell).reshape((X.shape))
+        sX = X.reshape((-1,3))@self.invCell
+        sX -= np.floor(sX+0.5*int(central))@np.diag(self.Periodicity)
+        return (sX@self.Cell).reshape((X.shape))
         
         return X
+
     def pbc_dist(self,X:np.ndarray,axis:None|int=None)->float|np.ndarray:
         """Minimum image distance
         
@@ -104,6 +129,55 @@ class BaseWorker:
         """
         return np.linalg.norm(self.pbc(X),axis=axis)
     
+    def update(self,C=None,dC=None,X=None,T=None)->None:
+        """
+            Set state information
+        """
+        if C is not None:
+            self.set_cell(C)
+        
+        if X is not None:
+            self.set_positions(X)
+        
+        self.Cell, self.Periodicity = self.get_cell()
+        self.Volume = np.linalg.det(self.Cell)
+        self.invCell = np.linalg.inv(self.Cell)
+        
+        self.X = self.get_positions()
+
+        self.natoms = self.X.shape[0]
+        
+        # cell strain (if given)
+        if dC is not None:
+            self.dCell = dC.copy()
+            self.depsilon = self.dCell@self.invCell
+            self.norm_dC = np.sqrt((dC**2).sum())
+        
+        # tangent (if given)
+        if T is not None:
+            self.norm_T = 1.0 * np.linalg.norm(T)
+
+
+    def set_path_and_update(self,r:float=0):
+        # positions: x and d_u[x,y,z]
+        path_S  = self.Spline_S(r,nu=0).reshape((-1,3))
+        path_C  = self.Spline_C(r,nu=0).reshape((3,3)) @ self.scale
+        path_X  = path_S@path_C
+        path_dC = self.Spline_C(r,nu=1).reshape((3,3)) @ self.scale
+        
+        path_T = self.Spline_S(r,nu=1).reshape((-1,3))@path_C
+        path_T -= path_T.mean(0)
+        # sets norm_T and norm_dC as well
+        self.update(C=path_C,dC=path_dC,X=path_X,T=path_T)
+        
+        # tangent normalized
+        path_T /= self.norm_T
+
+        # dtangent rescaled
+        path_dT = self.Spline_S(r,nu=2).reshape((-1,3))@path_C
+        path_dT /= self.norm_T**2 + self.norm_dC**2 * self.alpha
+        return path_X, path_T, path_dT
+
     def make_path(self):
         """Make the splined PAFI path via scipy.interpolate.CubicSpline
 
@@ -118,49 +192,40 @@ class BaseWorker:
 
         # load configurations
         pc = self.parameters.PathwayConfigurations
-        all_X = [self.pbc(self.load_config(pc[0]),central=False)]
+        self.load_and_update(pc[0])
+        invC = self.invCell.copy()
+        S = self.X.reshape((-1,3))@self.invCell
+        S -= np.floor(S)@np.diag(self.Periodicity)
+
+        all_S = [S.flatten()]
+        all_C = [self.Cell.flatten()]
+        r_dist = [0.0]
         for p in pc[1:]:
-            all_X += [self.pbc(self.load_config(p)-all_X[0])+all_X[0]]
-            
+            self.load_and_update(p)
+            S = self.X.reshape((-1,3))@self.invCell
+            dS = S-all_S[0].reshape((-1,3))
+            dS -= np.floor(dS+0.5)@np.diag(self.Periodicity)
+            dC = self.Cell@invC - np.eye(3) # engineering distortion
+            r_dist += [ np.sqrt( (dS**2).sum() + self.alpha * (dC**2).sum() ) ]
+            all_S += [dS.flatten()+all_S[0]]
+            all_C += [self.Cell.flatten()]
+
         # determine distance TODO: symmetric??
         if self.parameters("RealMEPDist"):
-            self.r_dist = np.array([self.pbc_dist(X-all_X[0]) for X in all_X])
-            self.r_dist /= self.r_dist[-1]
+            self.r_dist = np.array(r_dist) / r_dist[-1]
         else:
             self.r_dist = np.linspace(0.,1.,all_X.shape[0])
 
         # splining - thank you scipy for 'axis' !!
-        all_X = np.array([X.flatten() for X in all_X]) # shape=(nknots,natoms)
+        all_S = np.array([S.flatten() for S in all_S])
+        all_C = np.array([C.flatten() for C in all_C])
+
         bc = self.parameters("CubicSplineBoundaryConditions")
         assert bc in ['clamped','not-a-knot','natural']
+        self.Spline_S = CubicSpline(self.r_dist,all_S,axis=0,bc_type=bc)
+        self.Spline_C = CubicSpline(self.r_dist,all_C,axis=0,bc_type=bc)
+        del all_S, all_C # save a bit of memory
 
-        self.Spline_X = CubicSpline(self.r_dist,all_X,axis=0,bc_type=bc)
-        del all_X # save a bit of memory
-
-    def pathway(self,r:float,nu:int=0,
-                scale:float|np.ndarray[3]=1.0)->np.ndarray:
-        """Evaluate the PAFI pathway
-
-        Parameters
-        ----------
-        r : float
-            reaction coordinate, should be in [0,1]
-        nu : int, optional
-            derivative order, by default 0
-        scale : float | np.ndarray[3], optional
-            thermal expansion, by default 1.0
-
-        Returns
-        -------
-        np.ndarray, shape (natoms,3)
-            pathway configuration
-        """
-        if isinstance(scale,float):
-            scale = np.eye(3)*float(scale)
-        else:
-            scale = np.diag(scale)
-        return self.Spline_X(r,nu=nu).reshape((-1,3))@scale
-    
     def close(self)->None:
         pass
             

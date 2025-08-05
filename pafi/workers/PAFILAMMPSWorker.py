@@ -6,7 +6,7 @@ from ..parsers.PAFIParser import PAFIParser
 from .LAMMPSWorker import LAMMPSWorker
 from ..results.ResultsHolder import ResultsHolder
 
-class PAFIWorker(LAMMPSWorker):
+class PAFILAMMPSWorker(LAMMPSWorker):
     """
         The hyperplane-constrained sampling run.
         results: ResultsHolder instance
@@ -42,7 +42,6 @@ class PAFIWorker(LAMMPSWorker):
                  rank: int, roots: List[int]) -> None:
         super().__init__(comm, parameters, tag, rank, roots)
         
-    
     def constrained_average(self,results:ResultsHolder)->ResultsHolder:
         """
         
@@ -58,13 +57,19 @@ class PAFIWorker(LAMMPSWorker):
             Returns the input data and all output data appended 
             as dictionary key,value pairs
         """
+        
         # ensure results inputs should override self.parameters()
         parameters = lambda k: results(k)\
             if results.has_key(k) else self.parameters(k)
+        
         fixname = self.setup_pafi_average(parameters("SampleSteps"),"avepafi")
+        
         self.run_commands("run %d" % parameters("SampleSteps"))
+        
         results = self.extract_pafi_data(results,fixname)
         
+        self.unset_pafi_average(fixname)
+
         return results
     
     def sample(self,results:ResultsHolder)->ResultsHolder:
@@ -101,34 +106,40 @@ class PAFIWorker(LAMMPSWorker):
             Returns the input data and all output data appended 
             as dictionary key,value pairs
         """
-        
-    
         results = self.standard_pafi_pre_average(results)
         results = self.constrained_average(results)
         results = self.standard_pafi_post_average(results)
-
         return results
     
-
-    def setup_pafi_average(self,ave_steps:int,fixname="avepafi")->str:
-        """Helper function to establish PAFI average
+    def setup_pafi_average( self , ave_steps:int , fixname="avepafi" )->str:
+        """
+        
+        Helper function to establish PAFI average
+        
         Parameters
         ----------
-        
         ave_steps : int
             steps for ave/time
         fixname:str, optional
             the fix name, default "avepafi"
+        
         Returns
         ---------
         str:
             the fix name
         """
+        self.setup_stress_average(ave_steps)
         self.run_commands(f"""
             fix {fixname} all ave/time 1 {ave_steps} {ave_steps} f_pafi[*]
         """)
         return fixname
     
+    def unset_pafi_average(self,fixname="avepafi")->None:
+        self.run_commands(f"""
+            unfix {fixname}
+        """)
+        self.unset_stress_average()
+
     def extract_pafi_data(self,results:ResultsHolder,
                           name:str="avepafi")->ResultsHolder:
         """Helper functions to extract PAFI data
@@ -145,18 +156,39 @@ class PAFIWorker(LAMMPSWorker):
         ResultsHolder instance
         """
         res = {}
-        fix_data = self.extract_fix(name,size=4)
-        res['FreeEnergyGradient'] = -fix_data[0] * self.norm_t
-        res['FreeEnergyGradientVariance'] = fix_data[1]**2 * self.norm_t**2 - res['FreeEnergyGradient']**2
-        res['avePsi'] = fix_data[2]
+        fix_data = self.extract_fix(name,size=4) # pure configuration
+        res['FreeEnergyGradient'] = -fix_data[0] * self.norm_T
+        res['FreeEnergyGradientVariance'] = fix_data[1]**2 * self.norm_T**2  - res['FreeEnergyGradient']**2
+        res['avePsi'] = 1.0-fix_data[2]
+        
         res['dXTangent'] = fix_data[3]
+        
+        # add cell force in NVT setting
+        stress_fixes = ['axx', 'ayy', 'azz', 'axy', 'axz', 'ayz']
+        
+        stress = self.extract_stress_average()
+
+        sigma_depsilon = stress[0] * self.depsilon[0][0] + \
+                         stress[1] * self.depsilon[1][1] + \
+                         stress[2] * self.depsilon[2][2] + \
+                         stress[3] * self.depsilon[0][1] + \
+                         stress[4] * self.depsilon[0][2] + \
+                         stress[5] * self.depsilon[1][2]
+        res['FreeEnergyGradient'] += 1.0 * float(sigma_depsilon) * res['avePsi']
+
+        # Jacobian / Grammian terms
+        res['FreeEnergyGradient'] += self.natoms * self.kB * results("Temperature") * res['avePsi'] * \
+                                    -1.0 * (self.depsilon[0][0]+self.depsilon[1][1]+self.depsilon[2][2])
+        # Add in post-processing
+        # res['FreeEnergyGradient'] += self.kB * results("Temperature") * np.log(res['avePsi'])
+
         results.set_dict(res)
-        self.run_commands(f"unfix {name}")
         return results
     
-    
     def standard_pafi_pre_average(self,results:ResultsHolder)->ResultsHolder:
-        """Helper functions for standard PAFI
+        """
+        Helper functions for standard PAFI
+        Performs all fixes before sampling
 
         Parameters
         ----------
@@ -171,8 +203,6 @@ class PAFIWorker(LAMMPSWorker):
         assert results.has_key("ReactionCoordinate")
         assert results.has_key("Temperature")
         
-        self.kB = 8.617e-5 # where should I put this...
-
         # we want any input paramaters in results() to override parameters()
         parameters = lambda k: results(k) \
             if results.has_key(k) else self.parameters(k)
@@ -180,13 +210,13 @@ class PAFIWorker(LAMMPSWorker):
         # initialize on hyperplane
         r = results("ReactionCoordinate")
         T = results("Temperature")
-        
+
         self.initialize_hyperplane(r,0.)
+
         # TODO: check order in public PAFI
         self.run_script("PreRun",results)
         self.initialize_hyperplane(r,T)
-        n_atoms = self.get_natoms()
-
+        
         # the PAFI fix
         gamma = parameters("Friction")
         overdamped = parameters("OverDamped")
@@ -202,8 +232,9 @@ class PAFIWorker(LAMMPSWorker):
                 min_style fire
                 minimize 0 0.0001 {min_steps} {min_steps}
             """)
-        if parameters("PostMin"):
-            self.change_x = -self.gather("x",1,3)
+        
+        # initial positions
+        self.change_x = self.gather("x",1,3)
         
         # PreThermalize (optional)
         self.run_script("PreTherm",results)
@@ -213,6 +244,7 @@ class PAFIWorker(LAMMPSWorker):
         pre_therm_hp = self.extract_fix("pafi",size=4)
         steps = parameters("ThermSteps")
         ave_steps = parameters("ThermWindow")
+
         f_T = "c_thermo_pe" if overdamped==1 else "c_thermo_temp"
         self.run_commands(f"""
             reset_timestep 0
@@ -222,7 +254,7 @@ class PAFIWorker(LAMMPSWorker):
         sampleT = self.extract_fix("__ae")
         
         if overdamped==1:
-            sampleT = (sampleT-results("MinEnergy"))/1.5/n_atoms/self.kB
+            sampleT = (sampleT-results("MinEnergy"))/1.5/self.natoms/self.kB
         results.set("preTemperature",sampleT)
         self.run_commands(f"""
             unfix __ae
@@ -241,7 +273,8 @@ class PAFIWorker(LAMMPSWorker):
         return results
     
     def standard_pafi_post_average(self,results:ResultsHolder)->ResultsHolder:
-        """Helper functions for standard PAFI
+        """
+        Helper functions for standard PAFI routine
 
         Parameters
         ----------
@@ -255,12 +288,11 @@ class PAFIWorker(LAMMPSWorker):
         """
         # we want any input paramaters in results() to override self.parameters()
         parameters = lambda k: results(k) if results.has_key(k) else self.parameters(k)
-        n_atoms = self.get_natoms()
         
         # get final temperature
         sampleT = self.extract_fix("__ae")
         if parameters("OverDamped")==1:
-            sampleT = (sampleT-results("MinEnergy"))/1.5/n_atoms/self.kB
+            sampleT = (sampleT-results("MinEnergy"))/1.5/self.natoms/self.kB
         results.set("postTemperature",sampleT)
         self.run_commands(f"""
             unfix __ae
@@ -269,9 +301,9 @@ class PAFIWorker(LAMMPSWorker):
         # average positions
         if parameters("PostDump"):
             dx = self.gather("f_pafiax",type=1,count=3)
-            dx[:,0] -= self.gather("f_ux",type=1,count=1).flatten()
-            dx[:,1] -= self.gather("f_uy",type=1,count=1).flatten()
-            dx[:,2] -= self.gather("f_uz",type=1,count=1).flatten()
+            dx[:,0] -= self.gather("d_ux",type=1,count=1).flatten()
+            dx[:,1] -= self.gather("d_uy",type=1,count=1).flatten()
+            dx[:,2] -= self.gather("d_uz",type=1,count=1).flatten()
             dx = self.pbc(dx)
             results.set("MaxDev",np.linalg.norm(dx,axis=1).max())
             results.set("Dev",dx.copy())
@@ -281,22 +313,35 @@ class PAFIWorker(LAMMPSWorker):
         # minimize to test for MaxJump
         if parameters("PostMin"):
             min_steps = parameters("MinSteps")
-        else:
-            min_steps = 1
-        self.run_commands(f"""
-            min_style fire
-            minimize 0 0.0001 {min_steps} {min_steps}
-        """)
+            self.run_commands(f"""
+                min_style fire
+                minimize 0 0.0001 {min_steps} {min_steps}
+            """)
         self.change_x += self.gather("x",1,3)
-        results.set("MaxJump",self.pbc_dist(self.change_x,axis=1).max())
-        results.set("Valid",bool(results("MaxJump")<parameters("MaxJumpThresh")))
+        jumps = np.linalg.norm(self.pbc(self.change_x),axis=1)
+        
+        max_jump = jumps.max()
+        max_jump_thresh = parameters("MaxJumpThresh")
+        if not parameters("PostMin"):
+            max_jump_thresh += jumps.std() * np.sqrt(2.0)
+            
+        valid_sample = bool(max_jump < max_jump_thresh)
+        
+        
+        results.set("MaxJump",max_jump)
+        results.set("Valid",valid_sample)
+        
         del self.change_x
+
         # unfix hyperplane
         self.run_commands("unfix pafi")
         self.run_script("PostRun",results)
+        
         # rescale back.... not sure if this is required
         r = results("ReactionCoordinate")
+        
         self.initialize_hyperplane(r,0.0)
+        
         return results
   
             

@@ -1,3 +1,4 @@
+<!--https://raw.githubusercontent.com/tomswinburne/pafi/refs/heads/master/doc-->
 <img src="./doc/pafi_title.png" width=500></img>
 <h2> PAFI: Evaluation of free energy barriers beyond Harmonic TST</h2>
 <h4 align="center">Swinburne and Marinica, Phys. Rev. Lett 2018 (<a href="#citation">bibtex citation</a>).</h4>
@@ -7,6 +8,7 @@ analytically reformulating an exact expression for the free energy gradient used
 This allows calculation of free energy barriers even when the minimum energy path (MEP)
 is not aligned with the minimum free energy path (MFEP). PAFI thus performs
 <a href="https://en.wikipedia.org/wiki/Stratified_sampling" target="_new">stratified sampling</a> of configuration space for a particular metastable pathway, with the usual reductions in variance.
+<strong>PAFI now accepts solid-state NEB pathways!</strong>
 <h3 align="center">
 <a href="#installation">Installation</a>
 | <a href="#running-pafi">Running PAFI</a>

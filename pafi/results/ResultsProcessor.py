@@ -11,7 +11,8 @@ class ResultsProcessor:
                  data_path:os.PathLike[str]|List[os.PathLike[str]],
                  xml_path:None|os.PathLike[str]=None,
                  axes:List[str]=None,
-                 integrate:bool=True) -> None:
+                 integrate:bool=True,
+                 starting_point:float=0.0) -> None:
         """Read in PAFI data and plot results
 
         Parameters
@@ -35,6 +36,7 @@ class ResultsProcessor:
         self.data = None
         self.axes = None
         self.fields = None
+        self.starting_point = starting_point
         if not isinstance(data_path,list):
             data_path = [data_path]
         for dp in data_path:
@@ -51,7 +53,7 @@ class ResultsProcessor:
         
         self.extract_axes(axes=axes)
 
-        if self.integrate:
+        if integrate:
             self.integrate(return_remeshed_array=True,remesh=10);
 
 
@@ -162,6 +164,7 @@ class ResultsProcessor:
                   target:str='FreeEnergyGradient',
                   variance:str='FreeEnergyGradientVariance',
                   remesh:int=5,
+                  starting_point:None|float = None,
                   return_remeshed_array:bool=False)->pd.DataFrame:
         """Integrate the target field over the argument field.
 
@@ -203,7 +206,8 @@ class ResultsProcessor:
         - {target}_integrated_u: Upper bound of the 95% confidence interval
         - {target}_integrated_l: Lower bound of the 95% confidence interval
         """
-        
+        if starting_point is None:
+            starting_point = self.starting_point
         # redo ensemble average
         self.ensemble_collate(return_pd=False)
         data = self.ave_data.copy()
@@ -254,9 +258,17 @@ class ResultsProcessor:
             y_spl = interp1d(x_val,y_val,axis=0,kind='cubic')
             dense_x = np.linspace(x_val.min(),x_val.max(),remesh*x_val.size)
             dense_y = y_spl(dense_x)
-            
+
+            from_index = np.abs(dense_x-starting_point).argmin()
             dense_i = cumulative_trapezoid(dense_y,dense_x,axis=0,initial=0)
 
+            if from_index>0:
+                dense_i[from_index:] = \
+                    cumulative_trapezoid(dense_y[from_index:],dense_x[from_index:],axis=0,initial=0)
+                dense_i[:from_index+1] = \
+                    cumulative_trapezoid(dense_y[:from_index+1][::-1],\
+                                        dense_x[:from_index+1][::-1]-dense_x[from_index],axis=0,initial=0)[::-1]
+            
             i_spl = interp1d(dense_x,dense_i,axis=0,kind='cubic')
             
             if return_remeshed_array:
@@ -300,7 +312,7 @@ class ResultsProcessor:
         else:
             return data
     
-    def plotting_data(self,remesh=10):
+    def plotting_data(self,remesh=10,starting_point=None):
         """Generate data suitable for plotting.
 
         This method integrates the free energy gradient data to produce free energy profiles,
@@ -335,8 +347,11 @@ class ResultsProcessor:
         the plotting data. The integration is performed over the reaction coordinate using the
         free energy gradient and its variance.
         """
-        _,ploting_data = self.integrate(remesh=10,return_remeshed_array=True,\
+        _,ploting_data = self.integrate(remesh=10,\
+                starting_point=starting_point,\
+                return_remeshed_array=True,\
                 argument='ReactionCoordinate',\
                 target='FreeEnergyGradient',\
                 variance='FreeEnergyGradientVariance')
+        
         return ploting_data,'ReactionCoordinate','FreeEnergyGradient_integrated'

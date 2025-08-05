@@ -67,21 +67,21 @@ class LAMMPSWorker(BaseWorker):
             print("ERROR STARTING LAMMPS!",self.last_error_message)
             return
         start_config = self.parameters.PathwayConfigurations[0]
+        
         # TODO abstract
         self.run_script("Input")
         if self.has_errors:
             print("ERROR RUNNING INPUT SCRIPT!",self.last_error_message)
             return
+        self.update()
         
-        self.has_cell_data = False
-        self.get_cell_data()
         # See initialize_hyperplane
         self.scale = np.ones(3)
         self.made_fix=False
         self.made_compute=False
         self.make_path()
-        
     
+        
     def start_lammps(self)->None:
         """Initialize LAMMPS instance
 
@@ -176,6 +176,7 @@ class LAMMPSWorker(BaseWorker):
         ValueError
             if name not found
         """
+        name=name.lower()
         if name in ['x','f','v'] or 'f_' in name:
             if type is None:
                 type = 1
@@ -214,6 +215,8 @@ class LAMMPSWorker(BaseWorker):
             type = 1
         count = data.shape[1] if len(data.shape)>1 else 1
         try:
+            if self.parameters("Verbose")>0 and self.rank==0:
+                print("Scattering",name,type,count,data.shape)
             self.L.scatter(name,type,count,
                            np.ctypeslib.as_ctypes(data.flatten()))
         except Exception as ae:
@@ -221,6 +224,46 @@ class LAMMPSWorker(BaseWorker):
                 print("Error in scatter:",ae)
             self.last_error_message = ae
     
+    def get_positions(self):
+        """
+        Get positions
+        """
+        return self.gather("x",1,3)
+    
+    def set_positions(self,x):
+        """
+        Set positions
+        """
+        self.scatter("x",x)
+        return None
+
+    def get_cell(self):
+        """
+        Get Cell
+        """
+        boxlo,boxhi,xy,yz,xz,pbc,box_change = self.L.extract_box()
+        Periodicity = np.array([bool(pbc[i]) for i in range(3)],bool)
+        Cell = np.zeros((3,3))
+        for cell_j in range(3):
+            Cell[cell_j][cell_j] = boxhi[cell_j]-boxlo[cell_j]
+        Cell[0][1] = xy
+        Cell[0][2] = xz
+        Cell[1][2] = yz
+        return Cell,Periodicity
+
+    def set_cell(self,C):
+        """ 
+        Set Cell
+        """
+        self.run_commands(f"""
+                change_box all triclinic
+
+                change_box all x final 0.0 {C[0][0]} y final 0.0 {C[1][1]} z final 0.0 {C[2][2]} xy final {C[0][1]} xz final {C[0][2]} yz final {C[1][2]}
+
+                run 0
+            """)
+        return None
+
     def get_natoms(self)->int:
         """Get the atom count
 
@@ -230,24 +273,70 @@ class LAMMPSWorker(BaseWorker):
             the atom count
         """
         return self.L.get_natoms()
-    
-    def get_cell_data(self)->None:
-        """
-            Extract supercell information
-        """
-        boxlo,boxhi,xy,yz,xz,pbc,box_change = self.L.extract_box()
-        self.Periodicity = np.array([bool(pbc[i]) for i in range(3)],bool)
-        self.Cell = np.zeros((3,3))
-        for cell_j in range(3):
-            self.Cell[cell_j][cell_j] = boxhi[cell_j]-boxlo[cell_j]
-        self.Cell[0][1] = xy
-        self.Cell[0][2] = xz
-        self.Cell[1][2] = yz
-        self.invCell = np.linalg.inv(self.Cell)
-        self.has_cell_data = True
-        return None
 
-    def load_config(self,file_path:os.PathLike[str])->np.ndarray:
+    def setup_stress_average(self, ave_steps:int)->None:
+        """
+        
+        Helper function to setup stress average
+        
+        Parameters
+        ----------
+        ave_steps : int
+            steps for ave/time
+        
+        ASSUMES METAL UNITS!
+            Stress is in bar = 1e5 J/m^3
+                             = 1e5 (1e19/1.6)eV / (1e30 A^3)
+                             = (1.0/1.6) * 1e-6 eV / A^3
+                             = ConvFactor eV/A^3
+            Vol is in A^3 
+            
+            => Stress * Vol * ConvFactor is in eV
+        
+        Returns
+        ---------
+        None
+        
+        """
+        # assumes metal units !!
+        conv = (1/1.6) * (1e-6) 
+        self.run_commands(f"""
+            variable conv equal {conv}
+            variable pxx equal pxx*vol*v_conv
+            variable pyy equal pyy*vol*v_conv
+            variable pzz equal pzz*vol*v_conv
+            variable pxy equal pxy*vol*v_conv
+            variable pxz equal pxz*vol*v_conv
+            variable pyz equal pyz*vol*v_conv
+            fix axx all ave/time 1 {ave_steps} {ave_steps} v_pxx
+            fix ayy all ave/time 1 {ave_steps} {ave_steps} v_pyy
+            fix azz all ave/time 1 {ave_steps} {ave_steps} v_pzz
+            fix axy all ave/time 1 {ave_steps} {ave_steps} v_pxy
+            fix axz all ave/time 1 {ave_steps} {ave_steps} v_pxz
+            fix ayz all ave/time 1 {ave_steps} {ave_steps} v_pyz
+        """)
+
+    def extract_stress_average(self)->np.ndarray:
+        """
+            See setup_stress_average
+        """
+        stress_fixes = ['axx', 'ayy', 'azz', 'axy', 'axz', 'ayz']
+        stress = np.zeros(6)
+        for i, var in enumerate(stress_fixes):
+            stress[i] = -self.extract_fix(var,size=1)
+        return stress
+    
+    def unset_stress_average(self)->None:
+        self.run_commands(f"""
+            unfix axx
+            unfix ayy
+            unfix azz
+            unfix axy
+            unfix axz
+            unfix ayz
+        """)    
+    
+    def load_and_update(self,file_path:os.PathLike[str])->None:
         """Load a LAMMPS data file with read_data() and return a numpy array of positions
 
         Parameters
@@ -266,23 +355,7 @@ class LAMMPSWorker(BaseWorker):
             delete_atoms group all
             read_data {file_path} add merge
         """)
-        return self.gather("x",type=1,count=3)
-
-    def thermal_expansion_supercell(self,T:float=0) -> None:
-        """Rescale the LAMMPS supercell *not coordinates*
-            according to the provided thermal expansion data
-
-        Parameters
-        ----------
-        T : float, optional
-            temperature in K, by default 0
-        """
-        newscale = self.parameters.expansion(T)
-        rs = newscale / self.scale
-        self.run_commands(f"""
-            change_box all x scale {rs[0]} y scale {rs[1]} z scale {rs[2]}
-            run 0""")
-        self.scale = newscale.copy()
+        self.update()
 
     def extract_compute(self,id:str,vector:bool=True)->float|np.ndarray:
         """    Extract compute from LAMMPS
@@ -331,8 +404,8 @@ class LAMMPSWorker(BaseWorker):
         type = LMP_TYPE_VECTOR if size>1 else LMP_TYPE_SCALAR
         assert hasattr(self.L,"numpy")
         try:
-
-            res = lambda i: self.L.numpy.extract_fix(id,style,type,ncol=i)
+            res = lambda i: np.ctypeslib.as_array(self.L.extract_fix(id,style,type,ncol=i))
+            
             if size>1:
                 return np.array([res(i) for i in range(size)])
             else:
@@ -344,7 +417,8 @@ class LAMMPSWorker(BaseWorker):
             return None
     
     def get_energy(self)->float:
-        """Extract the potential energy
+        """
+        Extract the potential energy
         
         Returns
         -------
@@ -357,7 +431,6 @@ class LAMMPSWorker(BaseWorker):
         """Establish worker on a given plane with the 
             reference pathway via `fix_pafi`. 
             Also computes the tangent magnitude.
-
         Parameters
         ----------
         r : float
@@ -366,47 +439,41 @@ class LAMMPSWorker(BaseWorker):
             The temperature in K. This will apply thermal expansion to the pathway.
         """
         
-        self.thermal_expansion_supercell(T) # updates self.scale also
-
         # check for __pafipath fix to store the path data
         # (path : d_u[x,y,z],tangent: d_n[x,y,z],dtangent: d_dn[x,y,z])
+        
         if not self.made_fix:
             self.run_commands(f"""
-            fix __pafipath all property/atom d_ux d_uy d_uz d_nx d_ny d_nz d_dnx d_dny d_dnz
-            run 0""")
+                fix __pafipath all property/atom d_ux d_uy d_uz d_nx d_ny d_nz d_dnx d_dny d_dnz
+                run 0
+            """)
             self.made_fix=True
         
-        # fill positions: x and d_u[x,y,z]
-        path_x = self.pathway(r,nu=0,scale=self.scale)
-        self.scatter("x",path_x)
-        for i,c in enumerate(["d_ux","d_uy","d_uz"]):
-            self.scatter(c,path_x[:,i])
-        del path_x
-
-        # fill tangent: d_n[x,y,z]
-        path_t = self.pathway(r,nu=1,scale=self.scale)
-        path_t -= path_t.mean(0)
-        self.norm_t = np.linalg.norm(path_t)
-        path_t /= self.norm_t
-        for i,c in enumerate(["d_nx","d_ny","d_nz"]):
-            self.scatter(c,path_t[:,i])
-        del path_t
-
-        # fill dtangent: d_dn[x,y,z]
-        path_t = self.pathway(r,nu=2,scale=self.scale) 
+        self.scale = self.thermal_expansion(T) # updates self.scale 
         
-        path_t /= self.norm_t**2
+        path_X,path_T,path_dT = self.set_path_and_update(r)
+        
+        # fill path
+        for i,c in enumerate(["d_ux","d_uy","d_uz"]):
+            self.scatter(c,path_X[:,i])
+        
+        for i,c in enumerate(["d_nx","d_ny","d_nz"]):
+            self.scatter(c,path_T[:,i])
+        
         for i,c in enumerate(["d_dnx","d_dny","d_dnz"]):
-            self.scatter(c,path_t[:,i])
-        del path_t
-
+            self.scatter(c,path_dT[:,i])
+        
+        #del path_X,path_T,path_dT
+        
         self.run_commands("run 0")
+
 
         # check for __pafipath compute to make this data accessible
         if not self.made_compute:
             self.run_commands(f"""
             compute __pafipath all property/atom d_ux d_uy d_uz d_nx d_ny d_nz d_dnx d_dny d_dnz
-            run 0""")
+            run 0
+            """)
             self.made_compute=True
     
     def close(self) -> None:

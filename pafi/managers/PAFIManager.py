@@ -6,7 +6,7 @@ from mpi4py import MPI
 from ..results.ResultsHolder import ResultsHolder
 from .BaseManager import BaseManager
 from ..parsers.PAFIParser import PAFIParser
-from ..workers.PAFIWorker import PAFIWorker
+from ..workers.PAFILAMMPSWorker import PAFILAMMPSWorker
 from ..results.Gatherer import Gatherer
 
 class PAFIManager(BaseManager):
@@ -14,7 +14,7 @@ class PAFIManager(BaseManager):
                  xml_path:None|os.PathLike[str]=None,
                  parameters:None|PAFIParser=None,
                  restart_data:None|os.PathLike[str]=None,
-                 Worker:PAFIWorker=PAFIWorker,
+                 Worker:PAFILAMMPSWorker=PAFILAMMPSWorker,
                  Gatherer:Gatherer=Gatherer) -> None:
         """Default manager of PAFI, child of BaseManager
 
@@ -28,8 +28,8 @@ class PAFIManager(BaseManager):
             preloaded PAFIParser object, default None
         restart_data : None or os.PathLike[str], optional
             path to CSV data file. Will read and skip already sampled parameters
-        Worker : PAFIWorker, optional,
-            Can be overwritten by child class, by default PAFIWorker
+        Worker : PAFILAMMPSWorker, optional,
+            Can be overwritten by child class, by default PAFILAMMPSWorker
         Gatherer : Gatherer, optional
             Can be overwritten by child class, by default Gatherer
         """

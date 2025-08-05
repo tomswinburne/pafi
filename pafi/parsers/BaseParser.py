@@ -311,6 +311,7 @@ class BaseParser:
             paths = paths[0] if isinstance(paths,list) else paths
             paths = glob.glob(os.path.join(directory.strip(),paths.strip()))
             paths = sorted(paths,key=lambda x:x.split("_")[-1])
+
         self.PathwayConfigurations = []
         for path in paths:
             try:
