@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/tomswinburne/pafi/refs/heads/master/doc/pafi_title.png" width=500></img>
+<img src="./doc/pafi_title.png" width=500></img>
 <h2> PAFI: Evaluation of free energy barriers beyond Harmonic TST</h2>
 <h4 align="center">Swinburne and Marinica, Phys. Rev. Lett 2018 (<a href="#citation">bibtex citation</a>).</h4>
 PAFI performs constrained sampling on <a href="https://docs.lammps.org/fix_neb.html" target="_new">NEB</a> hyperplanes in <a href="https://docs.lammps.org" target="_new">LAMMPS</a>, 
@@ -113,7 +113,7 @@ ax.legend(loc='best')
 ax.set_xlabel("Reaction coordinate")
 ax.set_ylabel("Free energy barrier (eV)")
 ```
-<img src="https://raw.githubusercontent.com/tomswinburne/pafi/refs/heads/master/doc/test_output.png" width=300></img>
+<img src="./doc/test_output.png" width=300></img>
 
 
 See the [examples](examples/README.md) and <a href="#hints-and-tips">hints and tips</a> for more information
