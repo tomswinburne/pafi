@@ -126,7 +126,9 @@ See the [examples](examples/README.md) and <a href="#hints-and-tips">hints and t
 ## Hints and Tips
 - See <a href="http://lammps.sandia.gov/doc/neb.html" target="_new">LAMMPS NEB</a> for making a pathway
 
-- New `equal` style gives optimal spacing for force integration- e.g. `fix neb all neb 1.0 parallel equal`
+- New `neb equal` style gives optimal spacing for force integration- e.g. `fix neb all neb 1.0 parallel equal`
+
+- **The supercell can change but all configurations should have the same type of supercell (orthrhombic or triclinic)**
 
 - Modify one of `examples/configuration_files/*_REAL.xml` to load in your pathway and potential:
 ```python
