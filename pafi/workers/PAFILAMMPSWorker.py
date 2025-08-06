@@ -175,21 +175,19 @@ class PAFILAMMPSWorker(LAMMPSWorker):
         stress_fixes = ['axx', 'ayy', 'azz', 'axy', 'axz', 'ayz']
         
         stress = self.extract_stress_average()
-
         sigma_depsilon = stress[0] * self.depsilon[0][0] + \
                          stress[1] * self.depsilon[1][1] + \
                          stress[2] * self.depsilon[2][2] + \
                          stress[3] * self.depsilon[0][1] + \
                          stress[4] * self.depsilon[0][2] + \
                          stress[5] * self.depsilon[1][2]
-        
         res['FreeEnergyGradient'] += 1.0 * float(sigma_depsilon) * res['avePsi']
-
+        
         # Jacobian / Grammian terms
         res['FreeEnergyGradient'] += \
             self.natoms * self.kB * results("Temperature") * res['avePsi'] * \
             -1.0 * (self.depsilon[0][0]+self.depsilon[1][1]+self.depsilon[2][2])
-        
+        res['PathEnergy'] = self.Spline_E(results("ReactionCoordinate"))
         # Add in post-processing
         # res['FreeEnergyGradient'] += self.kB * results("Temperature") * np.log(res['avePsi'])
 

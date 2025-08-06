@@ -117,7 +117,7 @@ ax.set_ylabel("Free energy barrier (eV)")
 ```
 <img src="./doc/test_output_vac.png" width=400></img>
 <img src="./doc/test_output_expansion.png" width=400></img>
-
+<img src="./doc/test_output_shear.png" width=400></img>
 
 See the [examples](examples/README.md) and <a href="#hints-and-tips">hints and tips</a> for more information
 

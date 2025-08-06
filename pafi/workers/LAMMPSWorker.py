@@ -251,14 +251,15 @@ class LAMMPSWorker(BaseWorker):
         Cell[1][2] = yz
         return Cell,Periodicity
 
-    def set_cell(self,C):
+    def set_cell(self,C,move_atoms=False):
         """ 
         Set Cell
         """
+        move_atoms_string = "remap" if move_atoms else ""
         self.run_commands(f"""
                 change_box all triclinic
 
-                change_box all x final 0.0 {C[0][0]} y final 0.0 {C[1][1]} z final 0.0 {C[2][2]} xy final {C[0][1]} xz final {C[0][2]} yz final {C[1][2]}
+                change_box all x final 0.0 {C[0][0]} y final 0.0 {C[1][1]} z final 0.0 {C[2][2]} xy final {C[0][1]} xz final {C[0][2]} yz final {C[1][2]} {move_atoms_string}
 
                 run 0
             """)
@@ -302,12 +303,12 @@ class LAMMPSWorker(BaseWorker):
         conv = (1/1.6) * (1e-6) 
         self.run_commands(f"""
             variable conv equal {conv}
-            variable pxx equal pxx*vol*v_conv
-            variable pyy equal pyy*vol*v_conv
-            variable pzz equal pzz*vol*v_conv
-            variable pxy equal pxy*vol*v_conv
-            variable pxz equal pxz*vol*v_conv
-            variable pyz equal pyz*vol*v_conv
+            variable pxx equal pxx*v_conv
+            variable pyy equal pyy*v_conv
+            variable pzz equal pzz*v_conv
+            variable pxy equal pxy*v_conv
+            variable pxz equal pxz*v_conv
+            variable pyz equal pyz*v_conv
             fix axx all ave/time 1 {ave_steps} {ave_steps} v_pxx
             fix ayy all ave/time 1 {ave_steps} {ave_steps} v_pyy
             fix azz all ave/time 1 {ave_steps} {ave_steps} v_pzz
@@ -335,9 +336,34 @@ class LAMMPSWorker(BaseWorker):
             unfix axz
             unfix ayz
         """)    
-    
+    def extract_cell_from_lammps_data(self,file_path:os.PathLike[str])->np.ndarray:
+        """
+        Extract the supercell from a LAMMPS data file
+        """
+        cell = np.zeros((3, 3))
+        triclinic = False
+        with open(file_path, "r") as f:
+            for line in f:
+                if "xlo xhi" in line:
+                    xlo, xhi = map(float, line.strip().split()[:2])
+                    cell[0, 0] = xhi - xlo
+                elif "ylo yhi" in line:
+                    ylo, yhi = map(float, line.strip().split()[:2])
+                    cell[1, 1] = yhi - ylo
+                elif "zlo zhi" in line:
+                    zlo, zhi = map(float, line.strip().split()[:2])
+                    cell[2, 2] = zhi - zlo
+                elif "xy xz yz" in line:
+                    triclinic = True
+                    xy, xz, yz = map(float, line.strip().split()[:3])
+                    cell[0, 1] = xy
+                    cell[0, 2] = xz
+                    cell[1, 2] = yz
+        return triclinic,cell
+
     def load_and_update(self,file_path:os.PathLike[str])->None:
-        """Load a LAMMPS data file with read_data() and return a numpy array of positions
+        """
+        Load a LAMMPS data file with read_data() and return a numpy array of positions
 
         Parameters
         ----------
@@ -351,11 +377,18 @@ class LAMMPSWorker(BaseWorker):
         """
         self.made_fix = False
         self.make_compute = False
+        triclinic,cell = self.extract_cell_from_lammps_data(file_path)
+        
+        if triclinic:
+           self.set_cell(cell)
+        
         self.run_commands(f"""
             delete_atoms group all
             read_data {file_path} add merge
+            run 0
         """)
         self.update()
+        
 
     def extract_compute(self,id:str,vector:bool=True)->float|np.ndarray:
         """    Extract compute from LAMMPS

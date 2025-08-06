@@ -56,7 +56,9 @@ class BaseWorker:
         self.depsilon = np.zeros((3,3))
         
         self.parameters.seed(worker_instance)
-    
+
+        self.Spline_E = lambda r,nu=0: np.zeros_like(r)
+
     def thermal_expansion(self,T:float=0) -> None:
         """Rescale the LAMMPS supercell *not coordinates*
             according to the provided thermal expansion data
@@ -150,7 +152,7 @@ class BaseWorker:
         # cell strain (if given)
         if dC is not None:
             self.dCell = dC.copy()
-            self.depsilon = self.dCell@self.invCell
+            self.depsilon = self.dCell@self.invCell * self.Volume
             self.norm_dC = np.sqrt((dC**2).sum())
         
         # tangent (if given)
@@ -165,7 +167,8 @@ class BaseWorker:
         path_X  = path_S@path_C
         path_dC = self.Spline_C(r,nu=1).reshape((3,3)) @ self.scale
         
-        path_T = self.Spline_S(r,nu=1).reshape((-1,3))@path_C
+        path_T = self.Spline_S(r,nu=1).reshape((-1,3))
+        path_T = path_T @ path_C
         path_T -= path_T.mean(0)
         # sets norm_T and norm_dC as well
         self.update(C=path_C,dC=path_dC,X=path_X,T=path_T)
@@ -191,10 +194,12 @@ class BaseWorker:
         """
 
         # load configurations
+        
         pc = self.parameters.PathwayConfigurations
         self.load_and_update(pc[0])
+        path_energy = [self.get_energy()]
         invC = self.invCell.copy()
-        S = self.X.reshape((-1,3))@self.invCell
+        S = self.X.reshape((-1,3))@self.invCell.T
         S -= np.floor(S)@np.diag(self.Periodicity)
 
         all_S = [S.flatten()]
@@ -202,14 +207,16 @@ class BaseWorker:
         r_dist = [0.0]
         for p in pc[1:]:
             self.load_and_update(p)
-            S = self.X.reshape((-1,3))@self.invCell
+            path_energy += [self.get_energy()]
+            S = self.X.reshape((-1,3))@self.invCell.T
             dS = S-all_S[0].reshape((-1,3))
             dS -= np.floor(dS+0.5)@np.diag(self.Periodicity)
             dC = self.Cell@invC - np.eye(3) # engineering distortion
+            #dS -= dS.mean(0)[None,:] # center ?
             r_dist += [ np.sqrt( (dS**2).sum() + self.alpha * (dC**2).sum() ) ]
             all_S += [dS.flatten()+all_S[0]]
             all_C += [self.Cell.flatten()]
-
+        path_energy = np.array(path_energy)
         # determine distance TODO: symmetric??
         if self.parameters("RealMEPDist"):
             self.r_dist = np.array(r_dist) / r_dist[-1]
@@ -222,6 +229,7 @@ class BaseWorker:
 
         bc = self.parameters("CubicSplineBoundaryConditions")
         assert bc in ['clamped','not-a-knot','natural']
+        self.Spline_E = CubicSpline(self.r_dist, path_energy, axis=0, bc_type=bc)
         self.Spline_S = CubicSpline(self.r_dist,all_S,axis=0,bc_type=bc)
         self.Spline_C = CubicSpline(self.r_dist,all_C,axis=0,bc_type=bc)
         del all_S, all_C # save a bit of memory

@@ -55,8 +55,8 @@ class ResultsProcessor:
 
         if integrate:
             self.integrate(return_remeshed_array=True,remesh=10);
-
-
+            self.path_energy = self.path_energy_spline()
+            
     
     def extract_axes(self,axes=None):
         self.fields = list(self.data.keys())[1:]
@@ -292,24 +292,32 @@ class ResultsProcessor:
             if k=='FreeEnergyGradient_integrated_err':
                 data['FreeEnergyBarrierErrors'] = i_data[:,i]    
         
-        self.FreeEnergyData = []
-        for T in np.unique(data['Temperature']):
-            dd = data[data['Temperature']==T]
-            res = {'Temperature':T}
-            res['FreeEnergyGradient'] = \
-                dd['FreeEnergyGradient']
-            res['FreeEnergyBarrier'] = \
-                dd['FreeEnergyGradient_integrated']
-            res['ReactionCoordinate'] = dd['ReactionCoordinate']
-            res['FreeEnergyBarrierError'] = \
-                dd['FreeEnergyGradient_integrated_err']
-            self.FreeEnergyData += [res]
+        if target == 'FreeEnergyGradient':
+            self.FreeEnergyData = []
+            for T in np.unique(data['Temperature']):
+                dd = data[data['Temperature']==T]
+                res = {'Temperature':T}
+                res['FreeEnergyGradient'] = \
+                    dd['FreeEnergyGradient']
+                res['FreeEnergyBarrier'] = \
+                    dd['FreeEnergyGradient_integrated']
+                res['ReactionCoordinate'] = dd['ReactionCoordinate']
+                res['FreeEnergyBarrierError'] = \
+                    dd['FreeEnergyGradient_integrated_err']
+                self.FreeEnergyData += [res]
         
         if return_remeshed_array:
             return data, out_array
         else:
             return data
-    
+    def path_energy_spline(self):
+        """
+        Calculate the path energy spline from the integrated path energy data.
+        A HACK for the moment, performs spline twice !
+        """
+        _,out_array = self.integrate(target='PathEnergy',return_remeshed_array=True)
+        return interp1d(out_array[0]['ReactionCoordinate'],out_array[0]['PathEnergy'],kind='cubic')
+
     def plotting_data(self,remesh=10,starting_point=None):
         """Generate data suitable for plotting.
 

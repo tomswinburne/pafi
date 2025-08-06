@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='utf-8'?>
+<PAFI>
+  <Axes>
+    <Temperature>0.0 30 300.0 1000.0 </Temperature>
+    <ReactionCoordinate>  0 0.125 0.25 0.375 0.5 0.625 0.75 0.875   1 </ReactionCoordinate>
+  </Axes>
+  <Parameters>
+    <CoresPerWorker>1</CoresPerWorker>
+    <WriteDev>0</WriteDev>
+    <Verbosity>0</Verbosity>
+    <SampleSteps>2000</SampleSteps>
+    <ThermSteps>1000</ThermSteps>
+    <ThermWindow>100</ThermWindow>
+    <MinSteps>1000</MinSteps>
+    <nRepeats>1</nRepeats>
+    <DumpFolder>./shear_output</DumpFolder>
+    <OverDamped>0</OverDamped>
+    <Friction>0.05</Friction>
+    <LogLammps>0</LogLammps>
+    <MaxJumpThresh>0.4</MaxJumpThresh>
+    <ReSampleThresh>0.5</ReSampleThresh>
+    <maxExtraRepeats>1</maxExtraRepeats>
+    <PostDump>0</PostDump>
+    <PreMin>1</PreMin>
+    <PostMin>1</PostMin>
+    <Verbose>0</Verbose>
+    <SplinePath>1</SplinePath>
+    <RealMEPDist>1</RealMEPDist>
+    <GlobalSeed>137</GlobalSeed>
+    <FreshSeed>1</FreshSeed>
+    <ReDiscretize>1</ReDiscretize>
+    <LinearThermalExpansion>  0   0   0 </LinearThermalExpansion>
+    <QuadraticThermalExpansion>  0   0   0 </QuadraticThermalExpansion>
+    <CubicSplineBoundaryConditions>not-a-knot</CubicSplineBoundaryConditions>
+  </Parameters>
+  <Scripts>
+    <Input>
+            units metal
+            atom_style atomic
+            atom_modify map array sort 0 0.0
+            read_data  %FirstPathConfiguration%
+            pair_style %PotentialType%
+            pair_coeff * * %Potential% %Species%
+            run 0
+            thermo 10
+            run 0
+        </Input>
+    <PreRun />
+    <PostRun />
+    <PreTherm />
+  </Scripts>
+  <PathwayConfigurations>
+    <Files>strain_0.dat
+strain_1.dat
+strain_2.dat
+strain_3.dat
+strain_4.dat
+strain_5.dat
+strain_6.dat
+strain_7.dat
+strain_8.dat
+strain_9.dat
+strain_10.dat
+</Files>
+    <Potential>systems/EAM-VAC-W/W.eam.fs</Potential>
+    <PotentialType>eam/fs</PotentialType>
+    <Species>W</Species>
+    <Directory>systems/EAM-SHEAR-W</Directory>
+  </PathwayConfigurations>
+</PAFI>
