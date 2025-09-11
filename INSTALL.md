@@ -45,7 +45,8 @@ git clone https://github.com/lammps/lammps.git
 git clone https://github.com/tomswinburne/pafi.git
 
 # install python packages
-${PYTHON} -m pip install mpi4py numpy pandas
+${PYTHON} -m pip install --no-binary=mpi4py mpi4py 
+${PYTHON} -m pip install numpy pandas
 
 # LAMMPS build 
 cd /path/to/lammps
