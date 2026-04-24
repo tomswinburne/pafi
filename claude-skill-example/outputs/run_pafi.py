@@ -12,7 +12,7 @@ import os
 import numpy as np
 from ase.io import read
 from mpi4py import MPI
-from pafi import PAFIMPI
+from pafiase import PAFIMPI
 
 from calc import make_calculator
 

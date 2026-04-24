@@ -12,7 +12,7 @@
 # --- cluster environment (preserved verbatim by the skill) -----------------
 module purge
 module load gcc/12.2.0 openmpi/4.1.5 lammps/2024.06.27
-source ~/venvs/pafi-ase/bin/activate
+source ~/venvs/pafi/bin/activate
 
 cd $SLURM_SUBMIT_DIR
 

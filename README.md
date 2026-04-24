@@ -1,5 +1,5 @@
 <img src="./pafi_title.png" width=500></img>
-<h2> pafi-ase: Free energy barriers beyond Harmonic TST with ASE calculators</h2>
+<h2> pafi: Free energy barriers beyond Harmonic TST with ASE calculators</h2>
 <h4 align="center">Swinburne and Marinica, Phys. Rev. Lett 2018 (<a href="#citation">bibtex citation</a>).</h4>
 
 PAFI performs constrained sampling on NEB hyperplanes using any <a href="https://wiki.fysik.dtu.dk/ase/ase/calculators/calculators.html" target="_new">ASE calculator</a>,
@@ -22,7 +22,7 @@ is not aligned with the minimum free energy path (MFEP). PAFI thus performs
 </br>
 
 ## Installation
-pafi-ase requires `numpy scipy matplotlib ase`. For MPI parallelism: `mpi4py`.
+pafi requires `numpy scipy matplotlib ase`. For MPI parallelism: `mpi4py`.
 ```bash
 pip install -e .
 ```

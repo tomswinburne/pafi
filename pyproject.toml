@@ -21,7 +21,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://tomswinburne.github.io"
-Repository = "https://github.com/tomswinburne/pafi-ase"
+Repository = "https://github.com/tomswinburne/pafi"
 
 [tool.setuptools.packages.find]
 where = ["."]
