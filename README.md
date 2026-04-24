@@ -152,15 +152,13 @@ data.plot_data(filename="free_energy.png")
 
 
 ## Claude Code skill: `pafi-setup`
+We include a simple [Claude Code](https://claude.com/claude-code) skill at
+[`.claude/skills/pafi-setup/SKILL.md`](./.claude/skills/pafi-setup/SKILL.md).
 
-This repo ships a [Claude Code](https://claude.com/claude-code) skill at
-[`.claude/skills/pafi-setup/SKILL.md`](./.claude/skills/pafi-setup/SKILL.md)
-that scaffolds a PAFI job from a user-provided folder. Given three
-ingredients, it writes a ready-to-launch driver (and, if applicable, a
-filled-in cluster submission script).
+The skill builds the files needed to run a PAFI simulation from a user provided folder
+Given three ingredients, it writes a ready-to-launch driver and, if applicable, a filled-in cluster submission script.
 
 **Install the skill so Claude Code sees it anywhere:**
-
 ```bash
 mkdir -p ~/.claude/skills/pafi-setup
 cp .claude/skills/pafi-setup/SKILL.md ~/.claude/skills/pafi-setup/

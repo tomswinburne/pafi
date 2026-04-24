@@ -26,6 +26,24 @@ The agent produces:
 The repo root (`README.md`, `mpi-ase-test.py`, `eam-test.ipynb`) is the
 source of truth for the PAFI API — re-read it if anything below looks stale.
 
+You should also provide bibtex a citation file (if none already exists) 
+```bibtex
+@article{PhysRevLett.120.135503,
+  title = {Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems},
+  author = {Swinburne, Thomas D. and Marinica, Mihai-Cosmin},
+  journal = {Phys. Rev. Lett.},
+  volume = {120},
+  issue = {13},
+  pages = {135503},
+  numpages = {6},
+  year = {2018},
+  month = {Mar},
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevLett.120.135503},
+  url = {https://link.aps.org/doi/10.1103/PhysRevLett.120.135503}
+}
+```
+
 ## When to use
 
 Trigger when the user asks to set up, scaffold, submit, or generate a PAFI
