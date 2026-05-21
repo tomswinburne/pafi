@@ -28,8 +28,16 @@ lmp.close()
 ```
 Then you can install PAFI:
 ```bash
-pip install pafi
+pip install lammps pafi
 ```
+> **MPI runtime note.** The `lammps` pip wheel is linked against **MPICH**
+> (`libmpi.so.12`). If your system only has OpenMPI, `mpi4py`/LAMMPS will
+> fail to load with `OSError: libmpi.so.12: cannot open shared object file`.
+> On Debian/Ubuntu: `apt-get install -y libmpich-dev mpich` (and switch
+> `update-alternatives --set mpirun /usr/bin/mpirun.mpich` if OpenMPI is
+> also installed). For a non-MPICH LAMMPS build, install LAMMPS from
+> source — see [INSTALL.md](INSTALL.md).
+
 Test routines can be found in this repository at `tests/`.
 
 Otherwise, see [here](INSTALL.md) for installation on HPC clusters. 
@@ -132,8 +140,6 @@ See the [examples](examples/README.md) and <a href="#hints-and-tips">hints and t
   manager.run()
   manager.close()
   ```
-
-- See the [tutorial](TUTORIAL.md) for information on the `pafi-path-test` routine
 
 - In general, we want a reference pathway with dense discretisation where energy gradients are large
 
