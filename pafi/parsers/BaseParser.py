@@ -381,6 +381,7 @@ class BaseParser:
             represented as an ElementTree Element
         """
         potential = None
+        species = None
         files = "*.dat"
         directory = "./"
         for path_data in xml_path_data:
@@ -393,6 +394,10 @@ class BaseParser:
                 files = path_data.text.strip().splitlines()
             if tag=="Species":
                 species = path_data.text.strip()
+        if species is None:
+            raise ValueError("<PathwayConfigurations> is missing a <Species> tag")
+        if potential is None:
+            raise ValueError("<PathwayConfigurations> is missing a <Potential> tag")
         self.set_species(species)
         self.set_potential(potential)
         self.set_pathway(files,directory)

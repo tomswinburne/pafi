@@ -133,9 +133,9 @@ DEFAULT PARAMETERS FOR PAFI
     <Potential>
     ../examples/systems/EAM-SIA-Fe/Fe.eam.fs
     </Potential>
-    <Elements>
+    <Species>
     Fe
-    </Elements>
+    </Species>
     <Directory>
     ../examples/systems/EAM-SIA-Fe/
     </Directory>
@@ -164,7 +164,7 @@ DEFAULT PARAMETERS FOR PAFI
       atom_modify map array sort 0 0.0
       read_data  %FirstPathConfiguration%
       pair_style    eam/fs
-      pair_coeff * * %Potential% %Elements
+      pair_coeff * * %Potential% %Species%
       run 0
       thermo 10
       run 0

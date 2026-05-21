@@ -133,6 +133,9 @@ DEFAULT PARAMETERS FOR PAFI
     <Potential>
     ../examples/systems/EAM-SIA-Fe/Fe.eam.fs
     </Potential>
+    <Species>
+    Fe
+    </Species>
     <Directory>
     ../examples/systems/EAM-SIA-Fe/
     </Directory>

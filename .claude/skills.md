@@ -37,7 +37,7 @@ Both should report success. Note: `lammps()` (and therefore `pafi-check-deps`) w
 
 ### From local repo
 
-The published `pafi 0.9.9.1` on PyPI lags the repo. The examples in this repo are written against the in-tree API; if you `pip install pafi`, several will fail (see "Known API drift" below). To run the in-tree examples:
+To install from a checkout instead of PyPI:
 
 ```bash
 pip install --force-reinstall --no-deps .
@@ -54,12 +54,12 @@ cd examples
 mpirun -np 2 python input_python.py
 ```
 
-| Script | What it does | Status on in-tree code |
-|---|---|---|
-| `input_python.py` | W vacancy, EAM, sets params in Python | works |
-| `input_python_custom.py` | Same system with custom `Input`/`PreRun` scripts and `hybrid/scaled` pair style | works |
-| `input_xml.py` | Reads `configuration_files/CompleteConfiguration_TEST.xml` | **fails** — see Known issues |
-| `post_processing.py` | Reads `dumps/pafi_data_*.csv`, integrates `<dF/dx>`, prints barriers | works |
+| Script | What it does |
+|---|---|
+| `input_python.py` | W vacancy, EAM, sets params in Python |
+| `input_python_custom.py` | Same system with custom `Input`/`PreRun` scripts and `hybrid/scaled` pair style |
+| `input_xml.py` | Reads `configuration_files/CompleteConfiguration_TEST.xml` |
+| `post_processing.py` | Reads `dumps/pafi_data_*.csv`, integrates `<dF/dx>`, prints barriers |
 
 Outputs land in `examples/dumps/`:
 - `pafi_data_<N>.csv` — one per worker, per temperature
@@ -145,15 +145,6 @@ Bundled in `examples/systems/`:
 - `EAM-SIA-Fe` — dumbbell SIA in Fe (Marinica07 EAM), 9 images, `Fe.eam.fs`.
 
 The XML "TEST" configs use sampling values too short for science — they exist only for smoke tests. Use `*_REAL.xml` for real runs.
-
-## Known API drift (PyPI 0.9.9.1 vs repo)
-
-If you `pip install pafi` rather than installing from this repo, the examples break:
-
-- `BaseParser.set_potential()` in the wheel uses kwarg `type=`; the in-tree code and examples use `pot_type=`. `input_python.py` will raise `TypeError: ... unexpected keyword argument 'pot_type'`.
-- `input_python_custom.py` hits `AttributeError: 'PAFIParser' object has no attribute 'PotentialType'` because it skips `set_potential()` and relies on attribute initialisation that the wheel doesn't do.
-- Both versions share a bug in `BaseParser.read_pathway` (`pafi/parsers/BaseParser.py:396`): `self.set_species(species)` runs unconditionally even when the XML has no `<Species>` tag. Neither shipped TEST XML (`CompleteConfiguration_TEST.xml`, `PartialConfiguration_TEST.xml`) defines `<Species>`, so `input_xml.py` raises `UnboundLocalError: cannot access local variable 'species'`.
-  - Workaround: add `<Species>W</Species>` (or the relevant element) inside `<PathwayConfigurations>` in the XML, or fix `read_pathway` to default `species = None` and skip the call.
 
 ## Layout
 
