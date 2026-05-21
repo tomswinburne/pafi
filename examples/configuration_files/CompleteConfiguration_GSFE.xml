@@ -133,6 +133,9 @@ DEFAULT PARAMETERS FOR PAFI
     <Potential>
       ../path/to/GSFE/Cu01.eam.alloy Cu
     </Potential>
+    <Species>
+      Cu
+    </Species>
     <Directory>
       ../path/to/GSFE/
     </Directory>
