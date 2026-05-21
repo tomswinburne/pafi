@@ -9,10 +9,19 @@ lmp.close()
 ```
 Then you can install PAFI:
 ```bash
-pip install pafi
+pip install lammps pafi
 pafi-check-deps
 pafi-run-tests
 ```
+
+> **MPI runtime note.** The `lammps` pip wheel is linked against **MPICH**
+> (`libmpi.so.12`). `mpi4py` will pick up whichever MPI it can `dlopen`,
+> so the two must agree. If your system has only OpenMPI installed
+> (`libmpi.so.40`), the import will fail with
+> `OSError: libmpi.so.12: cannot open shared object file`.
+> Either install MPICH (`apt-get install -y libmpich-dev mpich` on
+> Debian/Ubuntu) or build LAMMPS from source against your existing MPI
+> (see [From source](#from-source)).
 
 ## With conda
 Otherwise, we can use `conda-lammps`, but **best for local testing only!** 

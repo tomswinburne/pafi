@@ -40,10 +40,10 @@ Both should report success. Note: `lammps()` (and therefore `pafi-check-deps`) w
 To install from a checkout instead of PyPI:
 
 ```bash
-pip install --force-reinstall --no-deps .
+pip install --force-reinstall --no-deps .   # or: pip install -e .
 ```
 
-from the repo root.
+from the repo root. Note this is **not** an editable install unless you pass `-e`; with `--force-reinstall --no-deps .` the worker Python processes spawned by `mpirun` will resolve `pafi` from site-packages, not from the working tree, so any subsequent edits won't take effect without reinstalling. If you're iterating on source, use `pip install -e .` (or set `PYTHONPATH` to the repo root).
 
 ## Examples
 
