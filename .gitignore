@@ -1,4 +1,6 @@
 examples/dumps
+log.lammps
+*/log.lammps
 build*
 dist*
 # Mac OSX indexing
