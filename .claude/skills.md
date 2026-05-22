@@ -135,6 +135,15 @@ If the user hasn't supplied it (and you can't infer from a filename or directory
 5. **Quality preset** — smoke / quick / production (see below).
 6. **CoresPerWorker** — defaults to 1; set higher for big systems or HPC.
 
+### When info is missing
+
+Don't silently guess for items 1–5. Prefer to **ask the user** with `AskUserQuestion` when you have the tool. If you must hand back a script with unresolved info (e.g. running headless, or the user explicitly said "just draft it"), follow this discipline:
+
+- Use the **smoke** sampling preset (below) — never default to production.
+- Set `LogLammps = 1` so the user can debug the first run from `log.lammps.<i>`.
+- Put a **`# TODO(user):`** comment on every line you guessed, naming the assumption (e.g. `# TODO(user): boundary — guessed p p p; change to p p s for a slab`).
+- Put a **module-level docstring** at the top of the script that lists every placeholder the user must confirm before running, and the run command.
+
 ### Pair-style routing
 
 Decide which template to use based on pair_style. **Simple path**: PAFI's default `Input` script does the right thing — just call `set_potential()` + `set_species()` and stop. **Custom path**: write your own `Input` and `PreRun` scripts; `set_potential()` becomes optional (used only for the `%Potential%` substitution token).
@@ -144,11 +153,15 @@ Decide which template to use based on pair_style. **Simple path**: PAFI's defaul
 | `eam/fs`, `eam/alloy` | `.eam.fs`, `.eam.alloy` | `* * <file> <species…>` | **Simple** |
 | `eam` (old Funcfl) | `.eam` | `<i> <j> <file>` per pair | Custom |
 | `snap` | `.snapcoeff` + `.snapparam` | `* * <coeff> <param> <species…>` | Custom |
-| `mlip` / `pace` / `grace/fs` | `.yaml`, `.ace` | `* * <file> <species…>` | Custom (non-default pair_style name) |
+| `pace`, `pace/extrapolation` | `.yace`, `.ace` (from `pacemaker`) | `* * <file> <species…>` | Custom |
+| `grace`, `grace/fs` | `.yaml` (from GRACE) | `* * <file> <species…>` | Custom |
+| `mlip` | `.mtp` / `.ini` | varies | Custom |
 | `hybrid` / `hybrid/scaled` | mixed | `* * <sub_style> <args>` per pair | Custom |
 | `lj/cut`, `morse`, etc. | none | `<i> <j> <eps> <sig> …` | Custom (no file) |
 
 Rule of thumb: if `pair_coeff` is exactly `* * <one_file> <species>` *and* the pair_style is one of `eam/fs`/`eam/alloy`, use the Simple template. Anything else → Custom.
+
+> **"ACE" is ambiguous.** Users colloquially call both PACE (LAMMPS `pair_style pace`, from `pacemaker`, usually `.yace`/`.ace`) and GRACE (LAMMPS `pair_style grace` or `grace/fs`, from the GRACE/Graph-ACE toolkit, `.yaml`) "ACE potentials". If the user only says "ACE", **ask which one** — they read different files and the `pair_style` name differs. Don't guess from extension alone: a `.yaml` could be either GRACE or a pacemaker `.yace` renamed.
 
 ### Template A — Simple (eam/fs, eam/alloy)
 
@@ -275,7 +288,7 @@ parameters.set("ThermWindow", 500); parameters.set("nRepeats", 3)
 - `%FirstPathConfiguration%` appears in `Input` (the parser substitutes the first image; PAFI replays `read_data` for each hyperplane internally).
 - If pair_style isn't `eam/fs`/`eam/alloy`, you supplied a custom `Input` and `PreRun`.
 - For non-default boundary conditions, you set `boundary` explicitly in `Input` (LAMMPS default is `p p p`).
-- Run command stated: `mpirun -np $(N) python <script>.py` from the directory containing the data files (or with absolute paths in `set_pathway`).
+- Run command stated: `mpirun -np $(N) python <script>.py`. Relative paths in `set_pathway`/`set_potential` are resolved from **`mpirun`'s cwd**, not the script's location — if the script lives in `examples/` but references `./neb_path/`, the user must `cd` into the directory containing `neb_path/` (or you give absolute paths).
 - `CoresPerWorker` divides total MPI ranks evenly (`nWorkers = NPROCS // CoresPerWorker`).
 
 ## Key parameters
