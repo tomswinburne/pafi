@@ -120,6 +120,164 @@ for d in integrated:
     print(d["Temperature"], d["FreeEnergyGradient_integrated"][i])
 ```
 
+## Generating new driver scripts
+
+When a user says something like *"make me a PAFI example for my <potential> on <system>"* (or any variant — "write a driver", "generate a script", "set this up for ACE NiAl", …), follow the routine here.
+
+### Info to gather
+
+If the user hasn't supplied it (and you can't infer from a filename or directory), ask for:
+
+1. **Potential file(s)** — path(s) to the parameter file. The extension is usually enough to guess the pair_style; confirm.
+2. **Species list, in order** — must match the `read_data` atom types (type 1 = first species, etc.) and the `pair_coeff` line.
+3. **NEB pathway** — glob like `image_*.dat` plus the directory holding them. Don't guess; ask if there are non-default boundary conditions or empty `Masses` blocks.
+4. **Temperature(s)** in K (one value or a list).
+5. **Quality preset** — smoke / quick / production (see below).
+6. **CoresPerWorker** — defaults to 1; set higher for big systems or HPC.
+
+### Pair-style routing
+
+Decide which template to use based on pair_style. **Simple path**: PAFI's default `Input` script does the right thing — just call `set_potential()` + `set_species()` and stop. **Custom path**: write your own `Input` and `PreRun` scripts; `set_potential()` becomes optional (used only for the `%Potential%` substitution token).
+
+| pair_style | File ext. | `pair_coeff` shape | Template |
+|---|---|---|---|
+| `eam/fs`, `eam/alloy` | `.eam.fs`, `.eam.alloy` | `* * <file> <species…>` | **Simple** |
+| `eam` (old Funcfl) | `.eam` | `<i> <j> <file>` per pair | Custom |
+| `snap` | `.snapcoeff` + `.snapparam` | `* * <coeff> <param> <species…>` | Custom |
+| `mlip` / `pace` / `grace/fs` | `.yaml`, `.ace` | `* * <file> <species…>` | Custom (non-default pair_style name) |
+| `hybrid` / `hybrid/scaled` | mixed | `* * <sub_style> <args>` per pair | Custom |
+| `lj/cut`, `morse`, etc. | none | `<i> <j> <eps> <sig> …` | Custom (no file) |
+
+Rule of thumb: if `pair_coeff` is exactly `* * <one_file> <species>` *and* the pair_style is one of `eam/fs`/`eam/alloy`, use the Simple template. Anything else → Custom.
+
+### Template A — Simple (eam/fs, eam/alloy)
+
+```python
+from mpi4py import MPI
+from pafi import PAFIManager, PAFIParser
+
+rank = MPI.COMM_WORLD.Get_rank()
+parameters = PAFIParser(rank=rank)
+
+parameters.set_pathway("image_*.dat", directory="./neb_path")
+parameters.set_potential("./pots/Fe.eam.fs", pot_type="eam/fs")
+parameters.set_species(["Fe"])              # order = read_data atom types
+
+parameters.axes["Temperature"] = [300.0]
+parameters.set("CoresPerWorker", 1)
+parameters.set("nRepeats", 1)
+parameters.set("OverDamped", 0)
+parameters.set("SampleSteps", 2000)
+parameters.set("ThermSteps", 2000)
+parameters.set("ThermWindow", 100)
+
+manager = PAFIManager(MPI.COMM_WORLD, parameters=parameters)
+manager.run()
+manager.close()
+```
+
+### Template B — Custom Input + PreRun (ACE / GRACE / SNAP / hybrid / unusual pair_style)
+
+Use this when the default `Input` script's `pair_style %PotentialType%` line wouldn't be valid LAMMPS (e.g. `grace/fs` needs explicit args, `snap` needs two files, `hybrid` needs sub-style specs).
+
+```python
+from mpi4py import MPI
+from pafi import PAFIManager, PAFIParser
+
+rank = MPI.COMM_WORLD.Get_rank()
+parameters = PAFIParser(rank=rank)
+
+parameters.set_pathway("image_*.dat", directory="./dat_files")
+parameters.set_potential("FS_model.yaml", pot_type="grace/fs")  # optional; enables %Potential%
+parameters.set_species(["Ni", "Al"])         # order matters: matches mass/pair_coeff below
+
+parameters.axes["Temperature"] = [300.0]
+parameters.set("CoresPerWorker", 64)
+parameters.set("nRepeats", 1)
+parameters.set("OverDamped", 1)
+parameters.set("SampleSteps", 2000)
+parameters.set("ThermSteps", 2000)
+parameters.set("ThermWindow", 100)
+parameters.set("LogLammps", 1)
+
+parameters.set_script("Input", """
+    units           metal
+    dimension       3
+    boundary        p p s
+    atom_style      atomic
+    atom_modify     map array sort 0 0.0
+    newton          on
+    neigh_modify    every 2 delay 10 check yes page 1000000 one 100000
+    read_data       %FirstPathConfiguration%
+    mass 1 58.69    # Ni
+    mass 2 26.98    # Al
+""")
+
+parameters.set_script("PreRun", """
+    pair_style      grace/fs
+    pair_coeff      * * FS_model.yaml Ni Al
+""")
+
+manager = PAFIManager(MPI.COMM_WORLD, parameters=parameters)
+manager.run()
+manager.close()
+```
+
+Notes for Template B:
+- **Why `pair_style`/`pair_coeff` go in `PreRun`, not `Input`**: PAFI re-runs `PreRun` at each hyperplane; if you ever need per-hyperplane pair changes (thermal expansion, switching potentials, etc.) you do it here. For a static potential it works equally in either, but matching the existing custom example keeps things consistent.
+- **`mass` lines**: needed when the LAMMPS `.dat` file's `Masses` block is missing or zero. Check `head -25 image_0.dat`.
+- **`boundary`**: default `p p p`; use `p p s` (slab) or `f f f` (cluster) when the system demands it. Ask the user if you can't tell.
+- **Species order**: `set_species(["Ni","Al"])` must match `mass 1 Ni / mass 2 Al` and `pair_coeff * * <file> Ni Al`. Off-by-one here causes silent wrong physics.
+
+### Available substitution tokens
+
+Within `set_script()` bodies, the parser replaces `%Token%` with current values. Available everywhere:
+
+| Token | Source | When |
+|---|---|---|
+| `%FirstPathConfiguration%` | `PathwayConfigurations[0]` | Always |
+| `%Potential%` | `set_potential(path)` | If `set_potential` was called |
+| `%PotentialType%` | `set_potential(..., pot_type=...)` | If `set_potential` was called |
+| `%Species%` | `set_species([...])` joined by spaces | If `set_species` was called |
+
+Additional tokens in per-hyperplane scripts (`PreRun`, `PreTherm`, `PostTherm`, `PostRun`):
+
+| Token | Meaning |
+|---|---|
+| `%Temperature%` | Current temperature (K) for this hyperplane |
+| `%ReactionCoordinate%` | Current reaction coordinate ∈ [0, 1] |
+| `%SampleSteps%`, `%ThermSteps%`, `%ThermWindow%` | Override to 1 automatically at T=0 |
+| `%Repeat%` | 1-based repeat index (if `nRepeats > 1`) |
+| Anything else in `parameters.axes` | e.g. add `parameters.axes["Strain"] = [...]` and `%Strain%` becomes available |
+
+### Quality presets
+
+Pick one and fill it in. Don't ship "production" defaults silently — ask first.
+
+```python
+# smoke  — single-T, runs in <1 min, just checks the script doesn't crash
+parameters.axes["Temperature"] = [0.0]
+parameters.set("SampleSteps", 10); parameters.set("ThermSteps", 10)
+parameters.set("ThermWindow", 10); parameters.set("nRepeats", 1)
+
+# quick  — gives a noisy barrier estimate, useful for path debugging
+parameters.set("SampleSteps", 500);  parameters.set("ThermSteps", 500)
+parameters.set("ThermWindow", 100); parameters.set("nRepeats", 1)
+
+# production — what *_REAL.xml uses, minutes-to-hours per T
+parameters.set("SampleSteps", 5000); parameters.set("ThermSteps", 2000)
+parameters.set("ThermWindow", 500); parameters.set("nRepeats", 3)
+```
+
+### Checklist before handing the script back
+
+- `set_species(...)` order matches the `mass N <element>` lines and the trailing species on `pair_coeff`.
+- `%FirstPathConfiguration%` appears in `Input` (the parser substitutes the first image; PAFI replays `read_data` for each hyperplane internally).
+- If pair_style isn't `eam/fs`/`eam/alloy`, you supplied a custom `Input` and `PreRun`.
+- For non-default boundary conditions, you set `boundary` explicitly in `Input` (LAMMPS default is `p p p`).
+- Run command stated: `mpirun -np $(N) python <script>.py` from the directory containing the data files (or with absolute paths in `set_pathway`).
+- `CoresPerWorker` divides total MPI ranks evenly (`nWorkers = NPROCS // CoresPerWorker`).
+
 ## Key parameters
 
 Set via `parameters.set("Name", value)` in Python or `<Name>value</Name>` inside `<Parameters>` in XML.
@@ -132,6 +290,7 @@ Set via `parameters.set("Name", value)` in Python or `<Name>value</Name>` inside
 | `ThermSteps` | — | MD steps for thermalisation before sampling. |
 | `ThermWindow` | — | Window for thermalisation convergence check. |
 | `OverDamped` | 0 | `1` = Brownian dynamics, `0` = Langevin. |
+| `CoresPerWorker` | 1 | LAMMPS ranks per PAFI worker. `nWorkers = NPROCS / CoresPerWorker` and the division must be exact. |
 | `LogLammps` | 0 | `1` → each worker writes `log.lammps.<worker_instance>`; `0` → `-log none`. Controls only the PAFI workers, not the standalone `lammps()` in `pafi-check-deps`. |
 | `GlobalSeed` | 137 | RNG seed root. |
 | `SplinePath` / `RealMEPDist` / `ReDiscretize` | 1 | Pathway interpolation toggles. |
